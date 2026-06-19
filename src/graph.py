@@ -74,10 +74,17 @@ class ConnectionsGraph:
         adj = adj * self.adaptive_edge_weights * active_edges
         return adj
 
-    def get_multi_relational_adjacency(self) -> torch.Tensor:
+    def get_multi_relational_adjacency(
+        self,
+        include_self_loops: bool = False,
+    ) -> torch.Tensor:
         """
         Returns a combined adjacency matrix by aggregating the multi-dimensional edge features.
         Sparsifies continuous similarity matrices and row-normalizes node degrees to stabilize training.
+
+        Relation self-loops are removed by default because RelationalGCNLayer already
+        handles each node's own features through W_self. Set include_self_loops=True
+        to reproduce the old adjacency behavior for benchmarking.
         """
         # Shape: (num_nodes, num_nodes, num_edge_features)
         # We permute it to (num_edge_features, num_nodes, num_nodes) for multi-relational convolution
@@ -100,6 +107,9 @@ class ConnectionsGraph:
         adj = adj * self.adaptive_edge_weights.unsqueeze(0)
         active_edges = torch.outer(self.active_node_mask, self.active_node_mask)
         adj = adj * active_edges.unsqueeze(0)
+
+        if not include_self_loops:
+            adj = self._zero_relation_self_loops(adj)
         
         # Row-normalize each relationship channel to stabilize message propagation scales
         row_sums = adj.sum(dim=2, keepdim=True)
@@ -115,6 +125,12 @@ class ConnectionsGraph:
             length_similarity,
             torch.zeros_like(length_similarity),
         )
+
+    @staticmethod
+    def _zero_relation_self_loops(adj: torch.Tensor) -> torch.Tensor:
+        num_nodes = adj.shape[-1]
+        identity = torch.eye(num_nodes, dtype=adj.dtype, device=adj.device).unsqueeze(0)
+        return adj * (1.0 - identity)
 
     def update_edges_from_feedback(self, action_indices: tuple, feedback: str):
         """

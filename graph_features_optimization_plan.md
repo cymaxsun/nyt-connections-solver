@@ -98,11 +98,9 @@ score = clamp(score, 0.0, 1.0)
 
 This keeps balanced groups at their original mean score while penalizing candidates with one or more weak internal pair links.
 
-## Open Issues To Fix Next
-
 ### Self-Loop Signal Is Duplicated
 
-**Status:** Open.  
+**Status:** Resolved in the default GCN adjacency path; smoke benchmark completed.  
 **Severity:** P1 - Model-quality risk.  
 **Main files:** [src/features.py](file:///Users/maxsun/projects/connections/src/features.py), [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py).
 
@@ -110,12 +108,20 @@ This keeps balanced groups at their original mean score while penalizing candida
 
 Why this matters: the model gets two ways to pass “the node to itself.” After sparsification, some channels may contain mostly self-loops. That can make relation weights partly redundant with `W_self` and reduce cross-word signal.
 
-Recommended fix: benchmark two variants:
+What changed: stored edge features remain unchanged for cache compatibility, but `ConnectionsGraph.get_multi_relational_adjacency()` now zeros relation diagonals by default before row normalization. This makes the GCN rely on `W_self` for each node's own features. Benchmark code can still reproduce the old behavior with `include_self_loops=True`.
 
-1. Zero all diagonal relation adjacency before row normalization and rely on `W_self`.
-2. Keep the current diagonal features.
+Existing GCN checkpoints should be treated as behavior-stale even if their tensor shapes still load. Retrain before trusting solve or training results with the default zero-diagonal adjacency.
 
-Compare candidate recall@k, true-group MRR, and partition quality. Do not decide from BCE loss alone.
+Smoke benchmark: a 1-epoch in-memory run on 32 train puzzles and 8 validation puzzles produced weak ranking metrics for both variants, so this should not be treated as a final model-quality result.
+
+| Variant | Val MRR | Recall@20 | Recall@50 | Best partition exact groups |
+| --- | ---: | ---: | ---: | ---: |
+| Zero diagonal relation adjacency | `0.0044` | `0.00%` | `6.25%` | `0.00/4` |
+| Keep relation self-loops | `0.0058` | `3.12%` | `6.25%` | `0.00/4` |
+
+Full retraining should still compare candidate recall@k, true-group MRR, and partition quality. Do not decide from BCE loss alone.
+
+## Open Issues To Fix Next
 
 ### Relation Archetype Head Has No Negative Class
 
@@ -184,7 +190,7 @@ Phrase-completion groups often connect words because all four share a hidden pre
 - [x] Sparsify the length-similarity adjacency channel.
 - [x] Add deterministic tests for clue TF-IDF, schema invalidation, length sparsification, and raw candidate scoring.
 - [x] Add a raw preprocessed graph candidate baseline.
-- [ ] Benchmark diagonal relation adjacency versus relying on `W_self`.
+- [x] Benchmark diagonal relation adjacency versus relying on `W_self`.
 - [x] Replace or supplement arithmetic-mean group scoring.
 - [ ] Decide whether the relation archetype head needs a `NO_RELATION` class.
 - [ ] Add explicit cache-saving lifecycle methods.
