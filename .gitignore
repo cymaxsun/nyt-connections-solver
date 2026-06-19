@@ -1,0 +1,28 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# macOS files
+.DS_Store
+.env
+
+# Data caches and databases (large/generated files)
+data/*.db
+data/*_cache.json
+data/*.pt
+data/*.json.corrupt-*
+
+# Trained models
+models/*.pt
+
+# Generated visualizations
+visualizations/val_best.png
+visualizations/val_puzzles/
+visualizations/raw/

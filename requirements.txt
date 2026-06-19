@@ -1,0 +1,11 @@
+torch
+torch-geometric
+gymnasium
+nltk
+requests
+numpy
+pandas
+scikit-learn
+matplotlib
+networkx
+sentence-transformers
