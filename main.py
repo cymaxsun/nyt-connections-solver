@@ -23,7 +23,6 @@ def solve_custom_board(
     words_str: str,
     model_dir: str = "models",
     device: str = "cpu",
-    gcn_backbone: str = "relational",
 ):
     """
     Solves a custom 16-word board using the trained GCN and DQN models.
@@ -38,7 +37,7 @@ def solve_custom_board(
     print("Words: " + ", ".join(words))
     
     # Check if models exist
-    gcn_path = os.path.join(model_dir, _gcn_checkpoint_filename(gcn_backbone))
+    gcn_path = os.path.join(model_dir, _gcn_checkpoint_filename())
     dqn_path = os.path.join(model_dir, "dqn_q_net.pt")
     if not os.path.exists(gcn_path) or not os.path.exists(dqn_path):
         print(f"Error: Trained models not found at {model_dir}. Please run training first via: python main.py --train")
@@ -48,17 +47,16 @@ def solve_custom_board(
     
     # Load Models
     gcn = build_gcn_model(
-        gcn_backbone,
         in_features=7,
         hidden_features=32,
         out_features=16,
         num_relations=EDGE_FEATURE_DIM,
     ).to(device)
     gcn_state = torch.load(gcn_path, map_location=device)
-    if not _is_gcn_checkpoint_compatible(gcn_state, gcn_backbone):
+    if not _is_gcn_checkpoint_compatible(gcn_state):
         print(
-            f"Error: Existing {gcn_backbone} GCN checkpoint is incompatible with "
-            "the current GCN architecture. Retrain via: python main.py --train"
+            "Error: Existing GCN checkpoint is incompatible with the current "
+            "GCN architecture. Retrain via: python main.py --train"
         )
         return
     gcn.load_state_dict(gcn_state)
@@ -165,12 +163,6 @@ def main():
     parser.add_argument("--train", action="store_true", help="Run the full training pipeline")
     parser.add_argument("--skip-gcn", action="store_true", help="Skip GCN training, load existing weights, retrain RL only")
     parser.add_argument("--gcn-epochs", type=int, default=20, help="Number of GCN training epochs")
-    parser.add_argument(
-        "--gcn-backbone",
-        choices=("relational", "gine"),
-        default="relational",
-        help="GCN backbone to train or load",
-    )
     parser.add_argument("--gcn-patience", type=int, default=15, help="Early stopping patience for GCN training")
     parser.add_argument("--rl-episodes", type=int, default=300, help="Number of RL training episodes")
     parser.add_argument("--solve", type=str, help="16 comma-separated words to solve interactively")
@@ -194,10 +186,9 @@ def main():
             gcn_patience=args.gcn_patience,
             skip_gcn=args.skip_gcn,
             update_artifacts=not args.skip_validation_artifacts,
-            gcn_backbone=args.gcn_backbone,
         )
     elif args.solve:
-        solve_custom_board(args.solve, device=args.device, gcn_backbone=args.gcn_backbone)
+        solve_custom_board(args.solve, device=args.device)
     else:
         parser.print_help()
 
@@ -208,19 +199,14 @@ def _is_dqn_checkpoint_compatible(state_dict: dict) -> bool:
     expected_inputs = 33 + CANDIDATE_FEATURE_DIM
     return first_layer_weight.shape[1] == expected_inputs
 
-def _gcn_checkpoint_filename(backbone: str) -> str:
-    if backbone == "gine":
-        return "gine_best.pt"
+def _gcn_checkpoint_filename() -> str:
     return "gcn_best.pt"
 
-def _is_gcn_checkpoint_compatible(state_dict: dict, backbone: str) -> bool:
+def _is_gcn_checkpoint_compatible(state_dict: dict) -> bool:
     rel_weights = state_dict.get("gcn1.W_rel")
-    gine_weight = state_dict.get("gine1.nn.0.weight")
     relation_head = state_dict.get("relation_score_net.2.weight")
     
     # Expect the new 5-class relation score net to be present
-    if backbone == "gine":
-        return gine_weight is not None and relation_head is not None and relation_head.shape[0] == 5
     return (
         rel_weights is not None
         and rel_weights.shape[0] == EDGE_FEATURE_DIM

@@ -21,7 +21,6 @@ def train_pipeline(
     gcn_patience: int = 15,
     skip_gcn: bool = False,
     update_artifacts: bool = True,
-    gcn_backbone: str = "relational",
 ):
     """
     Main training pipeline.
@@ -56,22 +55,21 @@ def train_pipeline(
     
     # 2. Train or Load GCN
     gcn = build_gcn_model(
-        gcn_backbone,
         in_features=7, # node features count
         hidden_features=32,
         out_features=16,
         num_relations=EDGE_FEATURE_DIM # edge features count
     ).to(device)
     
-    gcn_weights_path = os.path.join(model_dir, _gcn_checkpoint_filename(gcn_backbone))
+    gcn_weights_path = os.path.join(model_dir, _gcn_checkpoint_filename())
     
     if skip_gcn:
         print("\n--- Phase 1: Loading Pre-trained GCN (skipping training) ---")
         gcn_state = torch.load(gcn_weights_path, map_location=device)
-        if not _gcn_checkpoint_matches_backbone(gcn_state, gcn_backbone):
+        if not _gcn_checkpoint_matches_model(gcn_state):
             raise RuntimeError(
-                f"Existing {gcn_backbone} GCN checkpoint is incompatible with the "
-                "current model architecture. Retrain without --skip-gcn."
+                "Existing GCN checkpoint is incompatible with the current model "
+                "architecture. Retrain without --skip-gcn."
             )
         gcn.load_state_dict(gcn_state)
         _, best_mrr = validate_gcn(gcn, val_puzzles, extractor, device, visualize=False)
@@ -121,7 +119,7 @@ def train_pipeline(
             val_puzzles,
             extractor,
             device,
-            checkpoint_label=os.path.join(model_dir, _gcn_checkpoint_filename(gcn_backbone)),
+            checkpoint_label=os.path.join(model_dir, _gcn_checkpoint_filename()),
         )
     else:
         print("\n--- Phase 1b: Skipping Validation Artifacts ---")
@@ -397,18 +395,12 @@ def _preprocessed_features_are_current(puzzles: list) -> bool:
         return False
     return first["edge_features"].shape[-1] == EDGE_FEATURE_DIM
 
-def _gcn_checkpoint_filename(backbone: str) -> str:
-    if backbone == "gine":
-        return "gine_best.pt"
+def _gcn_checkpoint_filename() -> str:
     return "gcn_best.pt"
 
-def _gcn_checkpoint_matches_backbone(state_dict: Dict[str, torch.Tensor], backbone: str) -> bool:
+def _gcn_checkpoint_matches_model(state_dict: Dict[str, torch.Tensor]) -> bool:
     rel_weights = state_dict.get("gcn1.W_rel")
-    gine_weight = state_dict.get("gine1.nn.0.weight")
     relation_head = state_dict.get("relation_score_net.2.weight")
-    
-    if backbone == "gine":
-        return gine_weight is not None and relation_head is not None and relation_head.shape[0] == 5
     return (
         rel_weights is not None
         and rel_weights.shape[0] == EDGE_FEATURE_DIM

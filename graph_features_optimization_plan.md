@@ -1,109 +1,197 @@
 # Graph Formation Optimization Plan
 
-This document outlines the proposed orthographic, phonetic, and collocational features to extend [features.py](file:///Users/maxsun/projects/connections/src/features.py) and improve GCN candidate group recall for NYT-style Connections puzzles.
+This document tracks graph-feature fixes and future feature work for the Connections solver. The goal is simple: generate better 4-word candidate groups before the RL agent makes guesses.
 
-## Concern Classification
+## Status Summary
 
-Use these severity labels when turning this plan into implementation work:
+Use these labels when turning items into implementation work:
 
 | Severity | Meaning | Required action |
 | --- | --- | --- |
-| **P0 - Correctness bug** | Existing graph/training logic is broken or silently disables a feature. | Fix before adding new features or retraining checkpoints. |
-| **P1 - Model-quality risk** | Logic runs, but strongly biases learning/candidate ranking or makes validation misleading. | Fix or explicitly benchmark before treating results as meaningful. |
-| **P2 - Feature gap** | Missing signal that likely improves recall for specific Connections archetypes. | Add after P0/P1 issues are controlled. |
-| **P3 - Operational/reproducibility** | Cache, preprocessing, or artifact behavior can make experiments stale or expensive. | Fix alongside the first implementation pass. |
+| **P0 - Correctness bug** | A feature or training path is broken or silently disabled. | Fix before trusting experiments. |
+| **P1 - Model-quality risk** | Code runs, but the model can learn the wrong signal or validation can mislead us. | Fix or benchmark before treating results as meaningful. |
+| **P2 - Feature gap** | A useful Connections signal is missing. | Add after the P0/P1 issues are under control. |
+| **P3 - Operational/reproducibility** | Caches, artifacts, or scripts can make experiments stale or expensive. | Fix when touching the related pipeline. |
 
-### Current Major Flaws / Bugs to Fix First
+## Resolved Issues
 
-| Concern | Severity | Location | Why it matters | Recommended fix |
-| --- | --- | --- | --- | --- |
-| Clue TF-IDF similarity is effectively dead code. `get_clue_similarity` returns `None` after cache/membership checks because the actual TF-IDF computation is indented after `get_sentence_embedding_similarity` and after an unconditional `return`. | **P0 - Correctness bug** | [src/features.py](file:///Users/maxsun/projects/connections/src/features.py#L115), [src/features.py](file:///Users/maxsun/projects/connections/src/features.py#L180) | Edge feature 4 is documented, preprocessed, thresholded, and fed to the GCN, but non-self clue similarities become `None`/0.0. This removes one of the few phrase/category context channels. | Move the TF-IDF lookup block back into `get_clue_similarity`; add a tiny regression check where two cached descriptions with shared terms produce a positive score. |
-| Preprocessed graph staleness is detected only by `EDGE_FEATURE_DIM`. | **P0 - Correctness bug** | [src/train.py](file:///Users/maxsun/projects/connections/src/train.py#L37), [src/train.py](file:///Users/maxsun/projects/connections/src/train.py#L42) | Fixing feature logic without changing dimensionality will keep loading old `data/preprocessed_graphs.pt`, so validation can silently use stale/broken features. | Store a feature schema/version/hash in the preprocessed file and invalidate when feature extraction logic changes. At minimum, bump a `FEATURE_SCHEMA_VERSION` when fixing clue similarity or normalization. |
-| GINE backbone builds a complete directed graph for every off-diagonal pair, including pairs whose relational adjacency vector is all zero. | **P1 - Model-quality risk** | [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py#L219), [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py#L224) | Sparsification in `get_multi_relational_adjacency` does not actually remove edges for GINE; zero-feature edges still allow message passing between unrelated words. This can wash out graph structure. | In `_dense_adj_to_pyg`, mask edges with `adj.permute(1, 2, 0).abs().sum(dim=-1) > 0` in addition to `src != dst`, or build `edge_index` from nonzero feature channels before row normalization. |
-| Dense length-similarity channel connects nearly every word to nearly every other word after `1.0 - len_diff`. | **P1 - Model-quality risk** | [src/graph.py](file:///Users/maxsun/projects/connections/src/graph.py#L83), [src/graph.py](file:///Users/maxsun/projects/connections/src/graph.py#L99) | Length is weak evidence for most Connections groups. As a dense relation, it can dominate message passing and encourage grouping words by surface length rather than relation. | Threshold or downweight the length channel, or keep it as a pairwise scoring feature instead of a message-passing adjacency relation. |
-| Self-loop signal is duplicated: relation channels include diagonal identity features while `RelationalGCNLayer` also has `W_self`. | **P1 - Model-quality risk** | [src/features.py](file:///Users/maxsun/projects/connections/src/features.py#L503), [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py#L35) | Sparse channels can become mostly self-loops after thresholding, reducing useful cross-word propagation and making relation weights partly redundant with `W_self`. | Consider zeroing diagonal relation adjacency before row normalization and relying on `W_self`, or benchmark both choices. |
-| Candidate group score is the arithmetic mean of six pairwise probabilities. | **P1 - Model-quality risk** | [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py#L92), [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py#L108) | A candidate with one weak or unrelated pair can still rank high if the other edges are strong; this is common for broad semantic hubs. | Add minimum-edge, geometric mean, or learned quartet scoring; evaluate candidate recall@k and exact-group rank, not only average edge BCE. |
-| Relation archetype head is trained only on positive edges and gets no explicit negative/unknown class. | **P1 - Model-quality risk** | [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py#L304), [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py#L318) | The head can produce confident archetype labels for arbitrary candidate groups because it never learns "not a valid relation." This mostly affects visualization and downstream candidate explanations, but can mislead debugging. | Keep it auxiliary-only, or add a `NO_RELATION` class / gate relation type by edge probability. |
-| WordNet and sentence embedding caches are only saved by preprocessing, not ordinary on-the-fly graph builds. | **P3 - Operational/reproducibility** | [src/features.py](file:///Users/maxsun/projects/connections/src/features.py#L94), [src/preprocess.py](file:///Users/maxsun/projects/connections/src/preprocess.py#L62) | Interactive solving or raw-data training can recompute embeddings/WordNet features and produce slow, inconsistent runs if interrupted before preprocessing saves. | Add an explicit `FeatureExtractor.close()`/`save_caches()` call in training/CLI paths or periodically flush dirty caches. |
+### Clue TF-IDF Similarity Was Dead Code
 
----
+**Status:** Resolved.  
+**Severity:** P0 - Correctness bug.  
+**Main files:** [src/features.py](file:///Users/maxsun/projects/connections/src/features.py), [tests/test_features.py](file:///Users/maxsun/projects/connections/tests/test_features.py).
 
-## 1. Orthographic & Sub-Word Features (for Morphology & Wordplay)
+`get_clue_similarity` was supposed to compare cached clue descriptions with TF-IDF. That code had slipped below `get_sentence_embedding_similarity`, after an unconditional `return`, so Python never reached it. In practice, edge feature `4` was mostly zero even though the rest of the pipeline treated it as a real feature.
 
-**Classification:** **P2 - Feature gap**, with one integration caveat: these features should not be added until the P0 feature-path bugs above are fixed and preprocessed schema invalidation exists.
+Why this mattered: clue descriptions are one of the few features that can connect words by category context. For example, two words whose descriptions both mention “fruit” should get a positive clue-similarity score. With this bug, the GCN and raw graph scorer lost that signal.
 
-These features help identify letter-level patterns, stripping/adding operations, and structural characteristics that dictionary definitions and semantic embeddings cannot see.
+What changed: the TF-IDF lookup now lives inside `get_clue_similarity`, missing words return `0.0`, and tests cover positive shared-description similarity plus missing-word fallback.
 
-### Proposed Feature Details
-* **Normalized Edit Distance (Jaro-Winkler or Levenshtein):**
-  * *Logic:* Measure character distance to identify anagrams, spelling mistakes, or single-character edits.
-  * *Formula:* $1.0 - (\text{LevenshteinDistance}(w_1, w_2) / \max(\text{len}(w_1), \text{len}(w_2)))$.
-  * *Example:* *TICK* and *TICKLE* or *COLE* and *POLE*.
-* **Letter Addition / Stripping (Prefix & Suffix Removal):**
-  * *Logic:* Explicitly check if $w_1$ is identical to $w_2$ with its first or last letter removed.
-  * *Example:* *PAIN* and *T-PAIN* (rapper minus first letter) $\to$ *PAIN* matches *PAIN*.
-* **Interior Character n-Gram Jaccard Overlap:**
-  * *Logic:* Tokenize words into character 2-grams or 3-grams, and calculate the Jaccard similarity of these sets.
-  * *Example:* *SPRING* and *STRING* $\to$ bigrams `{'SP', 'PR', 'RI', 'IN', 'NG'}` vs `{'ST', 'TR', 'RI', 'IN', 'NG'}` (Jaccard: $0.43$).
+### Preprocessed Graphs Could Stay Stale After Feature Fixes
 
----
+**Status:** Resolved.  
+**Severity:** P0 - Correctness bug.  
+**Main files:** [src/features.py](file:///Users/maxsun/projects/connections/src/features.py), [src/preprocess.py](file:///Users/maxsun/projects/connections/src/preprocess.py), [src/train.py](file:///Users/maxsun/projects/connections/src/train.py), [tests/test_train.py](file:///Users/maxsun/projects/connections/tests/test_train.py).
 
-## 2. Phonetic & Pronunciation Features (for Homophones & Rhymes)
+The training pipeline used to check only `EDGE_FEATURE_DIM` to decide whether `data/preprocessed_graphs.pt` was current. That is not enough. Many feature fixes change values without changing the number of feature columns.
 
-**Classification:** **P2 - Feature gap**. This is likely high-value for WORDPLAY/MORPHOLOGY categories, but it requires careful fallback behavior for multi-word answers, proper nouns, abbreviations, and entries absent from CMU Dict.
+Why this mattered: after fixing a feature bug, training could still load old preprocessed tensors. That would make validation look like it used the new code when it actually used stale graph features.
 
-Connections frequently features groups based on how words sound (homophones) or rhyme, which standard text representations miss.
+What changed: preprocessed puzzle records now include `feature_schema_version`, and the loader rejects preprocessed graphs when the stored schema does not match `FEATURE_SCHEMA_VERSION`. The current schema version is `3`.
 
-### Proposed Feature Details
-* **Homophone Relationship (CMU Dict Match):**
-  * *Logic:* Use the Carnegie Mellon Pronouncing Dictionary (`nltk.corpus.cmudict`) to fetch phonetic transcriptions (phonemes). If two words share an identical phoneme sequence, set the edge to $1.0$.
-  * *Example:* *HARE* `['HH', 'EH', 'R']` and *HAIR* `['HH', 'EH', 'R']` $\to 1.0$.
-* **Rhyming Relationship (Sound-Alike Suffix):**
-  * *Logic:* Compare the final $K$ phonemes of the words (particularly matching from the last stressed vowel phoneme to the end).
-  * *Example:* *SIGHT* `['S', 'AY', 'T']` and *KITE* `['K', 'AY', 'T']` $\to 1.0$ (matching `['AY', 'T']`).
+### Dense Length Similarity Connected Too Many Words
 
----
+**Status:** Resolved.  
+**Severity:** P1 - Model-quality risk.  
+**Main files:** [src/graph.py](file:///Users/maxsun/projects/connections/src/graph.py), [tests/test_graph.py](file:///Users/maxsun/projects/connections/tests/test_graph.py).
 
-## 3. Idiom & Phrase Collocation Features (for Phrase Completion)
+Feature `9` stores normalized length difference. The graph used `1.0 - len_diff` as a length-similarity adjacency. That made many unrelated pairs positive edges because most words on a board have roughly similar lengths.
 
-**Classification:** **P2 - Feature gap / P3 data-dependency risk**. Phrase-completion signal is important, but a naive pairwise bigram/PMI feature can miss the actual puzzle pattern, which is often "all four words share a hidden common prefix/suffix/completion" rather than each pair co-occurring directly.
+Why this mattered: word length is weak evidence for most Connections groups. As a dense message-passing relation, it can make the graph look connected even when words have no real relation. This can blur useful sparse signals such as WordNet, clue TF-IDF, ConceptNet, or wordplay features.
 
-Phrase completion groups (e.g. *___ CHICKEN*) consist of semantically disparate words that only group because they can precede or follow a common word.
-
-### Proposed Feature Details
-* **Bigram/Collocation Lookup:**
-  * *Logic:* Measure if $w_1$ and $w_2$ frequently co-occur in the same idiomatic expressions or compound nouns using a local bigram index or Google Books Ngrams cache.
-  * *Example:* *RUBBER* and *CHICKEN* or *FUNKY* and *CHICKEN*.
-* **Pointwise Mutual Information (PMI):**
-  * *Logic:* Calculate the PMI between word pairs in a large corpus to find highly correlated collocates.
-  * *Formula:* $\text{PMI}(w_1, w_2) = \log \frac{P(w_1, w_2)}{P(w_1)P(w_2)}$.
-
----
-
-## 4. Feature Matrix Integration
-
-**Classification:** **P0/P1 integration risk**. Increasing `EDGE_FEATURE_DIM` is mechanically simple, but graph construction, adjacency normalization, checkpoint compatibility, preprocessing invalidation, and visualization labels all need coordinated updates.
-
-We will extend `EDGE_FEATURE_DIM` (currently 11) to incorporate these new features.
+What changed: the raw stored feature remains normalized length difference, but graph adjacency now converts it through one helper:
 
 ```python
-# Extended Edge Feature Indices:
-# 11: Normalized Levenshtein similarity [0.0 - 1.0]
-# 12: Is letter addition/removal match (Boolean)
-# 13: Character bigram Jaccard similarity [0.0 - 1.0]
-# 14: Is Homophone (Boolean)
-# 15: Rhymes (Boolean)
-# 16: Co-occurs in common phrase completion/bigrams (Boolean)
+length_similarity = 1.0 - normalized_len_diff
+keep edge only if length_similarity >= 0.90
 ```
 
-### Implementation Checklist
-- [ ] Fix the existing P0 bugs before adding feature dimensions: restore clue TF-IDF similarity and add feature-schema invalidation for preprocessed graphs.
-- [ ] Decide which channels should be message-passing adjacencies versus candidate-scoring-only features; downweight or threshold dense weak channels such as length similarity.
-- [ ] If using `--gcn-backbone gine`, make `_dense_adj_to_pyg` drop zero-adjacency edges instead of creating a complete graph.
-- [ ] Install the Pronouncing package or download the NLTK `cmudict` corpus.
-- [ ] Add `extract_phonetic_features` and `extract_collocation_features` functions in [features.py](file:///Users/maxsun/projects/connections/src/features.py).
-- [ ] Increase `EDGE_FEATURE_DIM` and map the new values in `build_graph_matrices`.
-- [ ] Update graph adjacency handling for dimensions 11-16, including thresholds, inversions, diagonal behavior, and feature comments.
-- [ ] Add small deterministic feature tests for each new channel and regression tests for existing channels.
-- [ ] Re-run the preprocessing pipeline (`PYTHONPATH=. python src/preprocess.py`).
-- [ ] Re-train the Relational GCN model (`PYTHONPATH=. python -u main.py --train --gcn-epochs 100 --rl-episodes 0`) and compare validation MRR, exact group recall@k, and candidate partition quality against the current checkpoint.
+Tests cover equal-length pairs, below-threshold pairs, consistency between single-channel and multi-relational adjacency, and active-mask/adaptive-weight behavior.
+
+### Raw Preprocessed Graph Candidate Baseline Added
+
+**Status:** Resolved as a baseline tool; still needs tuning.  
+**Severity:** P1 - Model-quality diagnostic.  
+**Main files:** [src/raw_candidates.py](file:///Users/maxsun/projects/connections/src/raw_candidates.py), [tests/test_raw_candidates.py](file:///Users/maxsun/projects/connections/tests/test_raw_candidates.py).
+
+The GCN can hide whether the hand-built graph features are useful. A raw candidate scorer gives us a direct baseline: collapse preprocessed pair features into one pair-score matrix, score every 4-word group by its six internal pair scores, and build full-board partitions from those groups.
+
+Why this mattered: on a 40-puzzle smoke subset, raw candidate scoring beat the small GCN by a large margin:
+
+| Method | Split | MRR |
+| --- | --- | ---: |
+| Raw graph candidate scorer | all 40 smoke puzzles | `0.1470` |
+| Raw graph candidate scorer | smoke validation split | `0.0648` |
+| Raw graph candidate scorer | smoke test split | `0.2066` |
+| 3-epoch relational GCN | smoke validation split | `0.0066` |
+| 39-epoch relational GCN | smoke validation split | `0.0072` |
+| 39-epoch relational GCN | smoke test split | `0.0059` |
+
+This does not mean raw scoring is good enough to solve the puzzle. Its best partitions are still weak. It does mean the raw features currently rank true groups better than the trained GCN on the smoke subset.
+
+### Candidate Group Score Used A Simple Mean
+
+**Status:** Resolved.  
+**Severity:** P1 - Model-quality risk.  
+**Main files:** [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py), [src/raw_candidates.py](file:///Users/maxsun/projects/connections/src/raw_candidates.py), [src/candidate_scoring.py](file:///Users/maxsun/projects/connections/src/candidate_scoring.py).
+
+Candidate groups were scored by averaging the six internal pair scores. A group could rank high even if one word did not belong, as long as the other pairs were strong enough.
+
+Why this mattered: Connections groups need all four words to fit. A simple mean can over-rank “three correct plus one hub word” candidates. The raw baseline results showed this pattern often: many top groups had `3/4` overlap but missed the exact group.
+
+What changed: GCN candidates and raw graph candidates now use one shared quartet scorer:
+
+```python
+score = mean(pair_scores) - 0.25 * (max(pair_scores) - min(pair_scores))
+score = clamp(score, 0.0, 1.0)
+```
+
+This keeps balanced groups at their original mean score while penalizing candidates with one or more weak internal pair links.
+
+## Open Issues To Fix Next
+
+### Self-Loop Signal Is Duplicated
+
+**Status:** Open.  
+**Severity:** P1 - Model-quality risk.  
+**Main files:** [src/features.py](file:///Users/maxsun/projects/connections/src/features.py), [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py).
+
+`build_graph_matrices` sets several diagonal relation features to `1.0`. The relational GCN layer also has `W_self`, which separately handles each node's own features.
+
+Why this matters: the model gets two ways to pass “the node to itself.” After sparsification, some channels may contain mostly self-loops. That can make relation weights partly redundant with `W_self` and reduce cross-word signal.
+
+Recommended fix: benchmark two variants:
+
+1. Zero all diagonal relation adjacency before row normalization and rely on `W_self`.
+2. Keep the current diagonal features.
+
+Compare candidate recall@k, true-group MRR, and partition quality. Do not decide from BCE loss alone.
+
+### Relation Archetype Head Has No Negative Class
+
+**Status:** Open.  
+**Severity:** P1 - Model-quality risk.  
+**Main file:** [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py).
+
+The auxiliary relation-type head is trained only on true positive edges. It learns labels such as `SYNONYM`, `WORDPLAY`, and `TRIVIA_ENCYCLOPEDIC`, but it never learns “these two words are not related.”
+
+Why this matters: the visualizer can show confident relation labels for bad candidate groups. That can mislead debugging because the label may look meaningful even when the pair should have been rejected.
+
+Recommended fix: either keep this head strictly auxiliary, or add a `NO_RELATION` class and train it on negative edges. If used in explanations, gate relation labels by edge probability.
+
+### Caches Are Saved Mainly By Preprocessing
+
+**Status:** Open.  
+**Severity:** P3 - Operational/reproducibility.  
+**Main files:** [src/features.py](file:///Users/maxsun/projects/connections/src/features.py), [src/preprocess.py](file:///Users/maxsun/projects/connections/src/preprocess.py), [main.py](file:///Users/maxsun/projects/connections/main.py).
+
+WordNet and sentence embedding caches are saved at the end of preprocessing. Interactive solving and raw-data training can still compute features on the fly.
+
+Why this matters: if a run computes many features and then exits before preprocessing saves caches, later runs may repeat slow work. That makes experiments slower and less reproducible.
+
+Recommended fix: add an explicit `FeatureExtractor.save_caches()` method and call it from training, preprocessing, and CLI solve paths. Prefer explicit lifecycle management over relying on `__del__`.
+
+## Feature Gaps To Add Later
+
+Do not add new feature dimensions until the open P1 graph/model issues have a benchmark or fix. Increasing `EDGE_FEATURE_DIM` requires coordinated changes to preprocessing, checkpoint compatibility, graph normalization, raw candidate scoring, and visualization labels.
+
+### 1. Orthographic And Sub-Word Features
+
+**Classification:** P2 - Feature gap.
+
+These features help with morphology and wordplay categories that semantic embeddings often miss.
+
+- **Normalized edit distance:** score words by character edits, such as `TICK` and `TICKLE`.
+- **Letter addition/removal:** detect one-letter prefix or suffix changes.
+- **Character n-gram overlap:** compare character bigrams or trigrams, such as `SPRING` and `STRING`.
+
+### 2. Phonetic And Pronunciation Features
+
+**Classification:** P2 - Feature gap.
+
+Connections often uses sound-based groups. Text embeddings usually miss homophones and rhymes.
+
+- **Homophone match:** use CMU Dict phoneme sequences, such as `HARE` and `HAIR`.
+- **Rhyme match:** compare the suffix from the last stressed vowel, such as `SIGHT` and `KITE`.
+
+Handle multi-word answers, proper nouns, abbreviations, and words missing from CMU Dict with clear fallbacks.
+
+### 3. Idiom And Phrase Collocation Features
+
+**Classification:** P2 - Feature gap / P3 data-dependency risk.
+
+Phrase-completion groups often connect words because all four share a hidden prefix, suffix, or completion. Pairwise co-occurrence alone may miss that pattern.
+
+- **Bigram/collocation lookup:** use a local phrase or n-gram index to find common compounds.
+- **PMI score:** estimate whether two words co-occur more often than chance.
+- **Shared completion search:** look for one hidden word that works with all four candidate words, not just pairwise matches.
+
+## Feature Matrix Integration Checklist
+
+- [x] Restore clue TF-IDF similarity.
+- [x] Store and validate `FEATURE_SCHEMA_VERSION` in preprocessed graphs.
+- [x] Bump `FEATURE_SCHEMA_VERSION` after graph-feature behavior changes.
+- [x] Sparsify the length-similarity adjacency channel.
+- [x] Add deterministic tests for clue TF-IDF, schema invalidation, length sparsification, and raw candidate scoring.
+- [x] Add a raw preprocessed graph candidate baseline.
+- [ ] Benchmark diagonal relation adjacency versus relying on `W_self`.
+- [x] Replace or supplement arithmetic-mean group scoring.
+- [ ] Decide whether the relation archetype head needs a `NO_RELATION` class.
+- [ ] Add explicit cache-saving lifecycle methods.
+- [ ] Add orthographic, phonetic, and collocation feature dimensions.
+- [ ] Re-run full preprocessing after the next feature-schema bump.
+- [ ] Retrain and compare using candidate recall@k, true-group MRR, and partition quality.
+
+## Current Experiment Takeaway
+
+The raw preprocessed graph baseline is the best current candidate-generation signal in the smoke tests. The relational GCN loss improves with more epochs, but candidate MRR stays far below the raw scorer on the same 40-puzzle subset. The next model work should optimize group ranking or partition ranking directly instead of relying only on pairwise BCE loss.

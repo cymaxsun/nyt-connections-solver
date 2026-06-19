@@ -10,19 +10,12 @@ from src.graph import ConnectionsGraph
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Evaluate GCN auxiliary head on validation set")
-    parser.add_argument(
-        "--gcn-backbone",
-        choices=("relational", "gine"),
-        default="relational",
-        help="GCN backbone to evaluate",
-    )
     args = parser.parse_args()
 
     device = "cpu"
     data_path = "data/preprocessed_graphs.pt"
     
-    checkpoint_name = "gine_best.pt" if args.gcn_backbone == "gine" else "gcn_best.pt"
-    model_path = os.path.join("models", checkpoint_name)
+    model_path = os.path.join("models", "gcn_best.pt")
     
     if not os.path.exists(data_path):
         print(f"Error: Preprocessed dataset not found at {data_path}")
@@ -38,7 +31,7 @@ def main():
     extractor = FeatureExtractor()
     
     print(f"Loading GCN model from {model_path}...")
-    model = build_gcn_model(args.gcn_backbone, in_features=7, hidden_features=32, out_features=16, num_relations=EDGE_FEATURE_DIM)
+    model = build_gcn_model(in_features=7, hidden_features=32, out_features=16, num_relations=EDGE_FEATURE_DIM)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     

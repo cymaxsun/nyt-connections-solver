@@ -3,14 +3,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import List, Tuple, Any, Optional
+from src.candidate_scoring import score_group_pair_values
 from src.graph import ConnectionsGraph
 from src.features import EDGE_FEATURE_DIM, FeatureExtractor
 from src.visualize import plot_connections_graph
-
-try:
-    from torch_geometric.nn import GINEConv
-except ImportError:
-    GINEConv = None
 
 class RelationalGCNLayer(nn.Module):
     def __init__(self, in_features: int, out_features: int, num_relations: int):
@@ -94,25 +90,14 @@ class ConnectionsScoringMixin:
         Computes the cohesion score for all 1820 4-node combinations.
         Returns candidate subgraphs sorted by cohesion score (descending).
         """
-        device = edge_probs.device
-        c = self.comb_tensor.to(device)
-        
-        # Extract edge probabilities for the 6 pairs in each 4-node combination
-        p_01 = edge_probs[c[:, 0], c[:, 1]]
-        p_02 = edge_probs[c[:, 0], c[:, 2]]
-        p_03 = edge_probs[c[:, 0], c[:, 3]]
-        p_12 = edge_probs[c[:, 1], c[:, 2]]
-        p_13 = edge_probs[c[:, 1], c[:, 3]]
-        p_23 = edge_probs[c[:, 2], c[:, 3]]
-        
-        # Average probability across all 6 internal edges
-        scores = (p_01 + p_02 + p_03 + p_12 + p_13 + p_23) / 6.0 # (1820,)
-        
-        # Sort scores in descending order
-        sorted_indices = torch.argsort(scores, descending=True)
+        scores = self.get_candidate_scores_tensor(edge_probs)[1]
+        sorted_indices = sorted(
+            range(len(self.combinations)),
+            key=lambda idx: (-float(scores[idx]), self.combinations[idx]),
+        )
         
         candidates = []
-        for idx in sorted_indices.tolist():
+        for idx in sorted_indices:
             comb = self.combinations[idx]
             candidates.append((comb, float(scores[idx])))
             
@@ -121,14 +106,18 @@ class ConnectionsScoringMixin:
     def get_candidate_scores_tensor(self, edge_probs: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Return all 4-node combinations and their cohesion scores as tensors."""
         c = self.comb_tensor.to(edge_probs.device)
-        scores = (
-            edge_probs[c[:, 0], c[:, 1]]
-            + edge_probs[c[:, 0], c[:, 2]]
-            + edge_probs[c[:, 0], c[:, 3]]
-            + edge_probs[c[:, 1], c[:, 2]]
-            + edge_probs[c[:, 1], c[:, 3]]
-            + edge_probs[c[:, 2], c[:, 3]]
-        ) / 6.0
+        pair_scores = torch.stack(
+            [
+                edge_probs[c[:, 0], c[:, 1]],
+                edge_probs[c[:, 0], c[:, 2]],
+                edge_probs[c[:, 0], c[:, 3]],
+                edge_probs[c[:, 1], c[:, 2]],
+                edge_probs[c[:, 1], c[:, 3]],
+                edge_probs[c[:, 2], c[:, 3]],
+            ],
+            dim=-1,
+        )
+        scores = score_group_pair_values(pair_scores)
         return c, scores
 
 
@@ -168,87 +157,18 @@ class ConnectionsGCN(ConnectionsScoringMixin, nn.Module):
         return h2, torch.sigmoid(edge_logits), relation_logits
 
 
-class ConnectionsGINE(ConnectionsScoringMixin, nn.Module):
-    def __init__(
-        self,
-        in_features: int = 7,
-        hidden_features: int = 32,
-        out_features: int = 16,
-        num_relations: int = EDGE_FEATURE_DIM,
-    ):
-        super().__init__()
-        if GINEConv is None:
-            raise RuntimeError(
-                "torch-geometric is required for --gcn-backbone gine. "
-                "Install dependencies with: pip install -r requirements.txt"
-            )
-
-        self.num_relations = num_relations
-        self.input_ln = nn.LayerNorm(in_features)
-        self.gine1 = GINEConv(
-            nn.Sequential(
-                nn.Linear(in_features, hidden_features),
-                nn.ReLU(),
-                nn.Linear(hidden_features, hidden_features),
-            ),
-            edge_dim=num_relations,
-        )
-        self.ln1 = nn.LayerNorm(hidden_features)
-        self.dropout1 = nn.Dropout(p=0.1)
-        self.gine2 = GINEConv(
-            nn.Sequential(
-                nn.Linear(hidden_features, out_features),
-                nn.ReLU(),
-                nn.Linear(out_features, out_features),
-            ),
-            edge_dim=num_relations,
-        )
-        self.ln2 = nn.LayerNorm(out_features)
-        self._init_scoring_heads(hidden_features=hidden_features, out_features=out_features)
-
-    def forward(self, h: torch.Tensor, adj: torch.Tensor, return_logits: bool = False) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        edge_index, edge_attr = self._dense_adj_to_pyg(adj)
-        h_norm = self.input_ln(h)
-        h1 = self.dropout1(F.relu(self.ln1(self.gine1(h_norm, edge_index, edge_attr))))
-        h2 = self.ln2(self.gine2(h1, edge_index, edge_attr))
-        edge_logits, relation_logits = self._score_edges(h2)
-        if return_logits:
-            return h2, edge_logits, relation_logits
-        return h2, torch.sigmoid(edge_logits), relation_logits
-
-    def _dense_adj_to_pyg(self, adj: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        adj = torch.nan_to_num(adj, nan=0.0, posinf=1.0, neginf=0.0)
-        num_nodes = adj.shape[1]
-        node_ids = torch.arange(num_nodes, device=adj.device)
-        src, dst = torch.meshgrid(node_ids, node_ids, indexing="ij")
-        mask = src != dst
-        edge_index = torch.stack([src[mask], dst[mask]], dim=0)
-        edge_attr = adj.permute(1, 2, 0)[mask]
-        return edge_index, edge_attr
-
-
 def build_gcn_model(
-    backbone: str,
     in_features: int = 7,
     hidden_features: int = 32,
     out_features: int = 16,
     num_relations: int = EDGE_FEATURE_DIM,
 ) -> nn.Module:
-    if backbone == "relational":
-        return ConnectionsGCN(
-            in_features=in_features,
-            hidden_features=hidden_features,
-            out_features=out_features,
-            num_relations=num_relations,
-        )
-    if backbone == "gine":
-        return ConnectionsGINE(
-            in_features=in_features,
-            hidden_features=hidden_features,
-            out_features=out_features,
-            num_relations=num_relations,
-        )
-    raise ValueError(f"Unknown GCN backbone: {backbone}")
+    return ConnectionsGCN(
+        in_features=in_features,
+        hidden_features=hidden_features,
+        out_features=out_features,
+        num_relations=num_relations,
+    )
 
 def train_gcn_epoch(
     model: ConnectionsGCN, 
