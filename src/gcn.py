@@ -55,8 +55,7 @@ class ConnectionsScoringMixin:
         self.edge_score_net = nn.Sequential(
             nn.Linear(out_features * 2, hidden_features),
             nn.ReLU(),
-            nn.Linear(hidden_features, 1),
-            nn.Sigmoid()
+            nn.Linear(hidden_features, 1)
         )
         self.relation_score_net = nn.Sequential(
             nn.Linear(out_features * 2, hidden_features),
@@ -74,21 +73,21 @@ class ConnectionsScoringMixin:
         h_exp2 = node_embeddings.unsqueeze(0).expand(16, -1, -1)
         edge_input = torch.cat([h_exp1, h_exp2], dim=-1) # (16, 16, out_features * 2)
         
-        # Predict pairwise probability
-        edge_probs = self.edge_score_net(edge_input).squeeze(-1) # (16, 16)
+        # Predict pairwise logits
+        edge_logits = self.edge_score_net(edge_input).squeeze(-1) # (16, 16)
         
         # Symmetrize
-        edge_probs = (edge_probs + edge_probs.T) / 2.0
+        edge_logits = (edge_logits + edge_logits.T) / 2.0
         
         # Mask out diagonal (self-loops)
-        edge_probs = edge_probs * (1.0 - torch.eye(16, device=edge_probs.device))
+        edge_logits = edge_logits * (1.0 - torch.eye(16, device=edge_logits.device))
 
         # Predict relation type logits
         relation_logits = self.relation_score_net(edge_input) # (16, 16, 5)
         # Symmetrize relation logits
         relation_logits = (relation_logits + relation_logits.transpose(0, 1)) / 2.0
 
-        return edge_probs, relation_logits
+        return edge_logits, relation_logits
 
     def get_candidate_subgraphs(self, edge_probs: torch.Tensor) -> List[Tuple[Tuple[int, ...], float]]:
         """
@@ -142,24 +141,31 @@ class ConnectionsGCN(ConnectionsScoringMixin, nn.Module):
         num_relations: int = EDGE_FEATURE_DIM,
     ):
         super().__init__()
+        self.input_ln = nn.LayerNorm(in_features)
         self.gcn1 = RelationalGCNLayer(in_features, hidden_features, num_relations)
+        self.ln1 = nn.LayerNorm(hidden_features)
+        self.dropout1 = nn.Dropout(p=0.1)
         self.gcn2 = RelationalGCNLayer(hidden_features, out_features, num_relations)
+        self.ln2 = nn.LayerNorm(out_features)
         self._init_scoring_heads(hidden_features=hidden_features, out_features=out_features)
         
-    def forward(self, h: torch.Tensor, adj: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, h: torch.Tensor, adj: torch.Tensor, return_logits: bool = False) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Args:
             h: Node features (16, in_features)
             adj: Adjacency matrices (num_relations, 16, 16)
         Returns:
             node_embeddings: (16, out_features)
-            edge_probs: (16, 16) pairwise similarity scores
+            edge_probs: (16, 16) pairwise similarity scores (or logits if return_logits is True)
             relation_logits: (16, 16, 5) relation type logits
         """
-        h1 = F.relu(self.gcn1(h, adj))
-        h2 = self.gcn2(h1, adj) # (16, out_features)
-        edge_probs, relation_logits = self._score_edges(h2)
-        return h2, edge_probs, relation_logits
+        h_norm = self.input_ln(h)
+        h1 = self.dropout1(F.relu(self.ln1(self.gcn1(h_norm, adj))))
+        h2 = self.ln2(self.gcn2(h1, adj)) # (16, out_features)
+        edge_logits, relation_logits = self._score_edges(h2)
+        if return_logits:
+            return h2, edge_logits, relation_logits
+        return h2, torch.sigmoid(edge_logits), relation_logits
 
 
 class ConnectionsGINE(ConnectionsScoringMixin, nn.Module):
@@ -178,6 +184,7 @@ class ConnectionsGINE(ConnectionsScoringMixin, nn.Module):
             )
 
         self.num_relations = num_relations
+        self.input_ln = nn.LayerNorm(in_features)
         self.gine1 = GINEConv(
             nn.Sequential(
                 nn.Linear(in_features, hidden_features),
@@ -186,6 +193,8 @@ class ConnectionsGINE(ConnectionsScoringMixin, nn.Module):
             ),
             edge_dim=num_relations,
         )
+        self.ln1 = nn.LayerNorm(hidden_features)
+        self.dropout1 = nn.Dropout(p=0.1)
         self.gine2 = GINEConv(
             nn.Sequential(
                 nn.Linear(hidden_features, out_features),
@@ -194,14 +203,18 @@ class ConnectionsGINE(ConnectionsScoringMixin, nn.Module):
             ),
             edge_dim=num_relations,
         )
+        self.ln2 = nn.LayerNorm(out_features)
         self._init_scoring_heads(hidden_features=hidden_features, out_features=out_features)
 
-    def forward(self, h: torch.Tensor, adj: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, h: torch.Tensor, adj: torch.Tensor, return_logits: bool = False) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         edge_index, edge_attr = self._dense_adj_to_pyg(adj)
-        h1 = F.relu(self.gine1(h, edge_index, edge_attr))
-        h2 = self.gine2(h1, edge_index, edge_attr)
-        edge_probs, relation_logits = self._score_edges(h2)
-        return h2, edge_probs, relation_logits
+        h_norm = self.input_ln(h)
+        h1 = self.dropout1(F.relu(self.ln1(self.gine1(h_norm, edge_index, edge_attr))))
+        h2 = self.ln2(self.gine2(h1, edge_index, edge_attr))
+        edge_logits, relation_logits = self._score_edges(h2)
+        if return_logits:
+            return h2, edge_logits, relation_logits
+        return h2, torch.sigmoid(edge_logits), relation_logits
 
     def _dense_adj_to_pyg(self, adj: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         adj = torch.nan_to_num(adj, nan=0.0, posinf=1.0, neginf=0.0)
@@ -279,17 +292,21 @@ def train_gcn_epoch(
             words = puzzle.words
             word_to_cat = puzzle.word_to_cat
             
-        node_embeddings, edge_probs, relation_logits = model(graph.node_features, graph.get_multi_relational_adjacency())
+        node_embeddings, edge_logits, relation_logits = model(
+            graph.node_features, graph.get_multi_relational_adjacency(), return_logits=True
+        )
         
-        # Weighted BCE Loss (positive pairs are less frequent: 48 out of 240, so weight pos by 4x)
+        # Weighted BCE Loss with logits (positive pairs are less frequent: 48 out of 240, so weight pos by 4x)
         weight_mask = diag_mask.clone()
         weight_mask[adj_true == 1] *= 4.0
-        bce_loss = F.binary_cross_entropy(edge_probs, adj_true, weight=weight_mask)
+        bce_loss = F.binary_cross_entropy_with_logits(edge_logits, adj_true, weight=weight_mask)
         
         # Ground truth relation indices (-100 for ignore / negative edges)
         relation_true = torch.full((16, 16), -100, dtype=torch.long, device=device)
         for i in range(16):
             for j in range(16):
+                if i == j:
+                    continue
                 w_i = words[i]
                 w_j = words[j]
                 w_i_cat = word_to_cat[w_i] if isinstance(word_to_cat, dict) else word_to_cat.get(w_i)
@@ -365,16 +382,20 @@ def validate_gcn(
                 word_to_cat = puzzle.word_to_cat
                 puzzle_id = puzzle.id
             
-            node_embeddings, edge_probs, relation_logits = model(graph.node_features, graph.get_multi_relational_adjacency())
+            node_embeddings, edge_logits, relation_logits = model(
+                graph.node_features, graph.get_multi_relational_adjacency(), return_logits=True
+            )
             
             # Compute loss
             weight_mask = diag_mask.clone()
             weight_mask[adj_true == 1] *= 4.0
-            bce_loss = F.binary_cross_entropy(edge_probs, adj_true, weight=weight_mask)
+            bce_loss = F.binary_cross_entropy_with_logits(edge_logits, adj_true, weight=weight_mask)
             
             relation_true = torch.full((16, 16), -100, dtype=torch.long, device=device)
             for i in range(16):
                 for j in range(16):
+                    if i == j:
+                        continue
                     w_i = words[i]
                     w_j = words[j]
                     w_i_cat = word_to_cat[w_i] if isinstance(word_to_cat, dict) else word_to_cat.get(w_i)
@@ -392,6 +413,7 @@ def validate_gcn(
             loss = bce_loss + 0.5 * class_loss
             total_loss += loss.item()
             
+            edge_probs = torch.sigmoid(edge_logits)
             c, scores = model.get_candidate_scores_tensor(edge_probs)
             
             # 2. Find rank of each of the 4 true categories

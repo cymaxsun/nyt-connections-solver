@@ -6,19 +6,29 @@ This repository is a Python solver for NYT-style Connections puzzles using graph
 
 ## Build, Test, and Development Commands
 
-Create and activate a virtual environment before installing dependencies:
+Use the project virtual environment for all Python commands. If `.venv/` already exists, activate it or call its interpreter directly:
 
 ```bash
-python -m venv .venv
+source .venv/bin/activate
+.venv/bin/python -m compileall main.py src tests
+```
+
+If `.venv/` does not exist, create it and install dependencies:
+
+```bash
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Run the CLI help with `python main.py`. Train both models with:
+After activation, `python` should resolve to the virtualenv interpreter. If it does not, use `.venv/bin/python` explicitly. Run the CLI help with `python main.py`. Train both models with:
 
 ```bash
 python main.py --train --gcn-epochs 20 --rl-episodes 300
 ```
+
+> [!NOTE]
+> When running training scripts in the background or redirecting their output to a log file, Python block-buffers standard output by default, meaning logs won't appear in real time. To bypass this and see logs instantly, run Python with the `-u` flag (e.g., `python -u main.py ...`) or set `PYTHONUNBUFFERED=1` in your shell environment.
 
 Retrain only the RL agent from an existing GCN checkpoint with `python main.py --train --skip-gcn`. Solve a custom board interactively with `python main.py --solve "WORD1,WORD2,...,WORD16"`.
 
@@ -28,7 +38,7 @@ Use Python 3 with 4-space indentation, descriptive snake_case names for function
 
 ## Testing Guidelines
 
-No automated test suite is currently present. For code changes, run at least `python -m compileall main.py src` to catch syntax errors. For training or inference changes, run a small smoke test such as `python main.py --train --gcn-epochs 1 --rl-episodes 5` and verify that checkpoints and visualizations are produced without exceptions. Add future tests under `tests/` using filenames like `test_dataset.py` or `test_env.py`.
+For code changes, run at least `python -m compileall main.py src tests` to catch syntax errors and `python -m unittest discover tests` for the existing unit tests. If the shell has no `python` command, use `.venv/bin/python -m compileall main.py src tests` and `.venv/bin/python -m unittest discover tests`. For training or inference changes, run a small smoke test such as `python main.py --train --gcn-epochs 1 --rl-episodes 5` and verify that checkpoints and visualizations are produced without exceptions. Add future tests under `tests/` using filenames like `test_dataset.py` or `test_env.py`.
 
 ## Commit & Pull Request Guidelines
 

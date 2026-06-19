@@ -13,6 +13,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 EDGE_FEATURE_DIM = 11
+FEATURE_SCHEMA_VERSION = 3
 SENTENCE_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # Ensure WordNet is downloaded
@@ -128,6 +129,20 @@ class FeatureExtractor:
             self.clue_sim_cache[key] = 0.0
             return 0.0
 
+        try:
+            idx1 = self.clue_words_index_map[w1_clean]
+            idx2 = self.clue_words_index_map[w2_clean]
+
+            vec1 = self.tfidf_matrix[idx1]
+            vec2 = self.tfidf_matrix[idx2]
+
+            sim = float(vec1.dot(vec2.T).toarray()[0][0])
+            self.clue_sim_cache[key] = sim
+            return sim
+        except Exception:
+            self.clue_sim_cache[key] = 0.0
+            return 0.0
+
     def get_sentence_embeddings(self, words: List[str]) -> Dict[str, np.ndarray]:
         """Return normalized sentence-transformer embeddings for board words when available."""
         missing_words = []
@@ -178,21 +193,6 @@ class FeatureExtractor:
             return 0.0
         # Embeddings are normalized, so dot product equals cosine similarity.
         return float(np.clip(np.dot(emb1, emb2), -1.0, 1.0))
-            
-        try:
-            idx1 = self.clue_words_index_map[w1_clean]
-            idx2 = self.clue_words_index_map[w2_clean]
-            
-            vec1 = self.tfidf_matrix[idx1]
-            vec2 = self.tfidf_matrix[idx2]
-            
-            # Efficient dot product for sparse TF-IDF rows
-            sim = float(vec1.dot(vec2.T).toarray()[0][0])
-            self.clue_sim_cache[key] = sim
-            return sim
-        except Exception:
-            self.clue_sim_cache[key] = 0.0
-            return 0.0
 
     def __del__(self):
         if hasattr(self, 'db_conn') and self.db_conn is not None:

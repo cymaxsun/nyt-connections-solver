@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from typing import List, Dict, Any
 from src.dataset import load_dataset, ConnectionsPuzzle
-from src.features import EDGE_FEATURE_DIM, FeatureExtractor
+from src.features import EDGE_FEATURE_DIM, FEATURE_SCHEMA_VERSION, FeatureExtractor
 from src.gcn import ConnectionsGCN, build_gcn_model, train_gcn_epoch, validate_gcn
 from src.rl_agent import CANDIDATE_FEATURE_DIM, DQNAgent, train_rl_episodes
 from src.env import ConnectionsEnv
@@ -39,9 +39,10 @@ def train_pipeline(
         from src.dataset import load_preprocessed_dataset
         print(f"Loading preprocessed graphs from {preprocessed_path}...")
         train_puzzles, val_puzzles, test_puzzles = load_preprocessed_dataset(preprocessed_path)
-        if not _preprocessed_matches_edge_dim(train_puzzles + val_puzzles + test_puzzles):
+        if not _preprocessed_features_are_current(train_puzzles + val_puzzles + test_puzzles):
             print(
-                f"Preprocessed graphs are stale; expected {EDGE_FEATURE_DIM} edge features. "
+                "Preprocessed graphs are stale; expected feature schema "
+                f"{FEATURE_SCHEMA_VERSION} with {EDGE_FEATURE_DIM} edge features. "
                 "Loading raw dataset so features can be rebuilt."
             )
             train_puzzles, val_puzzles, test_puzzles = load_dataset(data_path)
@@ -386,12 +387,14 @@ def _candidate_summary_line(
         f"{', '.join(candidate_words):<65} | {status}{relation_str}"
     )
 
-def _preprocessed_matches_edge_dim(puzzles: list) -> bool:
+def _preprocessed_features_are_current(puzzles: list) -> bool:
     if not puzzles:
         return True
     first = puzzles[0]
     if not isinstance(first, dict) or "edge_features" not in first:
         return True
+    if first.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+        return False
     return first["edge_features"].shape[-1] == EDGE_FEATURE_DIM
 
 def _gcn_checkpoint_filename(backbone: str) -> str:

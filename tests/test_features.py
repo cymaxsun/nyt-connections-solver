@@ -1,4 +1,5 @@
 import unittest
+import tempfile
 
 import numpy as np
 
@@ -24,6 +25,32 @@ class FeatureExtractorTests(unittest.TestCase):
         self.assertEqual(edge_features.shape, (16, 16, EDGE_FEATURE_DIM))
         self.assertEqual(edge_features[0, 0, 10], 1.0)
         self.assertEqual(edge_features[0, 1, 10], 1.0)
+
+    def test_clue_similarity_uses_tfidf_descriptions(self):
+        with tempfile.TemporaryDirectory() as cache_dir:
+            extractor = FeatureExtractor(cache_dir=cache_dir)
+            extractor.clue_cache = {
+                "APPLE": "fruit tree orchard crisp",
+                "PEAR": "fruit tree orchard soft",
+                "HAMMER": "tool nail construction",
+            }
+            extractor._init_clue_tfidf()
+
+            similarity = extractor.get_clue_similarity("APPLE", "PEAR")
+
+            self.assertIsInstance(similarity, float)
+            self.assertGreater(similarity, 0.0)
+
+    def test_clue_similarity_returns_zero_for_missing_words(self):
+        with tempfile.TemporaryDirectory() as cache_dir:
+            extractor = FeatureExtractor(cache_dir=cache_dir)
+            extractor.clue_cache = {
+                "APPLE": "fruit tree orchard crisp",
+                "PEAR": "fruit tree orchard soft",
+            }
+            extractor._init_clue_tfidf()
+
+            self.assertEqual(extractor.get_clue_similarity("APPLE", "MISSING"), 0.0)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import os
 import json
 import time
 import requests
+import argparse
 from typing import List, Dict, Any
 
 # Define the 5 relation types
@@ -104,6 +105,11 @@ def get_deepseek_labels(batch: List[Dict[str, Any]], api_key: str) -> List[str]:
     raise RuntimeError("Failed to query DeepSeek API after 3 attempts.")
 
 def main():
+    parser = argparse.ArgumentParser(description="Label Connections categories using DeepSeek API.")
+    parser.add_argument("--limit-batches", type=int, default=0, help="Limit number of batches to run (0 for no limit).")
+    parser.add_argument("--batch-size", type=int, default=30, help="Batch size of groups per request.")
+    args = parser.parse_args()
+
     env = load_env()
     api_key = env.get("DEEPSEEK_API_KEY")
     if not api_key or api_key == "your_api_key_here":
@@ -146,9 +152,13 @@ def main():
         # Convert unique groups dictionary to a list for batching
         to_label = [{"key": k, "group": v["group"], "members": v["members"]} for k, v in unique_groups.items()]
         
-        batch_size = 30
-        for i in range(0, len(to_label), batch_size):
-            batch_slice = to_label[i:i+batch_size]
+        batches_run = 0
+        for i in range(0, len(to_label), args.batch_size):
+            if args.limit_batches > 0 and batches_run >= args.limit_batches:
+                print(f"Stopping after hitting the limit of {args.limit_batches} batch(es).")
+                break
+
+            batch_slice = to_label[i:i+args.batch_size]
             # Attach a temporary serial ID for tracking in LLM response
             batch_payload = []
             for idx, item in enumerate(batch_slice):
@@ -158,7 +168,7 @@ def main():
                     "members": item["members"]
                 })
 
-            print(f"Labeling batch {i//batch_size + 1}/{(len(to_label)-1)//batch_size + 1} ({len(batch_slice)} items)...")
+            print(f"Labeling batch {batches_run + 1}/{(len(to_label)-1)//args.batch_size + 1} ({len(batch_slice)} items)...")
             try:
                 labels = get_deepseek_labels(batch_payload, api_key)
                 for item, label in zip(batch_slice, labels):
@@ -168,6 +178,7 @@ def main():
                 with open(cache_path, "w") as f:
                     json.dump(cache, f, indent=4)
                 
+                batches_run += 1
                 time.sleep(0.5)  # Brief rate-limit buffer
             except Exception as e:
                 print(f"Error during labeling: {e}")
@@ -186,7 +197,7 @@ def main():
     with open(data_path, "w") as f:
         json.dump(puzzles, f, indent=4)
 
-    print(f"\nLabeling completed successfully!")
+    print(f"\nLabeling completed!")
     print(f"Updated {updated_count} groups in {data_path}.")
 
     # Print distribution stats

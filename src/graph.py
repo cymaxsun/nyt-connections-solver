@@ -3,6 +3,10 @@ import torch
 from typing import List, Dict, Tuple, Any
 from src.features import FeatureExtractor
 
+LENGTH_SIMILARITY_DIM = 9
+LENGTH_SIMILARITY_THRESHOLD = 0.90
+
+
 class ConnectionsGraph:
     """
     Representation of a single Connections puzzle graph.
@@ -64,9 +68,8 @@ class ConnectionsGraph:
             10: SentenceTransformer cosine similarity
         """
         adj = self.edge_features[:, :, dim_idx]
-        if dim_idx == 9:
-            # Invert length difference so similar lengths have high edge weights
-            adj = 1.0 - adj
+        if dim_idx == LENGTH_SIMILARITY_DIM:
+            adj = self._length_similarity_adjacency(adj)
         active_edges = torch.outer(self.active_node_mask, self.active_node_mask)
         adj = adj * self.adaptive_edge_weights * active_edges
         return adj
@@ -74,17 +77,44 @@ class ConnectionsGraph:
     def get_multi_relational_adjacency(self) -> torch.Tensor:
         """
         Returns a combined adjacency matrix by aggregating the multi-dimensional edge features.
-        Weights each dimension equally or returns a tensor of shape (num_dimensions, 16, 16).
+        Sparsifies continuous similarity matrices and row-normalizes node degrees to stabilize training.
         """
         # Shape: (num_nodes, num_nodes, num_edge_features)
         # We permute it to (num_edge_features, num_nodes, num_nodes) for multi-relational convolution
         adj = self.edge_features.permute(2, 0, 1).clone()
-        # Invert the length difference dimension (dimension 9)
-        adj[9] = 1.0 - adj[9]
+        
+        # Convert sparse length-difference signal to adjacency.
+        adj[LENGTH_SIMILARITY_DIM] = self._length_similarity_adjacency(
+            adj[LENGTH_SIMILARITY_DIM]
+        )
+        
+        # Apply sparsification thresholds to continuous edge features to reduce noise/oversmoothing
+        # Dim 0: WordNet path similarity (threshold 0.15)
+        adj[0] = torch.where(adj[0] >= 0.15, adj[0], torch.zeros_like(adj[0]))
+        # Dim 4: Clue description TF-IDF similarity (threshold 0.10)
+        adj[4] = torch.where(adj[4] >= 0.10, adj[4], torch.zeros_like(adj[4]))
+        # Dim 10: SentenceTransformer cosine similarity (threshold 0.25)
+        adj[10] = torch.where(adj[10] >= 0.25, adj[10], torch.zeros_like(adj[10]))
+        
+        # Apply adaptive game-state weights and active node mask
         adj = adj * self.adaptive_edge_weights.unsqueeze(0)
         active_edges = torch.outer(self.active_node_mask, self.active_node_mask)
         adj = adj * active_edges.unsqueeze(0)
+        
+        # Row-normalize each relationship channel to stabilize message propagation scales
+        row_sums = adj.sum(dim=2, keepdim=True)
+        adj = adj / (row_sums + 1e-8)
+        
         return adj
+
+    @staticmethod
+    def _length_similarity_adjacency(length_diff: torch.Tensor) -> torch.Tensor:
+        length_similarity = 1.0 - length_diff
+        return torch.where(
+            length_similarity >= LENGTH_SIMILARITY_THRESHOLD,
+            length_similarity,
+            torch.zeros_like(length_similarity),
+        )
 
     def update_edges_from_feedback(self, action_indices: tuple, feedback: str):
         """

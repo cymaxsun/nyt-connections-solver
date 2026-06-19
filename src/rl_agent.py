@@ -213,13 +213,15 @@ class DQNAgent:
             return int(torch.argmax(q_vals).item())
 
     def train_step(self, batch_size: int) -> Optional[float]:
-        """Runs a single training update step."""
+        """Runs a single training update step, accumulating gradients over the batch to avoid loop updates."""
         if len(self.buffer) < batch_size:
             return None
             
         samples = self.buffer.sample(batch_size)
         
+        self.optimizer.zero_grad()
         losses = []
+        
         for state, cand_feats, action_idx, reward, next_state, next_cand_feats, done in samples:
             # Map elements to tensors
             state_t = torch.tensor(state, dtype=torch.float32, device=self.device)
@@ -242,11 +244,13 @@ class DQNAgent:
                     target = reward_t + self.gamma * torch.max(next_q_vals)
                     
             loss = F.mse_loss(q_val, target)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
+            # Scale loss by batch_size to average gradients over the entire batch
+            scaled_loss = loss / batch_size
+            scaled_loss.backward()
             
             losses.append(loss.item())
+            
+        self.optimizer.step()
             
         # Decay epsilon
         self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
