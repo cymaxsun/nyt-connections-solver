@@ -1,4 +1,5 @@
 import os
+import shutil
 import torch
 import numpy as np
 from typing import List, Dict, Any
@@ -62,6 +63,7 @@ def train_pipeline(
     ).to(device)
     
     gcn_weights_path = os.path.join(model_dir, _gcn_checkpoint_filename())
+    previous_gcn_weights_path = os.path.join(model_dir, _gcn_previous_best_checkpoint_filename())
     
     if skip_gcn:
         print("\n--- Phase 1: Loading Pre-trained GCN (skipping training) ---")
@@ -77,6 +79,11 @@ def train_pipeline(
     else:
         print("\n--- Phase 1: Training GCN ---")
         gcn_optimizer = torch.optim.Adam(gcn.parameters(), lr=1e-3, weight_decay=1e-5)
+        _preserve_existing_artifact(gcn_weights_path, previous_gcn_weights_path)
+        _preserve_existing_artifact(
+            os.path.join("visualizations", "val_best.png"),
+            os.path.join("visualizations", "val_previous_best.png"),
+        )
         
         best_mrr = 0.0
         epochs_no_improve = 0
@@ -90,7 +97,10 @@ def train_pipeline(
             if val_mrr > best_mrr:
                 best_mrr = val_mrr
                 epochs_no_improve = 0
-                torch.save(gcn.state_dict(), gcn_weights_path)
+                _save_gcn_best_checkpoint(
+                    gcn.state_dict(),
+                    gcn_weights_path,
+                )
                 best_filepath = os.path.join("visualizations", "val_best.png")
                 _, _ = validate_gcn(
                     gcn, 
@@ -241,6 +251,8 @@ def update_validation_artifacts(
     """Refresh validation graph PNGs and candidate summary for the loaded GCN."""
     os.makedirs(output_dir, exist_ok=True)
     summary_path = os.path.join(output_dir, "candidates_summary.md")
+    previous_summary_path = os.path.join(output_dir, "candidates_previous_best_summary.md")
+    _preserve_existing_artifact(summary_path, previous_summary_path)
     gcn.eval()
 
     lines = [
@@ -283,12 +295,18 @@ def update_validation_artifacts(
             edge_probs_np = edge_probs.cpu().numpy()
 
             if idx < 5:
+                visualization_path = os.path.join(output_dir, f"val_puzzle_{puzzle_id}.png")
+                previous_visualization_path = os.path.join(
+                    output_dir,
+                    f"val_previous_best_puzzle_{puzzle_id}.png",
+                )
+                _preserve_existing_artifact(visualization_path, previous_visualization_path)
                 plot_connections_graph(
                     words,
                     edge_probs_np,
                     true_categories=true_cats,
                     threshold=0.45,
-                    filepath=os.path.join(output_dir, f"val_puzzle_{puzzle_id}.png"),
+                    filepath=visualization_path,
                     title=f"GCN Edge Predictions - Puzzle {puzzle_id}",
                     relation_logits=relation_logits.cpu().numpy()
                 )
@@ -397,6 +415,20 @@ def _preprocessed_features_are_current(puzzles: list) -> bool:
 
 def _gcn_checkpoint_filename() -> str:
     return "gcn_best.pt"
+
+def _gcn_previous_best_checkpoint_filename() -> str:
+    return "gcn_previous_best.pt"
+
+def _save_gcn_best_checkpoint(
+    state_dict: Dict[str, torch.Tensor],
+    best_path: str,
+) -> None:
+    torch.save(state_dict, best_path)
+
+def _preserve_existing_artifact(current_path: str, previous_path: str) -> None:
+    if os.path.exists(current_path):
+        os.makedirs(os.path.dirname(previous_path), exist_ok=True)
+        shutil.copy2(current_path, previous_path)
 
 def _gcn_checkpoint_matches_model(state_dict: Dict[str, torch.Tensor]) -> bool:
     rel_weights = state_dict.get("gcn1.W_rel")
