@@ -301,7 +301,7 @@ def train_rl_episodes(
             # Re-run GCN on the (potentially updated) graph each step
             with torch.no_grad():
                 node_embeddings, edge_probs, _ = gcn_model(
-                    graph.node_features, graph.get_multi_relational_adjacency()
+                    graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features
                 )
                 candidates = graph.filter_candidates(gcn_model.get_candidate_subgraphs(edge_probs))
                 action_candidates = agent.get_partition_action_candidates(
@@ -326,7 +326,7 @@ def train_rl_episodes(
             # Re-run GCN for next-state candidate features (with updated graph)
             with torch.no_grad():
                 next_node_embeddings, next_edge_probs, _ = gcn_model(
-                    graph.node_features, graph.get_multi_relational_adjacency()
+                    graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features
                 )
                 next_candidates = graph.filter_candidates(gcn_model.get_candidate_subgraphs(next_edge_probs))
                 next_action_candidates = agent.get_partition_action_candidates(

@@ -36,6 +36,10 @@ Retrain only the RL agent from an existing GCN checkpoint with `python main.py -
 
 Use Python 3 with 4-space indentation, descriptive snake_case names for functions and variables, and PascalCase for classes such as `ConnectionsGraph` and `DQNAgent`. Keep modules focused on one responsibility and prefer explicit imports from `src.*`. Follow the existing style: type hints for public helpers, short docstrings for major pipeline functions, and concise comments only where the model or training logic is non-obvious.
 
+## Model Development Timeline
+
+Periodically update `model_development_timeline.md` when making significant model, feature, training, evaluation, or data pipeline changes. Add concise milestone notes for architectural changes, measurable performance improvements or regressions, feature schema/cache changes, training stability fixes, new baselines, and refreshed model artifacts. Include relevant metrics, dataset scope, command details, and affected files when they help future contributors understand why the model behavior changed.
+
 ## Testing Guidelines
 
 For code changes, run at least `python -m compileall main.py src tests` to catch syntax errors and `python -m unittest discover tests` for the existing unit tests. If the shell has no `python` command, use `.venv/bin/python -m compileall main.py src tests` and `.venv/bin/python -m unittest discover tests`. For training or inference changes, run a small smoke test such as `python main.py --train --gcn-epochs 1 --rl-episodes 5` and verify that checkpoints and visualizations are produced without exceptions. Add future tests under `tests/` using filenames like `test_dataset.py` or `test_env.py`.

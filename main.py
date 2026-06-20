@@ -11,6 +11,7 @@ from src.rl_agent import CANDIDATE_FEATURE_DIM, DQNAgent
 from src.env import ConnectionsEnv
 from src.visualize import plot_connections_graph
 from src.train import train_pipeline
+from src.relation_archetypes import NUM_RELATION_ARCHETYPES
 
 def auto_device() -> str:
     if torch.cuda.is_available():
@@ -44,10 +45,11 @@ def solve_custom_board(
         return
         
     extractor = FeatureExtractor()
+    graph = ConnectionsGraph(words, extractor, device=device)
     
     # Load Models
     gcn = build_gcn_model(
-        in_features=7,
+        in_features=graph.node_features.shape[1],
         hidden_features=32,
         out_features=16,
         num_relations=EDGE_FEATURE_DIM,
@@ -74,11 +76,9 @@ def solve_custom_board(
     agent.q_net.eval()
     agent.epsilon = 0.0 # pure greedy
     
-    graph = ConnectionsGraph(words, extractor, device=device)
-
     # Run initial GCN inference for visualization
     with torch.no_grad():
-        node_embeddings, edge_probs, _ = gcn(graph.node_features, graph.get_multi_relational_adjacency())
+        node_embeddings, edge_probs, _ = gcn(graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features)
         
     # Visualize the initial graph
     viz_path = os.path.join("visualizations", "custom_board_clusters.png")
@@ -110,7 +110,7 @@ def solve_custom_board(
         # Re-run GCN on the feedback-adapted graph before each guess
         with torch.no_grad():
             node_embeddings, edge_probs, _ = gcn(
-                graph.node_features, graph.get_multi_relational_adjacency()
+                graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features
             )
             candidates = graph.filter_candidates(gcn.get_candidate_subgraphs(edge_probs))
             action_candidates = agent.get_partition_action_candidates(
@@ -205,13 +205,15 @@ def _gcn_checkpoint_filename() -> str:
 def _is_gcn_checkpoint_compatible(state_dict: dict) -> bool:
     rel_weights = state_dict.get("gcn1.W_rel")
     relation_head = state_dict.get("relation_score_net.2.weight")
+    input_proj = state_dict.get("input_proj.weight")
     
-    # Expect the new 5-class relation score net to be present
+    # Expect the current relation score net and input projection layer to be present.
     return (
         rel_weights is not None
         and rel_weights.shape[0] == EDGE_FEATURE_DIM
         and relation_head is not None
-        and relation_head.shape[0] == 5
+        and relation_head.shape[0] == NUM_RELATION_ARCHETYPES
+        and input_proj is not None
     )
 
 if __name__ == "__main__":

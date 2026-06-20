@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 from typing import List, Optional
+from src.relation_archetypes import RELATION_ARCHETYPES
 
 def plot_connections_graph(
     words: List[str],
@@ -23,7 +24,7 @@ def plot_connections_graph(
         threshold: Edge weight threshold below which edges are not drawn.
         filepath: Filepath to save the figure. If directory doesn't exist, it will be created.
         title: Title of the plot.
-        relation_logits: Optional 16x16x5 numpy array of predicted relation type logits.
+        relation_logits: Optional 16x16x6 numpy array of predicted relation type logits.
     """
     n = len(words)
     assert n == 16, "Graph must have exactly 16 nodes."
@@ -96,18 +97,16 @@ def plot_connections_graph(
         
         # Color palette for predicted relation types
         archetype_colors = {
-            0: "#708090", # SYNONYM -> Slate Gray
-            1: "#E74C3C", # WORDPLAY -> Red
-            2: "#E67E22", # PHRASE_COMPLETION -> Orange
-            3: "#2ECC71", # TRIVIA_ENCYCLOPEDIC -> Emerald Green
-            4: "#3498DB"  # MORPHOLOGY -> Sky Blue
+            0: "#B0B0B0", # NO_RELATION -> Neutral Gray
+            1: "#708090", # SYNONYM -> Slate Gray
+            2: "#E74C3C", # WORDPLAY -> Red
+            3: "#E67E22", # PHRASE_COMPLETION -> Orange
+            4: "#2ECC71", # TRIVIA_ENCYCLOPEDIC -> Emerald Green
+            5: "#3498DB"  # MORPHOLOGY -> Sky Blue
         }
         archetype_labels = {
-            0: "Synonym",
-            1: "Wordplay",
-            2: "Phrase Completion",
-            3: "Trivia/Encyclopedic",
-            4: "Morphology"
+            idx: name.replace("_", " ").title()
+            for idx, name in enumerate(RELATION_ARCHETYPES)
         }
         drawn_types = set()
         

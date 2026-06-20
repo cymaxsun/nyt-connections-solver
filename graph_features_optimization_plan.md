@@ -121,19 +121,60 @@ Smoke benchmark: a 1-epoch in-memory run on 32 train puzzles and 8 validation pu
 
 Full retraining should still compare candidate recall@k, true-group MRR, and partition quality. Do not decide from BCE loss alone.
 
-## Open Issues To Fix Next
-
 ### Relation Archetype Head Has No Negative Class
 
-**Status:** Open.  
+**Status:** Resolved.  
 **Severity:** P1 - Model-quality risk.  
-**Main file:** [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py).
+**Main files:** [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py), [src/relation_archetypes.py](file:///Users/maxsun/projects/connections/src/relation_archetypes.py), [src/visualize.py](file:///Users/maxsun/projects/connections/src/visualize.py), [src/evaluate_archetypes.py](file:///Users/maxsun/projects/connections/src/evaluate_archetypes.py), [tests/test_gcn_scoring.py](file:///Users/maxsun/projects/connections/tests/test_gcn_scoring.py).
 
 The auxiliary relation-type head is trained only on true positive edges. It learns labels such as `SYNONYM`, `WORDPLAY`, and `TRIVIA_ENCYCLOPEDIC`, but it never learns “these two words are not related.”
 
 Why this matters: the visualizer can show confident relation labels for bad candidate groups. That can mislead debugging because the label may look meaningful even when the pair should have been rejected.
 
-Recommended fix: either keep this head strictly auxiliary, or add a `NO_RELATION` class and train it on negative edges. If used in explanations, gate relation labels by edge probability.
+What changed: relation archetypes now live in one shared module and include `NO_RELATION` as class `0`. GCN relation logits widened from 5 to 6 outputs. Training and validation label every off-diagonal cross-category pair as `NO_RELATION` and still ignore only the diagonal. Visualization and candidate summaries use the shared label list, so bad or uncertain groups can surface `NO_RELATION` instead of forcing a positive archetype.
+
+Existing GCN checkpoints with a five-class relation head are architecture-stale and will be rejected by checkpoint compatibility checks. Retrain before using solve or validation artifact generation.
+
+### GCN Training Used Only Pairwise Edge Loss
+
+**Status:** Resolved as a first groupwise-training pass.  
+**Severity:** P1 - Model-quality risk.  
+**Main files:** [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py), [tests/test_gcn_scoring.py](file:///Users/maxsun/projects/connections/tests/test_gcn_scoring.py).
+
+The GCN was trained to predict whether each pair of words belongs together, but candidate generation ranks 4-word groups. Pairwise BCE is a useful local signal, but it does not directly push exact quartets above near-miss groups.
+
+What changed: GCN train and validation loss now include a groupwise margin-ranking term. The model learns pairwise edges, scores all 1,820 candidate 4-word groups, and pushes the four true groups above the highest-scoring false groups by a margin. This uses the same penalized group scorer used during candidate generation.
+
+Follow-up comparison: relation-archetype classification loss is currently weighted at `0.0` so it does not influence GCN training. This isolates whether pairwise-plus-groupwise training improves candidate ranking without the auxiliary relation objective.
+
+Benchmark note: this changes the training objective but not tensor shapes. Retrain before comparing candidate recall@k, true-group MRR, and partition quality against earlier pairwise-only runs.
+
+## Open Issues To Fix Next
+
+### GCN Representation Collapse & Embedding Oversmoothing
+
+**Status:** Open (Diagnosis complete).  
+**Severity:** P1 - Model-quality risk (Critical).  
+**Main files:** [src/gcn.py](file:///Users/maxsun/projects/connections/src/gcn.py), [src/candidate_scoring.py](file:///Users/maxsun/projects/connections/src/candidate_scoring.py).
+
+**Why this mattered:**  
+When `GROUPWISE_LOSS_WEIGHT` was increased from `0.5` to `1.0` in Phase 6, GCN candidate ranking performance collapsed. On validation puzzles, the Validation MRR dropped to `0.0395` (down from the previous best of `0.0967` and the raw feature baseline of `0.1458`).
+
+Diagnostic analysis of the saved model weights and inference embeddings revealed that:
+1. **Oversmoothing**: The GCN's final node embeddings became completely identical to each other, with a mean pairwise cosine similarity of **`0.991464`** (minimum `0.967473`).
+2. **Probability Collapse**: Because the node embeddings were identical, the pairwise edge scoring head received identical inputs for all pairs. This forced all edge probabilities to collapse to exactly **`0.5001 ± 0.0001`**, rendering GCN predictions completely flat and non-informative.
+
+**Root Causes:**
+* **The Hinge Loss "Shortcut"**: GCN ranking is trained using a margin hinge loss: `F.relu(margin - true_scores + hard_negative_scores)`. A model that tries to learn features but makes mistakes yields a high loss (`~0.4 - 0.5`). However, if the GCN collapses all node embeddings to be identical, then every group (true and negative) gets the exact same score. The hinge loss immediately drops to exactly `margin = 0.05`! This makes the collapsed state a powerful local attractor (minimum) that the model easily falls into. Once collapsed, any attempt to diverge node embeddings creates variance, raising the loss back up, trapping the model.
+* **Spread Penalty Gradient Contradiction**: The candidate scoring function uses `mean - 0.25 * (max - min)`. Backpropagating the spread penalty during GCN training causes bad gradients: for true groups, the gradient pushes the maximum edge down and minimum up (equalizing them). For negative groups, the gradient pushes the maximum edge **up** to maximize spread (which actively trains false links to have high probability!). These forces conflict across the 1820 combinations and result in a collapsed flat representation.
+* **Scale and Gradient Overwhelm**: While BCE gradients shrink to 0 as the model predicts correctly, the ranking hinge loss maintains a constant gradient magnitude as long as any margin violation exists. At weight `1.0`, these constant ranking gradients completely overwhelm the shrinking BCE gradients, forcing the model to collapse.
+* **Metadata Bottleneck**: The GCN only receives 7 non-semantic metadata node features (e.g., word length, plural suffix), while throwing away the 12 rich semantic/lexical edge similarities. Bottlenecking all information through 16-dimensional node embeddings makes it very hard to learn, further incentivizing the model to take the collapse shortcut.
+
+**Recommended fixes:**
+1. **Training Score Simplification**: Compute `groupwise_ranking_loss` using the raw **mean** of the 6 edges in the group, bypassing the spread penalty during training (but keeping it for validation/inference). This removes the gradient contradictions.
+2. **Smooth Ranking Loss**: Replace the hard ReLU hinge loss with a soft margin loss (`F.softplus(margin - true_scores + negative_scores)`) so that gradients naturally scale down as the margin violation decreases.
+3. **Lower Ranking Weight**: Scale down `GROUPWISE_LOSS_WEIGHT` to `0.1` or `0.2` to balance it with BCE.
+4. **Edge-Conditioned Scoring**: Concatenate the raw edge features directly with the node embeddings in the edge scoring head: `edge_input = torch.cat([h_exp1, h_exp2, raw_edge_features], dim=-1)` so the model doesn't throw away the 12 semantic similarities.
 
 ### Caches Are Saved Mainly By Preprocessing
 
@@ -143,7 +184,7 @@ Recommended fix: either keep this head strictly auxiliary, or add a `NO_RELATION
 
 WordNet and sentence embedding caches are saved at the end of preprocessing. Interactive solving and raw-data training can still compute features on the fly.
 
-Why this matters: if a run computes many features and then exits before preprocessing saves caches, later runs may repeat slow work. That makes experiments slower and less reproducible.
+Why this mattered: if a run computes many features and then exits before preprocessing saves caches, later runs may repeat slow work. That makes experiments slower and less reproducible.
 
 Recommended fix: add an explicit `FeatureExtractor.save_caches()` method and call it from training, preprocessing, and CLI solve paths. Prefer explicit lifecycle management over relying on `__del__`.
 
@@ -192,7 +233,11 @@ Phrase-completion groups often connect words because all four share a hidden pre
 - [x] Add a raw preprocessed graph candidate baseline.
 - [x] Benchmark diagonal relation adjacency versus relying on `W_self`.
 - [x] Replace or supplement arithmetic-mean group scoring.
-- [ ] Decide whether the relation archetype head needs a `NO_RELATION` class.
+- [x] Add a `NO_RELATION` class to the relation archetype head.
+- [x] Add groupwise ranking loss to GCN training.
+- [ ] Fix GCN collapse by using mean-only groupwise loss during training.
+- [ ] Replace ReLU hinge loss with softplus smooth ranking loss in GCN training.
+- [ ] Add raw edge features to the GCN edge scoring head to bypass the metadata bottleneck.
 - [ ] Add explicit cache-saving lifecycle methods.
 - [ ] Add orthographic, phonetic, and collocation feature dimensions.
 - [ ] Re-run full preprocessing after the next feature-schema bump.
@@ -200,4 +245,4 @@ Phrase-completion groups often connect words because all four share a hidden pre
 
 ## Current Experiment Takeaway
 
-The raw preprocessed graph baseline is the best current candidate-generation signal in the smoke tests. The relational GCN loss improves with more epochs, but candidate MRR stays far below the raw scorer on the same 40-puzzle subset. The next model work should optimize group ranking or partition ranking directly instead of relying only on pairwise BCE loss.
+The raw preprocessed graph baseline is the best current candidate-generation signal. Relational GCN training has suffered from representation collapse and embedding oversmoothing when groupwise ranking loss is heavily weighted (`GROUPWISE_LOSS_WEIGHT = 1.0` or `0.5`). This is caused by the model taking a "collapse shortcut" to minimize hinge loss and gradient conflicts from the spread penalty. The next development phase must implement training score simplification (mean-only ranking loss), smooth softplus loss, and edge-conditioned scoring before retraining and comparing GCN candidates against the raw baseline.

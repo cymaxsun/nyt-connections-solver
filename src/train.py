@@ -11,6 +11,7 @@ from src.env import ConnectionsEnv
 from src.graph import ConnectionsGraph
 from src.visualize import plot_connections_graph
 from src.candidates import build_partition_candidates, partition_groups_for_actions
+from src.relation_archetypes import NUM_RELATION_ARCHETYPES, RELATION_ARCHETYPES
 
 def train_pipeline(
     data_path: str,
@@ -54,9 +55,21 @@ def train_pipeline(
     # Initialize feature extractor
     extractor = FeatureExtractor()
     
+    # Determine in_features dynamically
+    if len(train_puzzles) > 0:
+        first_puzzle = train_puzzles[0]
+        if isinstance(first_puzzle, dict) and "node_features" in first_puzzle:
+            in_features = first_puzzle["node_features"].shape[1]
+        else:
+            dummy_words = ["CAT"] * 16
+            dummy_graph = ConnectionsGraph(dummy_words, extractor, device=device)
+            in_features = dummy_graph.node_features.shape[1]
+    else:
+        in_features = 775
+        
     # 2. Train or Load GCN
     gcn = build_gcn_model(
-        in_features=7, # node features count
+        in_features=in_features,
         hidden_features=32,
         out_features=16,
         num_relations=EDGE_FEATURE_DIM # edge features count
@@ -208,7 +221,7 @@ def evaluate_system(gcn: ConnectionsGCN, agent: DQNAgent, test_puzzles: List[Con
             # Re-run GCN on the (potentially updated) graph each step
             with torch.no_grad():
                 node_embeddings, edge_probs, _ = gcn(
-                    graph.node_features, graph.get_multi_relational_adjacency()
+                    graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features
                 )
                 candidates = graph.filter_candidates(gcn.get_candidate_subgraphs(edge_probs))
                 action_candidates = agent.get_partition_action_candidates(
@@ -286,7 +299,7 @@ def update_validation_artifacts(
             else:
                 graph = ConnectionsGraph(words, extractor, device=device)
 
-            node_embeddings, edge_probs, relation_logits = gcn(graph.node_features, graph.get_multi_relational_adjacency())
+            node_embeddings, edge_probs, relation_logits = gcn(graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features)
             candidates = gcn.get_candidate_subgraphs(edge_probs)
             active_mask = np.ones(16, dtype=np.float32)
             partitions = build_partition_candidates(candidates, active_mask, top_n=200)
@@ -395,8 +408,8 @@ def _candidate_summary_line(
         pred_idx = torch.argmax(avg_probs).item()
         confidence = avg_probs[pred_idx].item()
         
-        archetypes = ["SYNONYM", "WORDPLAY", "PHRASE_COMPLETION", "TRIVIA_ENCYCLOPEDIC", "MORPHOLOGY"]
-        relation_str = f" | [Pred Type: {archetypes[pred_idx]} ({confidence:.1%})]"
+        relation_name = RELATION_ARCHETYPES[pred_idx]
+        relation_str = f" | [Pred Type: {relation_name} ({confidence:.1%})]"
         
     return (
         f"   - Group {group_idx}: **{candidate.group_score:.4f}** | "
@@ -433,11 +446,13 @@ def _preserve_existing_artifact(current_path: str, previous_path: str) -> None:
 def _gcn_checkpoint_matches_model(state_dict: Dict[str, torch.Tensor]) -> bool:
     rel_weights = state_dict.get("gcn1.W_rel")
     relation_head = state_dict.get("relation_score_net.2.weight")
+    input_proj = state_dict.get("input_proj.weight")
     return (
         rel_weights is not None
         and rel_weights.shape[0] == EDGE_FEATURE_DIM
         and relation_head is not None
-        and relation_head.shape[0] == 5
+        and relation_head.shape[0] == NUM_RELATION_ARCHETYPES
+        and input_proj is not None
     )
 
 def _candidate_status(candidate_words: List[str], word_to_cat: Dict[str, Dict[str, Any]]) -> str:

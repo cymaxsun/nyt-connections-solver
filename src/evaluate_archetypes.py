@@ -1,11 +1,15 @@
 import os
 import torch
-import torch.nn.functional as F
 import numpy as np
 from src.dataset import load_preprocessed_dataset
-from src.gcn import build_gcn_model
+from src.gcn import build_gcn_model, build_relation_targets
 from src.features import FeatureExtractor, EDGE_FEATURE_DIM
 from src.graph import ConnectionsGraph
+from src.relation_archetypes import (
+    NO_RELATION_IDX,
+    RELATION_ARCHETYPE_TO_IDX,
+    RELATION_ARCHETYPES,
+)
 
 def main():
     import argparse
@@ -31,27 +35,18 @@ def main():
     extractor = FeatureExtractor()
     
     print(f"Loading GCN model from {model_path}...")
-    model = build_gcn_model(in_features=7, hidden_features=32, out_features=16, num_relations=EDGE_FEATURE_DIM)
+    in_features = val_puzzles[0]["node_features"].shape[1] if len(val_puzzles) > 0 else 775
+    model = build_gcn_model(in_features=in_features, hidden_features=32, out_features=16, num_relations=EDGE_FEATURE_DIM)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
-    
-    archetype_map = {
-        0: "SYNONYM",
-        1: "WORDPLAY",
-        2: "PHRASE_COMPLETION",
-        3: "TRIVIA_ENCYCLOPEDIC",
-        4: "MORPHOLOGY"
-    }
-    
-    archetype_to_idx = {v: k for k, v in archetype_map.items()}
     
     # Track statistics
     overall_correct = 0
     overall_total = 0
-    by_archetype_correct = {i: 0 for i in range(5)}
-    by_archetype_total = {i: 0 for i in range(5)}
+    by_archetype_correct = {i: 0 for i in range(len(RELATION_ARCHETYPES))}
+    by_archetype_total = {i: 0 for i in range(len(RELATION_ARCHETYPES))}
     
-    mrr_by_archetype = {i: [] for i in range(5)}
+    mrr_by_archetype = {i: [] for i in range(len(RELATION_ARCHETYPES))}
     
     with torch.no_grad():
         for puzzle in val_puzzles:
@@ -61,23 +56,19 @@ def main():
                 node_features=puzzle["node_features"], 
                 edge_features=puzzle["edge_features"]
             )
-            adj_true = torch.tensor(puzzle["adj"], dtype=torch.float32, device=device)
             words = puzzle["words"]
             word_to_cat = puzzle["word_to_cat"]
             
-            _, edge_probs, relation_logits = model(graph.node_features, graph.get_multi_relational_adjacency())
+            _, edge_probs, relation_logits = model(graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features)
             
-            # 1. Evaluate auxiliary relation classification accuracy (only on true positive edges)
+            # 1. Evaluate auxiliary relation classification accuracy on positives and negatives.
+            relation_true = build_relation_targets(words, word_to_cat, device)
             for i in range(16):
                 for j in range(16):
-                    if i == j or adj_true[i, j] == 0:
+                    true_idx = int(relation_true[i, j].item())
+                    if true_idx == -100:
                         continue
-                    
-                    w_i = words[i]
-                    w_i_cat = word_to_cat[w_i] if isinstance(word_to_cat, dict) else word_to_cat.get(w_i)
-                    rtype = w_i_cat.get("relation_type", "SYNONYM")
-                    true_idx = archetype_to_idx.get(rtype, 0)
-                    
+
                     logits = relation_logits[i, j]
                     pred_idx = torch.argmax(logits).item()
                     
@@ -104,7 +95,10 @@ def main():
                 first_word = words[indices[0]]
                 first_word_cat = word_to_cat[first_word] if isinstance(word_to_cat, dict) else word_to_cat.get(first_word)
                 rtype = first_word_cat.get("relation_type", "SYNONYM")
-                rtype_idx = archetype_to_idx.get(rtype, 0)
+                rtype_idx = RELATION_ARCHETYPE_TO_IDX.get(
+                    rtype,
+                    RELATION_ARCHETYPE_TO_IDX["SYNONYM"],
+                )
                 
                 match_mask = (c == tc).all(dim=1)
                 true_score = scores[match_mask][0]
@@ -117,9 +111,9 @@ def main():
     
     # 1. Print Relation Classification Accuracy
     overall_acc = overall_correct / overall_total if overall_total > 0 else 0
-    print(f"Overall Relation Type Accuracy (on positive edges): {overall_acc:.2%} ({overall_correct}/{overall_total})")
+    print(f"Overall Relation Type Accuracy (non-diagonal edges): {overall_acc:.2%} ({overall_correct}/{overall_total})")
     print("\nAccuracy per Relation Archetype:")
-    for idx, name in archetype_map.items():
+    for idx, name in enumerate(RELATION_ARCHETYPES):
         total = by_archetype_total[idx]
         correct = by_archetype_correct[idx]
         acc = correct / total if total > 0 else 0.0
@@ -127,7 +121,9 @@ def main():
         
     # 2. Print MRR per Archetype
     print("\nMean Reciprocal Rank (MRR) per Relation Archetype:")
-    for idx, name in archetype_map.items():
+    for idx, name in enumerate(RELATION_ARCHETYPES):
+        if idx == NO_RELATION_IDX:
+            continue
         mrrs = mrr_by_archetype[idx]
         mean_mrr = np.mean(mrrs) if mrrs else 0.0
         print(f" - {name:<20}: {mean_mrr:.4f} (count: {len(mrrs)})")

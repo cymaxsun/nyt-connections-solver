@@ -13,7 +13,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 EDGE_FEATURE_DIM = 12
-FEATURE_SCHEMA_VERSION = 4
+FEATURE_SCHEMA_VERSION = 5
 SENTENCE_EMBEDDING_MODEL = "sentence-transformers/all-mpnet-base-v2"
 
 # Ensure WordNet is downloaded
@@ -495,15 +495,25 @@ class FeatureExtractor:
         n = len(words)
         assert n == 16, "A Connections board must contain exactly 16 words."
         
-        # 1. Node features
-        node_feats = []
-        for w in words:
-            node_feats.append(self.get_word_node_features(w))
-        node_features = np.array(node_feats, dtype=np.float32)
-        
         # 2. Pre-fetch board-level semantic resources to save repeated calls
         cn_relations = {w: self.query_conceptnet(w) for w in words}
         sentence_embeddings = self.get_sentence_embeddings(words)
+
+        # 1. Node features (metadata + sentence embeddings)
+        # Determine sentence embedding dimensions dynamically (default to 768)
+        emb_dim = 768
+        for emb in sentence_embeddings.values():
+            emb_dim = emb.shape[0]
+            break
+
+        node_feats = []
+        for w in words:
+            meta_feats = self.get_word_node_features(w)
+            w_clean = w.strip().upper()
+            embedding = sentence_embeddings.get(w_clean, np.zeros(emb_dim, dtype=np.float32))
+            combined_feats = meta_feats + embedding.tolist()
+            node_feats.append(combined_feats)
+        node_features = np.array(node_feats, dtype=np.float32)
         
         # 3. Edge features
         # Edge dimensions:

@@ -21,7 +21,7 @@ class FeatureExtractorTests(unittest.TestCase):
         words = [f"WORD{i}" for i in range(16)]
         node_features, edge_features = extractor.build_graph_matrices(words)
 
-        self.assertEqual(node_features.shape, (16, 7))
+        self.assertEqual(node_features.shape, (16, 9))
         self.assertEqual(edge_features.shape, (16, 16, EDGE_FEATURE_DIM))
         self.assertEqual(edge_features[0, 0, 10], 1.0)
         self.assertEqual(edge_features[0, 1, 10], 1.0)
@@ -44,7 +44,7 @@ class FeatureExtractorTests(unittest.TestCase):
         words = ["CAT", "CATS"] + [f"WORD{i}" for i in range(14)]
         node_features, edge_features = extractor.build_graph_matrices(words)
 
-        self.assertEqual(node_features.shape, (16, 7))
+        self.assertEqual(node_features.shape, (16, 775))
         self.assertEqual(edge_features.shape, (16, 16, EDGE_FEATURE_DIM))
         self.assertEqual(edge_features[0, 0, 11], 0.0)
         self.assertEqual(edge_features[0, 1, 11], 0.25)
