@@ -5,6 +5,8 @@ from src.features import FeatureExtractor
 
 LENGTH_SIMILARITY_DIM = 9
 LENGTH_SIMILARITY_THRESHOLD = 0.90
+LEVENSHTEIN_DISTANCE_DIM = 11
+LEVENSHTEIN_SIMILARITY_THRESHOLD = 0.75
 
 
 class ConnectionsGraph:
@@ -66,10 +68,13 @@ class ConnectionsGraph:
             8: Is Substring
             9: Length difference (needs inversion to be adjacency)
             10: SentenceTransformer cosine similarity
+            11: Levenshtein distance (needs inversion to be adjacency)
         """
         adj = self.edge_features[:, :, dim_idx]
         if dim_idx == LENGTH_SIMILARITY_DIM:
             adj = self._length_similarity_adjacency(adj)
+        elif dim_idx == LEVENSHTEIN_DISTANCE_DIM:
+            adj = self._levenshtein_similarity_adjacency(adj)
         active_edges = torch.outer(self.active_node_mask, self.active_node_mask)
         adj = adj * self.adaptive_edge_weights * active_edges
         return adj
@@ -93,6 +98,9 @@ class ConnectionsGraph:
         # Convert sparse length-difference signal to adjacency.
         adj[LENGTH_SIMILARITY_DIM] = self._length_similarity_adjacency(
             adj[LENGTH_SIMILARITY_DIM]
+        )
+        adj[LEVENSHTEIN_DISTANCE_DIM] = self._levenshtein_similarity_adjacency(
+            adj[LEVENSHTEIN_DISTANCE_DIM]
         )
         
         # Apply sparsification thresholds to continuous edge features to reduce noise/oversmoothing
@@ -124,6 +132,15 @@ class ConnectionsGraph:
             length_similarity >= LENGTH_SIMILARITY_THRESHOLD,
             length_similarity,
             torch.zeros_like(length_similarity),
+        )
+
+    @staticmethod
+    def _levenshtein_similarity_adjacency(distance: torch.Tensor) -> torch.Tensor:
+        similarity = 1.0 - distance
+        return torch.where(
+            similarity >= LEVENSHTEIN_SIMILARITY_THRESHOLD,
+            similarity,
+            torch.zeros_like(similarity),
         )
 
     @staticmethod

@@ -12,8 +12,8 @@ from nltk.corpus import wordnet as wn
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-EDGE_FEATURE_DIM = 11
-FEATURE_SCHEMA_VERSION = 3
+EDGE_FEATURE_DIM = 12
+FEATURE_SCHEMA_VERSION = 4
 SENTENCE_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # Ensure WordNet is downloaded
@@ -419,14 +419,37 @@ class FeatureExtractor:
         # 5. Length ratio/difference
         len_diff = abs(len(w1_clean) - len(w2_clean))
         norm_len_diff = len_diff / max(1, max(len(w1_clean), len(w2_clean)))
+        norm_levenshtein_distance = self._normalized_levenshtein_distance(
+            w1_clean, w2_clean
+        )
         
         return {
             "is_anagram": is_anagram,
             "shared_prefix": shared_prefix,
             "shared_suffix": shared_suffix,
             "is_substring": is_substring,
-            "len_diff": norm_len_diff
+            "len_diff": norm_len_diff,
+            "levenshtein_distance": norm_levenshtein_distance
         }
+
+    @staticmethod
+    def _normalized_levenshtein_distance(w1: str, w2: str) -> float:
+        """Return edit distance normalized by the longer word length."""
+        if w1 == w2:
+            return 0.0
+
+        previous_row = list(range(len(w2) + 1))
+        for i, c1 in enumerate(w1, start=1):
+            current_row = [i]
+            for j, c2 in enumerate(w2, start=1):
+                insertions = previous_row[j] + 1
+                deletions = current_row[j - 1] + 1
+                substitutions = previous_row[j - 1] + (c1 != c2)
+                current_row.append(min(insertions, deletions, substitutions))
+            previous_row = current_row
+
+        distance = previous_row[-1]
+        return distance / max(1, max(len(w1), len(w2)))
 
     def get_word_node_features(self, w: str) -> List[float]:
         """Compute independent metadata features for a single word."""
@@ -495,6 +518,7 @@ class FeatureExtractor:
         # 8: Is Substring
         # 9: Length difference
         # 10: SentenceTransformer cosine similarity
+        # 11: Levenshtein distance
         num_edge_feats = EDGE_FEATURE_DIM
         edge_features = np.zeros((n, n, num_edge_feats), dtype=np.float32)
         
@@ -535,6 +559,7 @@ class FeatureExtractor:
                 edge_features[i, j, 10] = self.get_sentence_embedding_similarity(
                     w_i, w_j, sentence_embeddings
                 )
+                edge_features[i, j, 11] = wp["levenshtein_distance"]
                 
         return node_features, edge_features
 

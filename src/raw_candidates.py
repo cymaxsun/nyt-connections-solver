@@ -12,7 +12,12 @@ from src.candidate_scoring import score_group_pair_values
 from src.candidates import PartitionCandidate, build_partition_candidates
 from src.dataset import load_preprocessed_dataset
 from src.features import EDGE_FEATURE_DIM
-from src.graph import LENGTH_SIMILARITY_DIM, LENGTH_SIMILARITY_THRESHOLD
+from src.graph import (
+    LENGTH_SIMILARITY_DIM,
+    LENGTH_SIMILARITY_THRESHOLD,
+    LEVENSHTEIN_DISTANCE_DIM,
+    LEVENSHTEIN_SIMILARITY_THRESHOLD,
+)
 from src.visualize import plot_connections_graph
 
 
@@ -31,6 +36,7 @@ RAW_FEATURE_WEIGHTS: Dict[int, float] = {
     8: 1.0,   # substring
     9: 0.25,  # sparse length similarity
     10: 1.25, # sentence embedding
+    11: 0.75, # sparse Levenshtein similarity
 }
 
 
@@ -67,6 +73,9 @@ def raw_pair_scores(edge_features: np.ndarray) -> np.ndarray:
             channel = np.where(channel >= LENGTH_SIMILARITY_THRESHOLD, channel, 0.0)
         elif dim == 10:
             channel = np.where(channel >= 0.25, channel, 0.0)
+        elif dim == LEVENSHTEIN_DISTANCE_DIM:
+            channel = 1.0 - channel
+            channel = np.where(channel >= LEVENSHTEIN_SIMILARITY_THRESHOLD, channel, 0.0)
 
         channels.append(np.clip(channel, 0.0, 1.0) * weight)
         weights.append(weight)

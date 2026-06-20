@@ -9,15 +9,31 @@ from src.raw_candidates import (
     raw_candidate_groups,
     raw_pair_scores,
 )
+from src.graph import LENGTH_SIMILARITY_DIM, LEVENSHTEIN_DISTANCE_DIM
 
 
 class RawCandidateTests(unittest.TestCase):
     def test_raw_pair_scores_sparsify_length_channel(self):
         edge_features = np.zeros((16, 16, EDGE_FEATURE_DIM), dtype=np.float32)
-        edge_features[0, 1, 9] = 0.0
-        edge_features[1, 0, 9] = 0.0
-        edge_features[0, 2, 9] = 0.2
-        edge_features[2, 0, 9] = 0.2
+        edge_features[:, :, LEVENSHTEIN_DISTANCE_DIM] = 1.0
+        edge_features[0, 1, LENGTH_SIMILARITY_DIM] = 0.0
+        edge_features[1, 0, LENGTH_SIMILARITY_DIM] = 0.0
+        edge_features[0, 2, LENGTH_SIMILARITY_DIM] = 0.2
+        edge_features[2, 0, LENGTH_SIMILARITY_DIM] = 0.2
+
+        scores = raw_pair_scores(edge_features)
+
+        self.assertGreater(scores[0, 1], 0.0)
+        self.assertEqual(scores[0, 2], 0.0)
+
+    def test_raw_pair_scores_sparsify_levenshtein_channel(self):
+        edge_features = np.zeros((16, 16, EDGE_FEATURE_DIM), dtype=np.float32)
+        edge_features[:, :, LENGTH_SIMILARITY_DIM] = 1.0
+        edge_features[:, :, LEVENSHTEIN_DISTANCE_DIM] = 1.0
+        edge_features[0, 1, LEVENSHTEIN_DISTANCE_DIM] = 0.25
+        edge_features[1, 0, LEVENSHTEIN_DISTANCE_DIM] = 0.25
+        edge_features[0, 2, LEVENSHTEIN_DISTANCE_DIM] = 0.5
+        edge_features[2, 0, LEVENSHTEIN_DISTANCE_DIM] = 0.5
 
         scores = raw_pair_scores(edge_features)
 
@@ -54,6 +70,8 @@ class RawCandidateTests(unittest.TestCase):
 
     def test_evaluate_raw_candidates_finds_perfect_synthetic_partition(self):
         edge_features = np.zeros((16, 16, EDGE_FEATURE_DIM), dtype=np.float32)
+        edge_features[:, :, LENGTH_SIMILARITY_DIM] = 1.0
+        edge_features[:, :, LEVENSHTEIN_DISTANCE_DIM] = 1.0
         words = [f"WORD{i}" for i in range(16)]
         word_to_cat = {}
         for cat_idx in range(4):
