@@ -34,15 +34,31 @@ Retrain only the RL agent from an existing GCN checkpoint with `python main.py -
 
 ## GCN Model Evaluation & Analysis
 
-To analyze and compare GCN model performance, use the following tools and output locations:
+To analyze, compare, and debug model performance, use the following tools, reports, and logs:
 
-* **Archetype Evaluation Script**: Evaluate the GCN's auxiliary head relation classification accuracy and category Mean Reciprocal Rank (MRR) per relation archetype on the validation set:
+* **Model Comparison CLI Action**: Compare any two GCN checkpoints or registered configurations on the validation split. Run:
+  ```bash
+  python main.py --compare-models [MODEL_A] [MODEL_B]
+  ```
+  Both inputs can be registry keys (e.g., `gcn_best`, `gcn_previous_best`, `gcn_all_time_best`, `raw_baseline`) or direct file paths (e.g., `models/gcn_best.pt`). This outputs a delta performance table to the terminal and compiles a comprehensive Markdown comparison to `visualizations/model_comparison_report.md`.
+
+* **Model Registry (`models/model_registry.json`)**: Persistent JSON catalog recording evaluation metrics and archetype recall profiles for all GCN checkpoints and baseline configurations.
+
+* **Training Progress Curves**: Check training history plots to diagnose overfitting/convergence rate:
+  - `visualizations/gcn_learning_curves.png` (Train/val loss and validation MRR progression; logged to `visualizations/gcn_training_history.json`)
+  - `visualizations/dqn_learning_curves.png` (DQN win rate, rewards, steps, and epsilon exploration; logged to `visualizations/dqn_training_history.json`)
+
+* **Worst-Performing Puzzles Error Analysis**: After training, the validation suite identifies the 10 hardest boards (by candidate MRR) and outputs a detailed diagnostic report in `visualizations/val_puzzles/error_analysis.md`. This details words, category levels, failure archetypes, and relation archetype failure distributions to pinpoint semantic vs. orthographic GCN weakness.
+
+* **Archetype Evaluation Script**: Evaluate GCN's auxiliary head relation classification accuracy and category Mean Reciprocal Rank (MRR) per relation archetype on the validation set:
   ```bash
   PYTHONPATH=. .venv/bin/python src/evaluate_archetypes.py
   ```
-* **Validation Partition Summaries**: After training, GCN predictions are translated into candidate word groups and complete partitions, saved in:
-  - `visualizations/val_puzzles/candidates_summary.md` (Current run's validation partition prediction metrics)
+
+* **Validation Partition Summaries**: Validation candidates and partition search outcomes are saved in:
+  - `visualizations/val_puzzles/candidates_summary.md` (Current run's validation candidates and partitions breakdown)
   - `visualizations/val_puzzles/candidates_previous_best_summary.md` (Previous best run's predictions, preserved for regression checks)
+
 * **Validation Graphs & Plots**: Individual graph plots showing predicted link probabilities and node clusters are written to:
   - `visualizations/val_best.png` (Overall summary plot)
   - `visualizations/val_puzzles/val_puzzle_<id>.png` (Individual puzzle graphs)

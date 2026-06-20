@@ -17,6 +17,11 @@ timeline
     Phase 8 : Archetype Taxonomy Refactor : DeepSeek Flash Labeling : Relation Loss Re-enabled : Archetype Schema v2
     Phase 9 : Group-Level Archetype Supervision : Quartet Relation Head : Archetype-Aware Candidate Scoring
     Phase 10 : Strong Orthographic Node Features : Palindrome Flags : Double Letters : Compound Fragment Valence : Schema v6
+    Phase 11 : Board-Context Node Features : Static Edge Stats : Schema v7
+    Phase 12 : KG and Frequency Node Features : WordNet Domains : Schema v8
+    Phase 13 : ConceptNet Relation Decomposition : Relation-Type + Residual Edge Channels : Schema v10
+    Phase 14 : Phonetic Edge Features : CMUDict Rhymes & Phoneme Edit Distance : Jellyfish Metaphone : Schema v11
+    Phase 15 : Metrics Pipeline Redesign : GCN/DQN History Plots : Model Registry : CLI Comparison Tool : Worst-10 Error Analysis
 ```
 
 ---
@@ -130,3 +135,44 @@ timeline
   - **Board-Context Metadata**: Expanded full node metadata from 11 to 14 dimensions with SentenceTransformer centroid distance, average static relation strength, and max static relation strength.
   - **Static Edge Strength Summary**: Edge stats use the same distance-to-similarity conversions and sparsification thresholds as GCN adjacency setup, exclude self-loops, and avoid row normalization so hub/decoy strength remains visible.
   - **Feature Schema Version 7**: Bumped `FEATURE_SCHEMA_VERSION` to `7`; preprocessed graph caches and existing GCN checkpoints must be rebuilt before training or evaluation.
+
+---
+
+## Phase 12: Strong KG and Frequency Node Features
+* **Milestone**: Added knowledge-graph, WordNet taxonomy/domain, and frequency/register metadata to improve semantic-set, named-entity, common-phrase, and fill-in-the-blank signals.
+* **Major Changes**:
+  - **KG/Register Metadata**: Expanded full node metadata from 14 to 63 dimensions with adverb POS, normalized WordNet max depth, offline ConceptNet `IsA` count, normalized `wordfreq` Zipf frequency, in-domain collocation participation, and a fixed WordNet lexname multi-hot vector.
+  - **Offline-Safe Feature Extraction**: ConceptNet `IsA` node metadata uses local cache/SQLite data only; frequency uses `wordfreq` when installed and falls back to the in-repo collocation prior.
+  - **Feature Schema Version 8**: Bumped `FEATURE_SCHEMA_VERSION` to `8`; preprocessed graph caches and existing GCN checkpoints must be rebuilt before training or evaluation.
+
+---
+
+## Phase 13: ConceptNet Relation-Type Edge Features
+* **Milestone**: Replaced the two collapsed ConceptNet edge weights with seven relation-specific channels.
+* **Major Changes**:
+  - **ConceptNet Decomposition**: `src/features.py` now emits `IsA`, `Synonym`, `RelatedTo`, shared `HasContext`, `DerivedFrom`/`FormOf`, `EtymologicallyRelatedTo`, and `DistinctFrom` edge features from the existing ConceptNet cache.
+  - **Residual ConceptNet Aggregates**: Added forward/backward residual aggregate channels for direct ConceptNet relation types not already covered by the decomposed features, preserving broad semantic signal without double-counting modeled relation families.
+  - **Feature Schema Version 10**: Bumped `FEATURE_SCHEMA_VERSION` to `10` and `EDGE_FEATURE_DIM` to `19`; preprocessed graph caches and GCN checkpoints must be rebuilt.
+  - **Raw Baseline Alignment**: Updated raw candidate scoring and raw graph visualization to use named feature constants and the decomposed ConceptNet channels.
+
+---
+
+## Phase 14: Phonetic Edge Features
+* **Milestone**: Integrated strong pairwise phonetic edge features to enable detection of sound-based category themes (`SOUND_OR_SPELLING`).
+* **Major Changes**:
+  - **Phonetic Edge Features**: Introduced 5 new dimensions: Phoneme Edit Distance (CMUDict), Rhyme Match, Soundex Match, Metaphone Match (via `jellyfish`), and Phoneme Overlap Jaccard ratio.
+  - **CMUDict Cleaning/Splitting**: Implemented hyphen/space splitting during phonetic extraction, improving lexical coverage by resolving compound/multi-word board terms.
+  - **Feature Schema Version 11**: Bumped `FEATURE_SCHEMA_VERSION` to `11` and `EDGE_FEATURE_DIM` to `24`; preprocessed graph caches must be rebuilt.
+  - **Graph Adjacency & Thresholding**: Applied distance-to-similarity inversion for Phoneme Edit Distance and set sparsification thresholds for continuous phonetic features.
+  - **Raw Baseline Evaluation**: Evaluated raw features on validation split (`109` puzzles) and confirmed that manual weighting of phonetic features slightly improves validation MRR (from `0.0959` to `0.0962`) when correctly scaled to minimize background noise.
+
+---
+
+## Phase 15: Pipeline Metrics Redesign & Historical Evaluation
+* **Milestone**: Redesigned the model evaluation and metrics pipeline to support historical logs, automatic checkpoint registration, worst-performing puzzle diagnostics, and CLI checkpoint comparisons.
+* **Major Changes**:
+  - **Epoch/Episode History Plots**: Implemented JSON logging of training histories and automatically generates learning curve visualizations (`visualizations/gcn_learning_curves.png` and `visualizations/dqn_learning_curves.png`) displaying losses, validation MRRs, rewards, win rates, and exploration epsilon trends over epochs/episodes.
+  - **Model Registry (`models/model_registry.json`)**: Added a persistent, cataloged model registry storing flat metrics, feature/relation schemas, and detailed archetype-level performance maps for `gcn_best`, `gcn_previous_best`, `gcn_all_time_best`, and `raw_baseline`.
+  - **Worst-Performing Puzzle Diagnostics**: Validation evaluates per-puzzle MRRs to locate the 10 hardest validation boards, outputting a detailed report in `visualizations/val_puzzles/error_analysis.md` summarizing worst puzzles, exact ground-truth groups, and mapping relation archetype failure ratios.
+  - **Interactive Model Comparison CLI**: Added `--compare-models` to `main.py` which takes two models, parses registry metrics or evaluates checkpoints on the fly, logs delta metric tables to stdout, and compiles a comprehensive side-by-side Markdown report to `visualizations/model_comparison_report.md`.
+
