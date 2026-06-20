@@ -32,6 +32,21 @@ python main.py --train --gcn-epochs 20 --rl-episodes 300
 
 Retrain only the RL agent from an existing GCN checkpoint with `python main.py --train --skip-gcn`. Solve a custom board interactively with `python main.py --solve "WORD1,WORD2,...,WORD16"`.
 
+## GCN Model Evaluation & Analysis
+
+To analyze and compare GCN model performance, use the following tools and output locations:
+
+* **Archetype Evaluation Script**: Evaluate the GCN's auxiliary head relation classification accuracy and category Mean Reciprocal Rank (MRR) per relation archetype on the validation set:
+  ```bash
+  PYTHONPATH=. .venv/bin/python src/evaluate_archetypes.py
+  ```
+* **Validation Partition Summaries**: After training, GCN predictions are translated into candidate word groups and complete partitions, saved in:
+  - `visualizations/val_puzzles/candidates_summary.md` (Current run's validation partition prediction metrics)
+  - `visualizations/val_puzzles/candidates_previous_best_summary.md` (Previous best run's predictions, preserved for regression checks)
+* **Validation Graphs & Plots**: Individual graph plots showing predicted link probabilities and node clusters are written to:
+  - `visualizations/val_best.png` (Overall summary plot)
+  - `visualizations/val_puzzles/val_puzzle_<id>.png` (Individual puzzle graphs)
+
 ## Coding Style & Naming Conventions
 
 Use Python 3 with 4-space indentation, descriptive snake_case names for functions and variables, and PascalCase for classes such as `ConnectionsGraph` and `DQNAgent`. Keep modules focused on one responsibility and prefer explicit imports from `src.*`. Follow the existing style: type hints for public helpers, short docstrings for major pipeline functions, and concise comments only where the model or training logic is non-obvious.
