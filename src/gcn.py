@@ -255,12 +255,15 @@ class ConnectionsGCN(ConnectionsScoringMixin, nn.Module):
         h_metadata = h[..., :self.metadata_dim].clone()
         
         # Apply explicit fixed scaling to known count-like features
-        # Index 0: polysemy_count -> scale by 0.1
-        # Index 1: word_len -> scale by 0.1
-        # Index 6: clue_len -> scale by 0.01
-        h_metadata[..., 0] = h_metadata[..., 0] * 0.1
-        h_metadata[..., 1] = h_metadata[..., 1] * 0.1
-        h_metadata[..., 6] = h_metadata[..., 6] * 0.01
+        # Index 0: polysemy_count -> scale by 0.5 (maps typical 1-6 to 0.5-3.0)
+        # Index 1: word_len -> scale by 0.5 (maps typical 3-10 to 1.5-5.0)
+        # Index 6: clue_len -> scale by 0.05 (maps typical 0-60 to 0.0-3.0)
+        h_metadata[..., 0] = h_metadata[..., 0] * 0.5
+        h_metadata[..., 1] = h_metadata[..., 1] * 0.5
+        h_metadata[..., 6] = h_metadata[..., 6] * 0.05
+        
+        # Scale the entire metadata block to match the normalized embedding range
+        h_metadata = h_metadata * 3.0
         
         # Normalize the embedding features separately if present
         if h.shape[-1] > self.metadata_dim:
