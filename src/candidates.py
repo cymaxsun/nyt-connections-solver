@@ -59,6 +59,8 @@ def build_partition_candidates(
         groups_by_first_word=groups_by_first_word,
         partitions=partitions,
         top_k=top_k,
+        state_counter=[0],
+        max_states=5000,
     )
 
     partitions.sort(key=lambda item: (-item[1], item[0]))
@@ -132,7 +134,15 @@ def _search_partitions(
     groups_by_first_word: Dict[int, List[GroupScore]],
     partitions: List[Tuple[Tuple[GroupScore, ...], float]],
     top_k: int,
+    state_counter: List[int] | None = None,
+    max_states: int = 5000,
 ):
+    if state_counter is None:
+        state_counter = [0]
+    state_counter[0] += 1
+    if state_counter[0] > max_states:
+        return
+
     if not uncovered:
         ordered_groups = tuple(sorted(selected, key=lambda item: item[0]))
         score = _score_partition([score for _, score in ordered_groups])
@@ -152,6 +162,8 @@ def _search_partitions(
             groups_by_first_word=groups_by_first_word,
             partitions=partitions,
             top_k=top_k,
+            state_counter=state_counter,
+            max_states=max_states,
         )
 
 
@@ -202,3 +214,77 @@ def _is_better_group_context(
         existing.group_score,
         -existing.group_rank,
     )
+
+
+def build_greedy_partition_candidates(
+    candidates: Sequence[GroupScore],
+    active_mask: np.ndarray,
+    rejected_groups: Set[Tuple[int, ...]] | None = None,
+    top_n: int | None = None,
+    top_k: int = 20,
+) -> List[PartitionCandidate]:
+    """
+    Build partitions greedily, mimicking a human's elimination strategy.
+
+    Starting from each of the top-k candidate groups as a seed, it iteratively selects
+    the most confident remaining group that fits without overlap. The final group is
+    solved by elimination (remaining 4 active words).
+    """
+    active_indices = tuple(i for i, active in enumerate(active_mask) if active == 1.0)
+    if len(active_indices) < 4 or len(active_indices) % 4 != 0:
+        return []
+
+    active_set = set(active_indices)
+    rejected_groups = rejected_groups or set()
+    candidate_map = {tuple(sorted(group)): float(score) for group, score in candidates}
+
+    # Fetch active group scores up to top_n
+    limit_n = top_n if top_n is not None else len(candidates)
+    group_scores = _active_group_scores(candidates, active_set, rejected_groups, limit_n)
+    if not group_scores:
+        return []
+
+
+    partitions: List[Tuple[Tuple[GroupScore, ...], float]] = []
+    seen_partitions = set()
+
+    # Generate up to top_k partitions by seeding with each of the top group candidates
+    for seed_idx in range(min(len(group_scores), top_k)):
+        seed_group, seed_score = group_scores[seed_idx]
+
+        current_groups = [(seed_group, seed_score)]
+        uncovered = set(active_indices) - set(seed_group)
+
+        success = True
+        while len(uncovered) >= 4:
+            if len(uncovered) == 4:
+                # Elimination step: last group is whatever active words remain
+                leftover_group = tuple(sorted(uncovered))
+                leftover_score = candidate_map.get(leftover_group, 0.0)
+                current_groups.append((leftover_group, leftover_score))
+                uncovered.clear()
+                break
+
+            # Find the most confident group that is a subset of uncovered
+            found_next = False
+            for next_group, next_score in group_scores:
+                if set(next_group).issubset(uncovered):
+                    current_groups.append((next_group, next_score))
+                    uncovered -= set(next_group)
+                    found_next = True
+                    break
+
+            if not found_next:
+                success = False
+                break
+
+        if success and len(current_groups) * 4 == len(active_indices):
+            ordered_groups = tuple(sorted(current_groups, key=lambda item: item[0]))
+            if ordered_groups not in seen_partitions:
+                seen_partitions.add(ordered_groups)
+                score = _score_partition([score for _, score in ordered_groups])
+                partitions.append((ordered_groups, score))
+
+    partitions.sort(key=lambda item: (-item[1], item[0]))
+    return [_make_partition_candidate(groups, score) for groups, score in partitions[:top_k]]
+

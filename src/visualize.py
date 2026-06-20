@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 from typing import List, Optional
-from src.relation_archetypes import RELATION_ARCHETYPES
+from src.relation_archetypes import RELATION_ARCHETYPES, relation_prediction_from_probabilities
 
 def plot_connections_graph(
     words: List[str],
@@ -24,7 +24,7 @@ def plot_connections_graph(
         threshold: Edge weight threshold below which edges are not drawn.
         filepath: Filepath to save the figure. If directory doesn't exist, it will be created.
         title: Title of the plot.
-        relation_logits: Optional 16x16x6 numpy array of predicted relation type logits.
+        relation_logits: Optional 16x16xN numpy array of predicted relation type logits.
     """
     n = len(words)
     assert n == 16, "Graph must have exactly 16 nodes."
@@ -95,14 +95,16 @@ def plot_connections_graph(
         edge_widths = [max(1, (w / max_w) * 6.0) for w in weights]
         edge_alphas = [max(0.1, min(0.9, w)) for w in weights]
         
-        # Color palette for predicted relation types
+        # Color palette for predicted positive relation types.
         archetype_colors = {
-            0: "#B0B0B0", # NO_RELATION -> Neutral Gray
-            1: "#708090", # SYNONYM -> Slate Gray
-            2: "#E74C3C", # WORDPLAY -> Red
-            3: "#E67E22", # PHRASE_COMPLETION -> Orange
-            4: "#2ECC71", # TRIVIA_ENCYCLOPEDIC -> Emerald Green
-            5: "#3498DB"  # MORPHOLOGY -> Sky Blue
+            1: "#2ECC71", # SEMANTIC_SET -> Emerald Green
+            2: "#708090", # SYNONYM_OR_NEAR -> Slate Gray
+            3: "#9B59B6", # NAMED_ENTITY_SET -> Purple
+            4: "#3498DB", # WORD_FORM -> Sky Blue
+            5: "#F1C40F", # SOUND_OR_SPELLING -> Yellow
+            6: "#E74C3C", # WORDPLAY_TRANSFORM -> Red
+            7: "#E67E22", # FILL_IN_THE_BLANK -> Orange
+            8: "#16A085", # COMMON_PHRASE -> Teal
         }
         archetype_labels = {
             idx: name.replace("_", " ").title()
@@ -115,11 +117,14 @@ def plot_connections_graph(
             color = "#4A90E2" # default blue
             label = None
             if relation_logits is not None:
-                # Get prediction from symmetric relation logits
+                # Get prediction from symmetric relation logits only if it clears the no-relation gate.
                 edge_logits = relation_logits[u, v]
-                pred_type = int(np.argmax(edge_logits))
-                color = archetype_colors.get(pred_type, color)
-                if pred_type not in drawn_types:
+                exp_logits = np.exp(edge_logits - np.max(edge_logits))
+                edge_probs = exp_logits / np.sum(exp_logits)
+                pred_type = relation_prediction_from_probabilities(edge_probs)
+                if pred_type is not None:
+                    color = archetype_colors.get(pred_type, color)
+                if pred_type is not None and pred_type not in drawn_types:
                     drawn_types.add(pred_type)
                     label = archetype_labels.get(pred_type)
                     

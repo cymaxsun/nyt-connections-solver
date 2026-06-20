@@ -21,7 +21,7 @@ class ConnectionsPuzzle:
                     "level": cat["level"],
                     "group": cat["group"],
                     "cat_idx": cat_idx,
-                    "relation_type": cat.get("relation_type", "SYNONYM")
+                    "relation_type": cat.get("relation_type", "SYNONYM_OR_NEAR")
                 }
         
         # Shuffle words to avoid passing category order hints

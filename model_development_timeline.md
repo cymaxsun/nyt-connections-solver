@@ -14,6 +14,9 @@ timeline
     Phase 5 : Performance Tuning : Batched RL Optimizer : Full Cache Re-preprocessing : Raw Visualizations Update
     Phase 6 : Ranking Objective Tuning : Increased Groupwise Loss Weight
     Phase 7 : Semantic Node Embeddings & Edge-Conditioned Scoring : ST Node Features : Linear Input Projection : Scoring Head Concatenation : Schema v5
+    Phase 8 : Archetype Taxonomy Refactor : DeepSeek Flash Labeling : Relation Loss Re-enabled : Archetype Schema v2
+    Phase 9 : Group-Level Archetype Supervision : Quartet Relation Head : Archetype-Aware Candidate Scoring
+    Phase 10 : Strong Orthographic Node Features : Palindrome Flags : Double Letters : Compound Fragment Valence : Schema v6
 ```
 
 ---
@@ -88,3 +91,42 @@ timeline
   - **Feature Schema Version 5**: Bumped `FEATURE_SCHEMA_VERSION` in `src/features.py` to `5` to invalidate stale caches and trigger full graph re-preprocessing with semantic embeddings.
   - **Dynamic GCN Input Dimension Resolution**: Replaced the hardcoded GCN input size of `7` in `main.py`, `src/train.py`, and `src/evaluate_archetypes.py` with dynamic detection based on the preprocessed graph features.
   - **Ranking Loss Tuning**: Lowered `GROUPWISE_LOSS_WEIGHT` to `0.1` to prevent representation collapse while retaining the differentiable, gradient-consistent soft-min candidate score formulation for ranking loss.
+
+---
+
+## Phase 8: Category Archetype Refactor & Relabeling Pipeline
+* **Milestone**: Replaced broad relation labels with mechanism-based category archetypes and added an auditable DeepSeek Flash relabeling workflow.
+* **Major Changes**:
+  - **Mechanism-Based Taxonomy**: Expanded the relation head target space to `NO_RELATION` plus eight positive archetypes: semantic sets, near-synonyms, named entities, word form, sound/spelling, wordplay transforms, fill-in-the-blank, and common phrases.
+  - **Legacy Label Normalization**: Added compatibility mapping from old labels (`SYNONYM`, `WORDPLAY`, `PHRASE_COMPLETION`, `TRIVIA_ENCYCLOPEDIC`, `MORPHOLOGY`) into the new taxonomy so old or low-confidence categories remain trainable.
+  - **Relation Loss Re-enabled**: Set `RELATION_LOSS_WEIGHT` to `0.05` and added clipped inverse-frequency class weights with `NO_RELATION` downweighted to `0.25`.
+  - **DeepSeek Flash Labeling Script**: Added `src/label_archetypes_deepseek.py` to label one puzzle per request with `deepseek-v4-flash`, partially apply high-confidence labels, and write a review report for uncertain categories.
+  - **Archetype Cache Schema**: Added `RELATION_ARCHETYPE_SCHEMA_VERSION = 2` to invalidate preprocessed graph caches whose embedded `word_to_cat` labels use the old archetype schema.
+
+---
+
+## Phase 9: Group-Level Archetype Supervision
+* **Milestone**: Shifted archetype learning from pair-only supervision toward complete 4-word candidate groups.
+* **Major Changes**:
+  - **Quartet Archetype Head**: Added a group-level relation classifier over all 1,820 candidate quartets, using pooled node embeddings and pooled raw edge features.
+  - **Hard Negative Group Labels**: Trains the group classifier on the four true categories plus high-scoring false groups labeled as `NO_RELATION`, matching the candidate-selection problem more directly than pair-only archetype targets.
+  - **Archetype-Aware Candidate Scoring**: Candidate ranking now adds a small boost when the group classifier is confident in a positive archetype over `NO_RELATION`, allowing archetype evidence to influence partition search and RL action candidates.
+  - **Candidate Summary Display**: Validation summaries prefer the group-level archetype prediction for each candidate group and include its positive confidence plus `NO_RELATION` confidence.
+
+---
+
+## Phase 10: Strong Orthographic Node Features
+* **Milestone**: Added deterministic node metadata for high-signal word-form categories and compound-fragment behavior.
+* **Major Changes**:
+  - **Orthographic Metadata**: Expanded node metadata from 7 to 11 dimensions with palindrome, adjacent double-letter, WordNet compound-prefix valence, and WordNet compound-suffix valence features.
+  - **Feature Schema Version 6**: Bumped `FEATURE_SCHEMA_VERSION` to `6`; existing preprocessed graph caches must be rebuilt before training or evaluation.
+  - **Checkpoint Compatibility Guard**: GCN checkpoint checks now validate the input projection width so schema-v5 models fail cleanly and require retraining.
+
+---
+
+## Phase 11: Strong Board-Context Node Features
+* **Milestone**: Added static board-level node signals for semantic outlier detection and graph hub strength.
+* **Major Changes**:
+  - **Board-Context Metadata**: Expanded full node metadata from 11 to 14 dimensions with SentenceTransformer centroid distance, average static relation strength, and max static relation strength.
+  - **Static Edge Strength Summary**: Edge stats use the same distance-to-similarity conversions and sparsification thresholds as GCN adjacency setup, exclude self-loops, and avoid row normalization so hub/decoy strength remains visible.
+  - **Feature Schema Version 7**: Bumped `FEATURE_SCHEMA_VERSION` to `7`; preprocessed graph caches and existing GCN checkpoints must be rebuilt before training or evaluation.

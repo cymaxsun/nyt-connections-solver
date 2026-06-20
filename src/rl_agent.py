@@ -300,10 +300,15 @@ def train_rl_episodes(
         while not done:
             # Re-run GCN on the (potentially updated) graph each step
             with torch.no_grad():
-                node_embeddings, edge_probs, _ = gcn_model(
-                    graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features
+                node_embeddings, edge_probs, _, group_relation_logits = gcn_model(
+                    graph.node_features,
+                    graph.get_multi_relational_adjacency(),
+                    graph.edge_features,
+                    return_group_logits=True,
                 )
-                candidates = graph.filter_candidates(gcn_model.get_candidate_subgraphs(edge_probs))
+                candidates = graph.filter_candidates(
+                    gcn_model.get_candidate_subgraphs(edge_probs, group_relation_logits)
+                )
                 action_candidates = agent.get_partition_action_candidates(
                     candidates, obs, graph.rejected_groups
                 )
@@ -325,10 +330,15 @@ def train_rl_episodes(
             
             # Re-run GCN for next-state candidate features (with updated graph)
             with torch.no_grad():
-                next_node_embeddings, next_edge_probs, _ = gcn_model(
-                    graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features
+                next_node_embeddings, next_edge_probs, _, next_group_relation_logits = gcn_model(
+                    graph.node_features,
+                    graph.get_multi_relational_adjacency(),
+                    graph.edge_features,
+                    return_group_logits=True,
                 )
-                next_candidates = graph.filter_candidates(gcn_model.get_candidate_subgraphs(next_edge_probs))
+                next_candidates = graph.filter_candidates(
+                    gcn_model.get_candidate_subgraphs(next_edge_probs, next_group_relation_logits)
+                )
                 next_action_candidates = agent.get_partition_action_candidates(
                     next_candidates, next_obs, graph.rejected_groups
                 )

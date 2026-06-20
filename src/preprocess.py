@@ -5,6 +5,7 @@ from tqdm import tqdm
 from typing import List, Dict, Any
 from src.dataset import load_dataset, ConnectionsPuzzle
 from src.features import EDGE_FEATURE_DIM, FEATURE_SCHEMA_VERSION, FeatureExtractor
+from src.relation_archetypes import RELATION_ARCHETYPE_SCHEMA_VERSION
 
 def preprocess_all_puzzles(
     data_path: str,
@@ -45,6 +46,7 @@ def preprocess_all_puzzles(
                 "id": puzzle.id,
                 "date": puzzle.date,
                 "feature_schema_version": FEATURE_SCHEMA_VERSION,
+                "relation_archetype_schema_version": RELATION_ARCHETYPE_SCHEMA_VERSION,
                 "edge_feature_dim": EDGE_FEATURE_DIM,
                 "words": puzzle.words,
                 "categories": puzzle.categories,

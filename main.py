@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from typing import List
 from src.dataset import ConnectionsPuzzle
-from src.features import EDGE_FEATURE_DIM, FeatureExtractor
+from src.features import DEFAULT_NODE_FEATURE_DIM, EDGE_FEATURE_DIM, FeatureExtractor
 from src.graph import ConnectionsGraph
 from src.gcn import build_gcn_model
 from src.rl_agent import CANDIDATE_FEATURE_DIM, DQNAgent
@@ -55,7 +55,7 @@ def solve_custom_board(
         num_relations=EDGE_FEATURE_DIM,
     ).to(device)
     gcn_state = torch.load(gcn_path, map_location=device)
-    if not _is_gcn_checkpoint_compatible(gcn_state):
+    if not _is_gcn_checkpoint_compatible(gcn_state, graph.node_features.shape[1]):
         print(
             "Error: Existing GCN checkpoint is incompatible with the current "
             "GCN architecture. Retrain via: python main.py --train"
@@ -78,7 +78,12 @@ def solve_custom_board(
     
     # Run initial GCN inference for visualization
     with torch.no_grad():
-        node_embeddings, edge_probs, _ = gcn(graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features)
+        node_embeddings, edge_probs, _, group_relation_logits = gcn(
+            graph.node_features,
+            graph.get_multi_relational_adjacency(),
+            graph.edge_features,
+            return_group_logits=True,
+        )
         
     # Visualize the initial graph
     viz_path = os.path.join("visualizations", "custom_board_clusters.png")
@@ -109,10 +114,15 @@ def solve_custom_board(
 
         # Re-run GCN on the feedback-adapted graph before each guess
         with torch.no_grad():
-            node_embeddings, edge_probs, _ = gcn(
-                graph.node_features, graph.get_multi_relational_adjacency(), graph.edge_features
+            node_embeddings, edge_probs, _, group_relation_logits = gcn(
+                graph.node_features,
+                graph.get_multi_relational_adjacency(),
+                graph.edge_features,
+                return_group_logits=True,
             )
-            candidates = graph.filter_candidates(gcn.get_candidate_subgraphs(edge_probs))
+            candidates = graph.filter_candidates(
+                gcn.get_candidate_subgraphs(edge_probs, group_relation_logits)
+            )
             action_candidates = agent.get_partition_action_candidates(
                 candidates, obs, graph.rejected_groups
             )
@@ -202,9 +212,13 @@ def _is_dqn_checkpoint_compatible(state_dict: dict) -> bool:
 def _gcn_checkpoint_filename() -> str:
     return "gcn_best.pt"
 
-def _is_gcn_checkpoint_compatible(state_dict: dict) -> bool:
+def _is_gcn_checkpoint_compatible(
+    state_dict: dict,
+    expected_in_features: int = DEFAULT_NODE_FEATURE_DIM,
+) -> bool:
     rel_weights = state_dict.get("gcn1.W_rel")
     relation_head = state_dict.get("relation_score_net.2.weight")
+    group_relation_head = state_dict.get("group_relation_score_net.2.weight")
     input_proj = state_dict.get("input_proj.weight")
     
     # Expect the current relation score net and input projection layer to be present.
@@ -213,7 +227,10 @@ def _is_gcn_checkpoint_compatible(state_dict: dict) -> bool:
         and rel_weights.shape[0] == EDGE_FEATURE_DIM
         and relation_head is not None
         and relation_head.shape[0] == NUM_RELATION_ARCHETYPES
+        and group_relation_head is not None
+        and group_relation_head.shape[0] == NUM_RELATION_ARCHETYPES
         and input_proj is not None
+        and input_proj.shape[1] == expected_in_features
     )
 
 if __name__ == "__main__":

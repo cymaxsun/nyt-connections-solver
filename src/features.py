@@ -4,7 +4,7 @@ import json
 import urllib.request
 import urllib.parse
 import sqlite3
-from collections import Counter
+from collections import Counter, defaultdict
 import numpy as np
 from typing import List, Dict, Tuple, Set, Any
 import nltk
@@ -13,8 +13,31 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 EDGE_FEATURE_DIM = 12
-FEATURE_SCHEMA_VERSION = 5
+FEATURE_SCHEMA_VERSION = 7
+BASE_NODE_METADATA_DIM = 7
+INTRINSIC_NODE_METADATA_DIM = 11
+NODE_METADATA_DIM = 14
+NODE_IS_PALINDROME_DIM = 7
+NODE_HAS_DOUBLE_LETTER_DIM = 8
+NODE_COMPOUND_PREFIX_VALENCE_DIM = 9
+NODE_COMPOUND_SUFFIX_VALENCE_DIM = 10
+NODE_BOARD_ST_CENTROID_DISTANCE_DIM = 11
+NODE_BOARD_AVG_EDGE_WEIGHT_DIM = 12
+NODE_BOARD_MAX_EDGE_WEIGHT_DIM = 13
+DEFAULT_SENTENCE_EMBEDDING_DIM = 768
+DEFAULT_NODE_FEATURE_DIM = NODE_METADATA_DIM + DEFAULT_SENTENCE_EMBEDDING_DIM
 SENTENCE_EMBEDDING_MODEL = "sentence-transformers/all-mpnet-base-v2"
+
+WORDNET_PATH_SIM_DIM = 0
+CLUE_SIMILARITY_DIM = 4
+LENGTH_DISTANCE_DIM = 9
+SENTENCE_SIMILARITY_DIM = 10
+LEVENSHTEIN_DISTANCE_DIM = 11
+WORDNET_PATH_SIMILARITY_THRESHOLD = 0.15
+CLUE_SIMILARITY_THRESHOLD = 0.10
+LENGTH_SIMILARITY_THRESHOLD = 0.90
+SENTENCE_SIMILARITY_THRESHOLD = 0.25
+LEVENSHTEIN_SIMILARITY_THRESHOLD = 0.75
 
 # Ensure WordNet is downloaded
 try:
@@ -63,6 +86,8 @@ class FeatureExtractor:
         self.embedding_model = None
         self.embedding_model_failed = False
         self.embedding_cache_dirty = False
+        self._compound_prefix_counts = None
+        self._compound_suffix_counts = None
 
     def _load_json_cache(self, path: str) -> Dict[str, Any]:
         if os.path.exists(path):
@@ -451,11 +476,93 @@ class FeatureExtractor:
         distance = previous_row[-1]
         return distance / max(1, max(len(w1), len(w2)))
 
+    @staticmethod
+    def _orthographic_token(word: str) -> str:
+        """Return uppercase alphabetic text for spelling-shape features."""
+        return "".join(re.findall(r"[A-Z]", word.strip().upper()))
+
+    @staticmethod
+    def _compound_token(word: str) -> str:
+        """Return lowercase alphabetic text for compound-fragment lookup."""
+        return "".join(re.findall(r"[a-z]", word.strip().lower()))
+
+    @staticmethod
+    def _is_plausible_compound_part(part: str, lemma_words: Set[str]) -> bool:
+        return len(part) >= 3 and part in lemma_words
+
+    @staticmethod
+    def _normalize_compound_valence(count: int) -> float:
+        # Bounded so broad fragments do not dominate the node metadata scale.
+        return float(min(1.0, np.log1p(count) / np.log1p(50.0)))
+
+    def _build_compound_fragment_counts(self) -> None:
+        """Build WordNet-only prefix/suffix counts for compound fragments."""
+        prefix_matches = defaultdict(set)
+        suffix_matches = defaultdict(set)
+        lemma_names = set()
+
+        for synset in wn.all_synsets():
+            lemma_names.update(synset.lemma_names())
+
+        lemma_words = {
+            self._compound_token(lemma)
+            for lemma in lemma_names
+            if self._compound_token(lemma)
+        }
+
+        for lemma in lemma_names:
+            raw_parts = [p for p in re.split(r"[_-]+", lemma.lower()) if p]
+            parts = [self._compound_token(p) for p in raw_parts]
+            parts = [p for p in parts if self._is_plausible_compound_part(p, lemma_words)]
+            compound_key = lemma.lower()
+
+            if len(parts) >= 2:
+                for idx, part in enumerate(parts):
+                    if idx < len(parts) - 1:
+                        prefix_matches[part].add(compound_key)
+                    if idx > 0:
+                        suffix_matches[part].add(compound_key)
+                continue
+
+            token = self._compound_token(lemma)
+            if len(token) < 6 or token not in lemma_words:
+                continue
+            for split_idx in range(3, len(token) - 2):
+                left = token[:split_idx]
+                right = token[split_idx:]
+                if (
+                    self._is_plausible_compound_part(left, lemma_words)
+                    and self._is_plausible_compound_part(right, lemma_words)
+                ):
+                    prefix_matches[left].add(token)
+                    suffix_matches[right].add(token)
+
+        self._compound_prefix_counts = {
+            part: len(compounds) for part, compounds in prefix_matches.items()
+        }
+        self._compound_suffix_counts = {
+            part: len(compounds) for part, compounds in suffix_matches.items()
+        }
+
+    def get_compound_fragment_valence(self, word: str) -> Tuple[float, float]:
+        """Return normalized WordNet prefix/suffix compound-fragment counts."""
+        if self._compound_prefix_counts is None or self._compound_suffix_counts is None:
+            self._build_compound_fragment_counts()
+
+        token = self._compound_token(word)
+        prefix_count = self._compound_prefix_counts.get(token, 0)
+        suffix_count = self._compound_suffix_counts.get(token, 0)
+        return (
+            self._normalize_compound_valence(prefix_count),
+            self._normalize_compound_valence(suffix_count),
+        )
+
     def get_word_node_features(self, w: str) -> List[float]:
         """Compute independent metadata features for a single word."""
         w_clean = w.strip().upper()
-        if w_clean in self.wordnet_single_cache:
-            return self.wordnet_single_cache[w_clean]
+        cached = self.wordnet_single_cache.get(w_clean)
+        if cached is not None and len(cached) == INTRINSIC_NODE_METADATA_DIM:
+            return cached
             
         synsets = wn.synsets(w.lower())
         
@@ -472,6 +579,21 @@ class FeatureExtractor:
         clue_len = 0.0
         if w_clean in self.clue_cache:
             clue_len = len(self.clue_cache[w_clean])
+
+        ortho_token = self._orthographic_token(w)
+        is_palindrome = (
+            1.0
+            if len(ortho_token) >= 3 and ortho_token == ortho_token[::-1]
+            else 0.0
+        )
+        has_double_letter = (
+            1.0
+            if any(a == b for a, b in zip(ortho_token, ortho_token[1:]))
+            else 0.0
+        )
+        compound_prefix_valence, compound_suffix_valence = (
+            self.get_compound_fragment_valence(w)
+        )
             
         result = [
             float(polysemy_count),
@@ -480,7 +602,11 @@ class FeatureExtractor:
             float(has_noun),
             float(has_verb),
             float(has_adj),
-            float(clue_len)
+            float(clue_len),
+            float(is_palindrome),
+            float(has_double_letter),
+            float(compound_prefix_valence),
+            float(compound_suffix_valence),
         ]
         self.wordnet_single_cache[w_clean] = result
         return result
@@ -499,21 +625,21 @@ class FeatureExtractor:
         cn_relations = {w: self.query_conceptnet(w) for w in words}
         sentence_embeddings = self.get_sentence_embeddings(words)
 
-        # 1. Node features (metadata + sentence embeddings)
+        # 1. Node features (intrinsic metadata + sentence embeddings)
         # Determine sentence embedding dimensions dynamically (default to 768)
-        emb_dim = 768
+        emb_dim = DEFAULT_SENTENCE_EMBEDDING_DIM
         for emb in sentence_embeddings.values():
             emb_dim = emb.shape[0]
             break
 
-        node_feats = []
+        intrinsic_node_feats = []
+        node_embeddings = []
         for w in words:
-            meta_feats = self.get_word_node_features(w)
+            intrinsic_node_feats.append(self.get_word_node_features(w))
             w_clean = w.strip().upper()
-            embedding = sentence_embeddings.get(w_clean, np.zeros(emb_dim, dtype=np.float32))
-            combined_feats = meta_feats + embedding.tolist()
-            node_feats.append(combined_feats)
-        node_features = np.array(node_feats, dtype=np.float32)
+            node_embeddings.append(
+                sentence_embeddings.get(w_clean, np.zeros(emb_dim, dtype=np.float32))
+            )
         
         # 3. Edge features
         # Edge dimensions:
@@ -571,7 +697,110 @@ class FeatureExtractor:
                 )
                 edge_features[i, j, 11] = wp["levenshtein_distance"]
                 
+        board_context_features = self._get_board_context_features(
+            node_embeddings,
+            edge_features,
+        )
+        node_feats = []
+        for idx, intrinsic_feats in enumerate(intrinsic_node_feats):
+            combined_feats = (
+                intrinsic_feats
+                + board_context_features[idx].tolist()
+                + node_embeddings[idx].tolist()
+            )
+            node_feats.append(combined_feats)
+        node_features = np.array(node_feats, dtype=np.float32)
+
         return node_features, edge_features
+
+    def _get_board_context_features(
+        self,
+        node_embeddings: List[np.ndarray],
+        edge_features: np.ndarray,
+    ) -> np.ndarray:
+        centroid_distances = self._get_board_st_centroid_distances(node_embeddings)
+        avg_edge_weights, max_edge_weights = self._get_board_edge_weight_stats(
+            edge_features
+        )
+        return np.stack(
+            [centroid_distances, avg_edge_weights, max_edge_weights],
+            axis=1,
+        ).astype(np.float32)
+
+    @staticmethod
+    def _get_board_st_centroid_distances(
+        node_embeddings: List[np.ndarray],
+    ) -> np.ndarray:
+        n = len(node_embeddings)
+        if not node_embeddings:
+            return np.zeros(n, dtype=np.float32)
+
+        embeddings = np.asarray(node_embeddings, dtype=np.float32)
+        nonzero_mask = np.linalg.norm(embeddings, axis=1) > 0.0
+        if not np.any(nonzero_mask):
+            return np.zeros(n, dtype=np.float32)
+
+        centroid = embeddings[nonzero_mask].mean(axis=0)
+        centroid_norm = np.linalg.norm(centroid)
+        if centroid_norm == 0.0:
+            return np.zeros(n, dtype=np.float32)
+
+        centroid = centroid / centroid_norm
+        similarities = np.clip(embeddings @ centroid, -1.0, 1.0)
+        distances = np.where(nonzero_mask, 1.0 - similarities, 0.0)
+        return distances.astype(np.float32)
+
+    @staticmethod
+    def _get_board_edge_weight_stats(
+        edge_features: np.ndarray,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        strengths = FeatureExtractor._get_static_relation_strengths(edge_features)
+        n = strengths.shape[0]
+        if n <= 1:
+            return (
+                np.zeros(n, dtype=np.float32),
+                np.zeros(n, dtype=np.float32),
+            )
+
+        off_diagonal_mask = ~np.eye(n, dtype=bool)
+        incident_strengths = strengths[off_diagonal_mask].reshape(n, n - 1, -1)
+        incident_strengths = incident_strengths.reshape(n, -1)
+        return (
+            incident_strengths.mean(axis=1).astype(np.float32),
+            incident_strengths.max(axis=1).astype(np.float32),
+        )
+
+    @staticmethod
+    def _get_static_relation_strengths(edge_features: np.ndarray) -> np.ndarray:
+        strengths = np.array(edge_features, dtype=np.float32, copy=True)
+        strengths[:, :, LENGTH_DISTANCE_DIM] = FeatureExtractor._threshold_similarity(
+            1.0 - strengths[:, :, LENGTH_DISTANCE_DIM],
+            LENGTH_SIMILARITY_THRESHOLD,
+        )
+        strengths[:, :, LEVENSHTEIN_DISTANCE_DIM] = FeatureExtractor._threshold_similarity(
+            1.0 - strengths[:, :, LEVENSHTEIN_DISTANCE_DIM],
+            LEVENSHTEIN_SIMILARITY_THRESHOLD,
+        )
+        strengths[:, :, WORDNET_PATH_SIM_DIM] = FeatureExtractor._threshold_similarity(
+            strengths[:, :, WORDNET_PATH_SIM_DIM],
+            WORDNET_PATH_SIMILARITY_THRESHOLD,
+        )
+        strengths[:, :, CLUE_SIMILARITY_DIM] = FeatureExtractor._threshold_similarity(
+            strengths[:, :, CLUE_SIMILARITY_DIM],
+            CLUE_SIMILARITY_THRESHOLD,
+        )
+        strengths[:, :, SENTENCE_SIMILARITY_DIM] = FeatureExtractor._threshold_similarity(
+            strengths[:, :, SENTENCE_SIMILARITY_DIM],
+            SENTENCE_SIMILARITY_THRESHOLD,
+        )
+
+        idx = np.arange(strengths.shape[0])
+        strengths[idx, idx, :] = 0.0
+        return strengths
+
+    @staticmethod
+    def _threshold_similarity(values: np.ndarray, threshold: float) -> np.ndarray:
+        return np.where(values >= threshold, values, 0.0).astype(np.float32)
 
 if __name__ == "__main__":
     # Test on a small mockup
