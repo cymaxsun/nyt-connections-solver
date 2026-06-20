@@ -10,7 +10,7 @@ from src.gcn import build_gcn_model
 from src.rl_agent import CANDIDATE_FEATURE_DIM, DQNAgent
 from src.env import ConnectionsEnv
 from src.visualize import plot_connections_graph
-from src.train import train_pipeline
+from src.train import train_pipeline, compare_checkpoints
 from src.relation_archetypes import NUM_RELATION_ARCHETYPES
 
 def auto_device() -> str:
@@ -24,6 +24,7 @@ def solve_custom_board(
     words_str: str,
     model_dir: str = "models",
     device: str = "cpu",
+    gcn_checkpoint: str = "all-time",
 ):
     """
     Solves a custom 16-word board using the trained GCN and DQN models.
@@ -38,7 +39,13 @@ def solve_custom_board(
     print("Words: " + ", ".join(words))
     
     # Check if models exist
-    gcn_path = os.path.join(model_dir, _gcn_checkpoint_filename())
+    if gcn_checkpoint == "all-time":
+        gcn_path = os.path.join(model_dir, "gcn_all_time_best.pt")
+        if not os.path.exists(gcn_path):
+            gcn_path = os.path.join(model_dir, _gcn_checkpoint_filename())
+    else:
+        gcn_path = os.path.join(model_dir, _gcn_checkpoint_filename())
+        
     dqn_path = os.path.join(model_dir, "dqn_q_net.pt")
     if not os.path.exists(gcn_path) or not os.path.exists(dqn_path):
         print(f"Error: Trained models not found at {model_dir}. Please run training first via: python main.py --train")
@@ -175,12 +182,26 @@ def main():
     parser.add_argument("--gcn-epochs", type=int, default=20, help="Number of GCN training epochs")
     parser.add_argument("--gcn-patience", type=int, default=15, help="Early stopping patience for GCN training")
     parser.add_argument("--rl-episodes", type=int, default=300, help="Number of RL training episodes")
+    parser.add_argument("--seed", type=int, help="Seed for repeatable train/validation splits and training RNGs")
     parser.add_argument("--solve", type=str, help="16 comma-separated words to solve interactively")
     parser.add_argument("--device", type=str, default=auto_device(), help="Device to use for training (cpu, mps, cuda)")
+    parser.add_argument(
+        "--gcn-checkpoint",
+        type=str,
+        choices=["best", "all-time"],
+        default="all-time",
+        help="Which GCN checkpoint to load (best or all-time) when --skip-gcn is set or when solving (default: all-time)",
+    )
     parser.add_argument(
         "--skip-validation-artifacts",
         action="store_true",
         help="Skip regenerating validation PNGs and candidate summary after GCN training",
+    )
+    parser.add_argument(
+        "--compare-models",
+        nargs=2,
+        metavar=("MODEL_A", "MODEL_B"),
+        help="Compare two GCN models by registry name (e.g. gcn_best, gcn_all_time_best, raw_baseline) or checkpoint file path"
     )
     
     args = parser.parse_args()
@@ -196,9 +217,13 @@ def main():
             gcn_patience=args.gcn_patience,
             skip_gcn=args.skip_gcn,
             update_artifacts=not args.skip_validation_artifacts,
+            seed=args.seed,
+            gcn_checkpoint=args.gcn_checkpoint,
         )
+    elif args.compare_models:
+        compare_checkpoints(args.compare_models[0], args.compare_models[1], device=args.device)
     elif args.solve:
-        solve_custom_board(args.solve, device=args.device)
+        solve_custom_board(args.solve, device=args.device, gcn_checkpoint=args.gcn_checkpoint)
     else:
         parser.print_help()
 
