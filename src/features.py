@@ -14,7 +14,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 EDGE_FEATURE_DIM = 12
 FEATURE_SCHEMA_VERSION = 4
-SENTENCE_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+SENTENCE_EMBEDDING_MODEL = "sentence-transformers/all-mpnet-base-v2"
 
 # Ensure WordNet is downloaded
 try:
