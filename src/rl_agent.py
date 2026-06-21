@@ -213,49 +213,59 @@ class DQNAgent:
             return int(torch.argmax(q_vals).item())
 
     def train_step(self, batch_size: int) -> Optional[float]:
-        """Runs a single training update step, accumulating gradients over the batch to avoid loop updates."""
+        """Runs a single training update step, vectorized across the batch to avoid loop updates."""
         if len(self.buffer) < batch_size:
             return None
             
         samples = self.buffer.sample(batch_size)
         
-        self.optimizer.zero_grad()
-        losses = []
+        state_list = [s[0] for s in samples]
+        cand_feats_list = [torch.as_tensor(s[1], dtype=torch.float32, device=self.device) for s in samples]
+        action_idx_list = [s[2] for s in samples]
+        reward_list = [s[3] for s in samples]
+        next_state_list = [s[4] for s in samples]
+        next_cand_feats_list = [torch.as_tensor(s[5], dtype=torch.float32, device=self.device) for s in samples]
+        done_list = [float(s[6]) for s in samples]
         
-        for state, cand_feats, action_idx, reward, next_state, next_cand_feats, done in samples:
-            # Map elements to tensors
-            state_t = torch.tensor(state, dtype=torch.float32, device=self.device)
-            cand_feats_t = torch.tensor(cand_feats, dtype=torch.float32, device=self.device)
-            reward_t = torch.tensor(reward, dtype=torch.float32, device=self.device)
-            next_state_t = torch.tensor(next_state, dtype=torch.float32, device=self.device)
-            next_cand_feats_t = torch.tensor(next_cand_feats, dtype=torch.float32, device=self.device)
+        state_t = torch.tensor(np.stack(state_list), dtype=torch.float32, device=self.device)
+        next_state_t = torch.tensor(np.stack(next_state_list), dtype=torch.float32, device=self.device)
+        reward_t = torch.tensor(reward_list, dtype=torch.float32, device=self.device)
+        action_idx_t = torch.tensor(action_idx_list, dtype=torch.long, device=self.device)
+        done_t = torch.tensor(done_list, dtype=torch.float32, device=self.device)
+        
+        max_num_cand = max(t.shape[0] for t in cand_feats_list)
+        max_num_next_cand = max(t.shape[0] for t in next_cand_feats_list)
+        
+        padded_cand_feats = torch.zeros(batch_size, max_num_cand, CANDIDATE_FEATURE_DIM, dtype=torch.float32, device=self.device)
+        padded_next_cand_feats = torch.zeros(batch_size, max_num_next_cand, CANDIDATE_FEATURE_DIM, dtype=torch.float32, device=self.device)
+        next_mask = torch.zeros(batch_size, max_num_next_cand, dtype=torch.bool, device=self.device)
+        
+        for i in range(batch_size):
+            cand_len = cand_feats_list[i].shape[0]
+            padded_cand_feats[i, :cand_len, :] = cand_feats_list[i]
             
-            # Current Q-value
-            q_vals = self.q_net(state_t, cand_feats_t) # (num_cand,)
-            q_val = q_vals[action_idx]
+            next_cand_len = next_cand_feats_list[i].shape[0]
+            padded_next_cand_feats[i, :next_cand_len, :] = next_cand_feats_list[i]
+            next_mask[i, :next_cand_len] = True
             
-            # Target Q-value
-            if done:
-                target = reward_t
-            else:
-                with torch.no_grad():
-                    # Calculate double-Q style target or standard DQN target
-                    next_q_vals = self.target_net(next_state_t, next_cand_feats_t)
-                    target = reward_t + self.gamma * torch.max(next_q_vals)
-                    
-            loss = F.mse_loss(q_val, target)
-            # Scale loss by batch_size to average gradients over the entire batch
-            scaled_loss = loss / batch_size
-            scaled_loss.backward()
+        self.optimizer.zero_grad()
+        q_vals = self.q_net(state_t, padded_cand_feats) # (batch_size, max_num_cand)
+        q_val = q_vals[torch.arange(batch_size), action_idx_t] # (batch_size,)
+        
+        with torch.no_grad():
+            next_q_vals = self.target_net(next_state_t, padded_next_cand_feats) # (batch_size, max_num_next_cand)
+            next_q_vals_masked = next_q_vals.masked_fill(~next_mask, -1e9)
+            max_next_q = torch.max(next_q_vals_masked, dim=-1)[0]
+            target = reward_t + self.gamma * max_next_q * (1.0 - done_t)
             
-            losses.append(loss.item())
-            
+        loss = F.mse_loss(q_val, target)
+        loss.backward()
         self.optimizer.step()
-            
+        
         # Decay epsilon
         self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
         
-        return np.mean(losses)
+        return loss.item()
 
 def train_rl_episodes(
     agent: DQNAgent,
@@ -297,25 +307,23 @@ def train_rl_episodes(
         episode_reward = 0.0
         steps = 0
         
+        # Run GCN initially to get starting state embeddings and candidate features
+        with torch.no_grad():
+            node_embeddings, edge_probs, _, group_relation_logits = gcn_model(
+                graph.node_features,
+                graph.get_multi_relational_adjacency(),
+                graph.edge_features,
+                return_group_logits=True,
+            )
+            candidates = graph.filter_candidates(
+                gcn_model.get_candidate_subgraphs(edge_probs, group_relation_logits)
+            )
+            action_candidates = agent.get_partition_action_candidates(
+                candidates, obs, graph.rejected_groups
+            )
+        cand_list, cand_feats = agent.get_candidate_features(action_candidates, node_embeddings, obs)
+        
         while not done:
-            # Re-run GCN on the (potentially updated) graph each step
-            with torch.no_grad():
-                node_embeddings, edge_probs, _, group_relation_logits = gcn_model(
-                    graph.node_features,
-                    graph.get_multi_relational_adjacency(),
-                    graph.edge_features,
-                    return_group_logits=True,
-                )
-                candidates = graph.filter_candidates(
-                    gcn_model.get_candidate_subgraphs(edge_probs, group_relation_logits)
-                )
-                action_candidates = agent.get_partition_action_candidates(
-                    candidates, obs, graph.rejected_groups
-                )
-            
-            # Build current candidate features based on active words
-            cand_list, cand_feats = agent.get_candidate_features(action_candidates, node_embeddings, obs)
-            
             # Select action index
             action_idx = agent.select_action(obs, cand_list, cand_feats)
             action_indices = cand_list[action_idx]
@@ -328,7 +336,7 @@ def train_rl_episodes(
             feedback = step_info.get("feedback", "")
             graph.update_edges_from_feedback(action_indices, feedback)
             
-            # Re-run GCN for next-state candidate features (with updated graph)
+            # Run GCN once to compute next-state candidate features (with updated graph)
             with torch.no_grad():
                 next_node_embeddings, next_edge_probs, _, next_group_relation_logits = gcn_model(
                     graph.node_features,
@@ -358,8 +366,10 @@ def train_rl_episodes(
                 done
             )
             
-            # Move state
+            # Move state (carry over next state candidate features to next step)
             obs = next_obs
+            cand_list = next_cand_list
+            cand_feats = next_cand_feats
             steps += 1
             
             # Run optimizer training step

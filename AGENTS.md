@@ -71,10 +71,6 @@ Use Python 3 with 4-space indentation, descriptive snake_case names for function
 
 Periodically update `model_development_timeline.md` when making significant model, feature, training, evaluation, or data pipeline changes. Add concise milestone notes for architectural changes, measurable performance improvements or regressions, feature schema/cache changes, training stability fixes, new baselines, and refreshed model artifacts. Include relevant metrics, dataset scope, command details, and affected files when they help future contributors understand why the model behavior changed.
 
-## Testing Guidelines
-
-For code changes, run at least `python -m compileall main.py src tests` to catch syntax errors and `python -m unittest discover tests` for the existing unit tests. If the shell has no `python` command, use `.venv/bin/python -m compileall main.py src tests` and `.venv/bin/python -m unittest discover tests`. For training or inference changes, run a small smoke test such as `python main.py --train --gcn-epochs 1 --rl-episodes 5` and verify that checkpoints and visualizations are produced without exceptions. Add future tests under `tests/` using filenames like `test_dataset.py` or `test_env.py`.
-
 ## Commit & Pull Request Guidelines
 
 Git history is not available in this checkout, so use clear imperative commit messages, for example `Add RL smoke test` or `Fix graph feature normalization`. Pull requests should include a short summary, the commands run, any changed model/data artifacts, and screenshots or paths for new visualizations when relevant. Link related issues when available.

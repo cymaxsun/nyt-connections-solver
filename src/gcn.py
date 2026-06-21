@@ -47,20 +47,27 @@ class RelationalGCNLayer(nn.Module):
     def forward(self, h: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
         """
         Args:
-            h: Node features tensor of shape (16, in_features)
-            adj: Relational adjacency tensor of shape (num_relations, 16, 16)
+            h: Node features tensor of shape (batch_size, 16, in_features) or (16, in_features)
+            adj: Relational adjacency tensor of shape (batch_size, num_relations, 16, 16) or (num_relations, 16, 16)
         """
-        # Self contribution
-        out = self.W_self(h) # (16, out_features)
-
-        # Relational contributions
-        # Project h using all relational matrices: (num_relations, 16, out_features)
-        h_proj = torch.einsum('ni,rio->rno', h, self.W_rel)
-
-        # Multiply by adjacencies: (16, out_features)
-        out_rel = torch.einsum('ruv,rvo->uo', adj, h_proj)
-
-        return out + out_rel + self.bias
+        if len(h.shape) == 3:
+            # Batched case
+            out = self.W_self(h)  # (batch_size, 16, out_features)
+            h_proj = torch.einsum('bni,rio->brno', h, self.W_rel)  # (batch_size, num_relations, 16, out_features)
+            out_rel = torch.einsum('bruv,brvo->buo', adj, h_proj)  # (batch_size, 16, out_features)
+            return out + out_rel + self.bias
+        else:
+            # Self contribution
+            out = self.W_self(h) # (16, out_features)
+            
+            # Relational contributions
+            # Project h using all relational matrices: (num_relations, 16, out_features)
+            h_proj = torch.einsum('ni,rio->rno', h, self.W_rel)
+            
+            # Multiply by adjacencies: (16, out_features)
+            out_rel = torch.einsum('ruv,rvo->uo', adj, h_proj)
+            
+            return out + out_rel + self.bias
 
 class ConnectionsScoringMixin:
     def _init_scoring_heads(
@@ -92,29 +99,42 @@ class ConnectionsScoringMixin:
         self.comb_tensor = torch.tensor(self.combinations, dtype=torch.long)
 
     def _score_edges(self, node_embeddings: torch.Tensor, edge_features: torch.Tensor = None) -> Tuple[torch.Tensor, torch.Tensor]:
-        # Expand and concatenate to compute pairwise representations
-        h_exp1 = node_embeddings.unsqueeze(1).expand(-1, 16, -1)
-        h_exp2 = node_embeddings.unsqueeze(0).expand(16, -1, -1)
-
-        if edge_features is not None:
-            edge_input = torch.cat([h_exp1, h_exp2, edge_features], dim=-1)
+        is_batched = len(node_embeddings.shape) == 3
+        if is_batched:
+            batch_size = node_embeddings.shape[0]
+            # Expand and concatenate to compute pairwise representations
+            h_exp1 = node_embeddings.unsqueeze(2).expand(-1, -1, 16, -1)
+            h_exp2 = node_embeddings.unsqueeze(1).expand(-1, 16, -1, -1)
+            
+            if edge_features is not None:
+                edge_input = torch.cat([h_exp1, h_exp2, edge_features], dim=-1)
+            else:
+                dummy_edge = torch.zeros(batch_size, 16, 16, EDGE_FEATURE_DIM, device=node_embeddings.device)
+                edge_input = torch.cat([h_exp1, h_exp2, dummy_edge], dim=-1)
         else:
-            dummy_edge = torch.zeros(16, 16, EDGE_FEATURE_DIM, device=node_embeddings.device)
-            edge_input = torch.cat([h_exp1, h_exp2, dummy_edge], dim=-1)
-
+            # Expand and concatenate to compute pairwise representations
+            h_exp1 = node_embeddings.unsqueeze(1).expand(-1, 16, -1)
+            h_exp2 = node_embeddings.unsqueeze(0).expand(16, -1, -1)
+            
+            if edge_features is not None:
+                edge_input = torch.cat([h_exp1, h_exp2, edge_features], dim=-1)
+            else:
+                dummy_edge = torch.zeros(16, 16, EDGE_FEATURE_DIM, device=node_embeddings.device)
+                edge_input = torch.cat([h_exp1, h_exp2, dummy_edge], dim=-1)
+        
         # Predict pairwise logits
-        edge_logits = self.edge_score_net(edge_input).squeeze(-1) # (16, 16)
-
+        edge_logits = self.edge_score_net(edge_input).squeeze(-1) # (batch_size, 16, 16) or (16, 16)
+        
         # Symmetrize
-        edge_logits = (edge_logits + edge_logits.T) / 2.0
-
+        edge_logits = (edge_logits + edge_logits.transpose(-1, -2)) / 2.0
+        
         # Mask out diagonal (self-loops)
         edge_logits = edge_logits * (1.0 - torch.eye(16, device=edge_logits.device))
 
         # Predict relation type logits
-        relation_logits = self.relation_score_net(edge_input) # (16, 16, num_relation_archetypes)
+        relation_logits = self.relation_score_net(edge_input) # (batch_size, 16, 16, num_relation_archetypes) or (16, 16, num_relation_archetypes)
         # Symmetrize relation logits
-        relation_logits = (relation_logits + relation_logits.transpose(0, 1)) / 2.0
+        relation_logits = (relation_logits + relation_logits.transpose(-2, -3)) / 2.0
 
         return edge_logits, relation_logits
 
@@ -123,12 +143,18 @@ class ConnectionsScoringMixin:
         node_embeddings: torch.Tensor,
         edge_features: torch.Tensor = None,
     ) -> torch.Tensor:
+        is_batched = len(node_embeddings.shape) == 3
         c = self.comb_tensor.to(node_embeddings.device)
-        group_nodes = node_embeddings[c]  # (1820, 4, out_features)
+        
+        if is_batched:
+            group_nodes = node_embeddings[:, c]  # (batch_size, 1820, 4, out_features)
+        else:
+            group_nodes = node_embeddings[c]  # (1820, 4, out_features)
+            
         node_summary = torch.cat(
             [
-                group_nodes.mean(dim=1),
-                group_nodes.max(dim=1).values,
+                group_nodes.mean(dim=-2),
+                group_nodes.max(dim=-2).values,
             ],
             dim=-1,
         )
@@ -137,18 +163,27 @@ class ConnectionsScoringMixin:
             pair_features = _candidate_pair_values(edge_features, c)
             edge_summary = torch.cat(
                 [
-                    pair_features.mean(dim=1),
-                    pair_features.max(dim=1).values,
+                    pair_features.mean(dim=-2),
+                    pair_features.max(dim=-2).values,
                 ],
                 dim=-1,
             )
         else:
-            edge_summary = torch.zeros(
-                c.shape[0],
-                EDGE_FEATURE_DIM * 2,
-                dtype=node_embeddings.dtype,
-                device=node_embeddings.device,
-            )
+            if is_batched:
+                edge_summary = torch.zeros(
+                    node_embeddings.shape[0],
+                    c.shape[0],
+                    EDGE_FEATURE_DIM * 2,
+                    dtype=node_embeddings.dtype,
+                    device=node_embeddings.device,
+                )
+            else:
+                edge_summary = torch.zeros(
+                    c.shape[0],
+                    EDGE_FEATURE_DIM * 2,
+                    dtype=node_embeddings.dtype,
+                    device=node_embeddings.device,
+                )
 
         group_input = torch.cat([node_summary, edge_summary], dim=-1)
         return self.group_relation_score_net(group_input)
@@ -182,22 +217,36 @@ class ConnectionsScoringMixin:
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Return all 4-node combinations and their cohesion scores as tensors."""
         c = self.comb_tensor.to(edge_probs.device)
-        pair_scores = torch.stack(
-            [
-                edge_probs[c[:, 0], c[:, 1]],
-                edge_probs[c[:, 0], c[:, 2]],
-                edge_probs[c[:, 0], c[:, 3]],
-                edge_probs[c[:, 1], c[:, 2]],
-                edge_probs[c[:, 1], c[:, 3]],
-                edge_probs[c[:, 2], c[:, 3]],
-            ],
-            dim=-1,
-        )
+        is_batched = len(edge_probs.shape) == 3
+        if is_batched:
+            pair_scores = torch.stack(
+                [
+                    edge_probs[:, c[:, 0], c[:, 1]],
+                    edge_probs[:, c[:, 0], c[:, 2]],
+                    edge_probs[:, c[:, 0], c[:, 3]],
+                    edge_probs[:, c[:, 1], c[:, 2]],
+                    edge_probs[:, c[:, 1], c[:, 3]],
+                    edge_probs[:, c[:, 2], c[:, 3]],
+                ],
+                dim=-1,
+            )
+        else:
+            pair_scores = torch.stack(
+                [
+                    edge_probs[c[:, 0], c[:, 1]],
+                    edge_probs[c[:, 0], c[:, 2]],
+                    edge_probs[c[:, 0], c[:, 3]],
+                    edge_probs[c[:, 1], c[:, 2]],
+                    edge_probs[c[:, 1], c[:, 3]],
+                    edge_probs[c[:, 2], c[:, 3]],
+                ],
+                dim=-1,
+            )
         scores = score_group_pair_values(pair_scores)
         if group_relation_logits is not None:
             group_probs = torch.softmax(group_relation_logits, dim=-1)
-            positive_confidence = group_probs[:, 1:].max(dim=-1).values
-            no_relation_confidence = group_probs[:, NO_RELATION_IDX]
+            positive_confidence = group_probs[..., 1:].max(dim=-1).values
+            no_relation_confidence = group_probs[..., NO_RELATION_IDX]
             # Only boost if the prediction clears the archetype classification gate
             gate = (positive_confidence >= 0.45) & ((positive_confidence - no_relation_confidence) >= 0.10)
             archetype_boost = torch.where(
@@ -297,91 +346,120 @@ def train_gcn_epoch(
     relation_class_weights = build_relation_class_weights(puzzles, device)
     group_class_weights = build_group_class_weights(puzzles, device, GROUP_RELATION_HARD_NEGATIVES)
 
-    accum_batch_size = 32
+    batch_size = 32
     optimizer.zero_grad()
 
-    for idx, puzzle in enumerate(puzzles):
-        # Support both preprocessed dict format and ConnectionsPuzzle object format
-        if isinstance(puzzle, dict):
-            graph = ConnectionsGraph(
-                puzzle["words"],
-                device=device,
-                node_features=puzzle["node_features"],
-                edge_features=puzzle["edge_features"]
-            )
-            adj_true = torch.tensor(puzzle["adj"], dtype=torch.float32, device=device)
-            words = puzzle["words"]
-            word_to_cat = puzzle["word_to_cat"]
-        else:
-            graph = ConnectionsGraph(puzzle.words, extractor, device=device)
-            adj_true = torch.tensor(puzzle.adj, dtype=torch.float32, device=device)
-            words = puzzle.words
-            word_to_cat = puzzle.word_to_cat
+    for start_idx in range(0, len(puzzles), batch_size):
+        batch_puzzles = puzzles[start_idx : start_idx + batch_size]
+        actual_batch_size = len(batch_puzzles)
+        
+        node_features_list = []
+        edge_features_list = []
+        adj_multi_list = []
+        adj_true_list = []
+        
+        batch_words = []
+        batch_word_to_cat = []
+        
+        for puzzle in batch_puzzles:
+            if isinstance(puzzle, dict):
+                graph = ConnectionsGraph(
+                    puzzle["words"],
+                    device=device,
+                    node_features=puzzle["node_features"],
+                    edge_features=puzzle["edge_features"]
+                )
+                adj_true = torch.tensor(puzzle["adj"], dtype=torch.float32, device=device)
+                words = puzzle["words"]
+                word_to_cat = puzzle["word_to_cat"]
+            else:
+                graph = ConnectionsGraph(puzzle.words, extractor, device=device)
+                adj_true = torch.tensor(puzzle.adj, dtype=torch.float32, device=device)
+                words = puzzle.words
+                word_to_cat = puzzle.word_to_cat
+                
+            adj_multi = graph.get_multi_relational_adjacency()
+            adj_multi = drop_edges(adj_multi, p=0.2, training=True)
+            
+            node_features_list.append(graph.node_features)
+            edge_features_list.append(graph.edge_features)
+            adj_multi_list.append(adj_multi)
+            adj_true_list.append(adj_true)
+            
+            batch_words.append(words)
+            batch_word_to_cat.append(word_to_cat)
+            
+        batched_node_features = torch.stack(node_features_list)
+        batched_edge_features = torch.stack(edge_features_list)
+        batched_adj_multi = torch.stack(adj_multi_list)
 
-        adj_multi = graph.get_multi_relational_adjacency()
-        adj_multi = drop_edges(adj_multi, p=0.2, training=True)
         node_embeddings, edge_logits, relation_logits, group_relation_logits = model(
-            graph.node_features,
-            adj_multi,
-            graph.edge_features,
+            batched_node_features,
+            batched_adj_multi,
+            batched_edge_features,
             return_logits=True,
             return_group_logits=True,
         )
 
-        # Weighted BCE Loss with logits (positive pairs are less frequent: 48 out of 240, so weight pos by 4x)
-        weight_mask = diag_mask.clone()
-        weight_mask[adj_true == 1] *= 4.0
-        bce_loss = F.binary_cross_entropy_with_logits(edge_logits, adj_true, weight=weight_mask)
+        batch_losses = []
+        for i in range(actual_batch_size):
+            words = batch_words[i]
+            word_to_cat = batch_word_to_cat[i]
+            adj_true = adj_true_list[i]
 
-        relation_true = build_relation_targets(words, word_to_cat, device)
+            # Weighted BCE Loss with logits
+            weight_mask = diag_mask.clone()
+            weight_mask[adj_true == 1] *= 4.0
+            bce_loss_i = F.binary_cross_entropy_with_logits(edge_logits[i], adj_true, weight=weight_mask)
 
-        class_loss = focal_loss(
-            relation_logits.view(-1, NUM_RELATION_ARCHETYPES),
-            relation_true.view(-1),
-            gamma=2.0,
-            alpha=relation_class_weights,
-            ignore_index=-100,
-        )
-        group_relation_true = build_group_relation_targets(
-            model,
-            edge_logits,
-            words,
-            word_to_cat,
-            device,
-            hard_negative_count=GROUP_RELATION_HARD_NEGATIVES,
-        )
-        group_class_loss = _focal_loss_with_optional_targets(
-            group_relation_logits,
-            group_relation_true,
-            gamma=2.0,
-            alpha=group_class_weights,
-        )
-        group_loss = groupwise_ranking_loss(
-            model,
-            edge_logits,
-            words,
-            word_to_cat,
-            margin=GROUPWISE_LOSS_MARGIN,
-            hard_negative_count=GROUPWISE_HARD_NEGATIVES,
-        )
+            relation_true_i = build_relation_targets(words, word_to_cat, device)
 
-        # Combined loss
-        loss = (
-            bce_loss
-            + RELATION_LOSS_WEIGHT * class_loss
-            + GROUP_RELATION_LOSS_WEIGHT * group_class_loss
-            + GROUPWISE_LOSS_WEIGHT * group_loss
-        )
-        scaled_loss = loss / accum_batch_size
-        scaled_loss.backward()
+            class_loss_i = focal_loss(
+                relation_logits[i].view(-1, NUM_RELATION_ARCHETYPES),
+                relation_true_i.view(-1),
+                gamma=2.0,
+                alpha=relation_class_weights,
+                ignore_index=-100,
+            )
+            group_relation_true_i = build_group_relation_targets(
+                model,
+                edge_logits[i],
+                words,
+                word_to_cat,
+                device,
+                hard_negative_count=GROUP_RELATION_HARD_NEGATIVES,
+            )
+            group_class_loss_i = _focal_loss_with_optional_targets(
+                group_relation_logits[i],
+                group_relation_true_i,
+                gamma=2.0,
+                alpha=group_class_weights,
+            )
+            group_loss_i = groupwise_ranking_loss(
+                model,
+                edge_logits[i],
+                words,
+                word_to_cat,
+                margin=GROUPWISE_LOSS_MARGIN,
+                hard_negative_count=GROUPWISE_HARD_NEGATIVES,
+            )
 
-        total_loss += loss.item()
+            loss_i = (
+                bce_loss_i
+                + RELATION_LOSS_WEIGHT * class_loss_i
+                + GROUP_RELATION_LOSS_WEIGHT * group_class_loss_i
+                + GROUPWISE_LOSS_WEIGHT * group_loss_i
+            )
+            batch_losses.append(loss_i)
 
-        # Update weights at accumulation boundaries
-        if (idx + 1) % accum_batch_size == 0 or (idx + 1) == len(puzzles):
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
-            optimizer.zero_grad()
+        batch_loss = torch.stack(batch_losses).mean()
+        batch_loss.backward()
+        
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        optimizer.step()
+        optimizer.zero_grad()
+
+        total_loss += batch_loss.item() * actual_batch_size
 
     return total_loss / len(puzzles)
 
@@ -580,17 +658,31 @@ def get_hidden_features_from_state_dict(state_dict: dict, default: int = 128) ->
 
 
 def _candidate_pair_values(values: torch.Tensor, combinations: torch.Tensor) -> torch.Tensor:
-    return torch.stack(
-        [
-            values[combinations[:, 0], combinations[:, 1]],
-            values[combinations[:, 0], combinations[:, 2]],
-            values[combinations[:, 0], combinations[:, 3]],
-            values[combinations[:, 1], combinations[:, 2]],
-            values[combinations[:, 1], combinations[:, 3]],
-            values[combinations[:, 2], combinations[:, 3]],
-        ],
-        dim=1,
-    )
+    is_batched = len(values.shape) == 4
+    if is_batched:
+        return torch.stack(
+            [
+                values[:, combinations[:, 0], combinations[:, 1]],
+                values[:, combinations[:, 0], combinations[:, 2]],
+                values[:, combinations[:, 0], combinations[:, 3]],
+                values[:, combinations[:, 1], combinations[:, 2]],
+                values[:, combinations[:, 1], combinations[:, 3]],
+                values[:, combinations[:, 2], combinations[:, 3]],
+            ],
+            dim=2,
+        )
+    else:
+        return torch.stack(
+            [
+                values[combinations[:, 0], combinations[:, 1]],
+                values[combinations[:, 0], combinations[:, 2]],
+                values[combinations[:, 0], combinations[:, 3]],
+                values[combinations[:, 1], combinations[:, 2]],
+                values[combinations[:, 1], combinations[:, 3]],
+                values[combinations[:, 2], combinations[:, 3]],
+            ],
+            dim=1,
+        )
 
 
 def build_relation_targets(
