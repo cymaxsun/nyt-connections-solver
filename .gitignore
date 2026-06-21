@@ -21,8 +21,14 @@ data/*.json.corrupt-*
 
 # Trained models
 models/*.pt
+models/*.json
 
 # Generated visualizations
 visualizations/val_best.png
+visualizations/val_all_time_best.png
+visualizations/*_learning_curves.png
+visualizations/*_training_history.json
+visualizations/model_comparison_report.md
 visualizations/val_puzzles/
+visualizations/raw_candidates/
 visualizations/raw/

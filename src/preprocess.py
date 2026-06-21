@@ -10,7 +10,8 @@ from src.relation_archetypes import RELATION_ARCHETYPE_SCHEMA_VERSION
 def preprocess_all_puzzles(
     data_path: str,
     output_path: str,
-    limit: int = None
+    limit: int = None,
+    ngram_live: bool = False,
 ):
     """
     Precomputes and saves graph node and edge features for all puzzles in the dataset.
@@ -27,7 +28,7 @@ def preprocess_all_puzzles(
         
     print(f"Total puzzles to preprocess: {len(puzzles)}")
     
-    extractor = FeatureExtractor()
+    extractor = FeatureExtractor(ngram_live_lookup=ngram_live)
     # Preprocessing should be reproducible and fast: use local ConceptNet DB/cache only.
     extractor.conceptnet_offline = True
     preprocessed_data = []
@@ -66,6 +67,8 @@ def preprocess_all_puzzles(
     print(f"\nSuccessfully processed {len(preprocessed_data)} puzzles in {time.time() - start_time:.1f}s.")
     extractor._save_wordnet_cache()
     extractor._save_embedding_cache()
+    if extractor.ngram_cache_dirty:
+        extractor._save_ngram_compound_cache()
     
     # Save using torch.save for easy tensor loading
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -76,9 +79,14 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Preprocess Connections puzzles into graph features")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of puzzles to preprocess")
+    parser.add_argument(
+        "--ngram-live",
+        action="store_true",
+        help="Fetch missing Google Ngram compound profiles while preprocessing",
+    )
     args = parser.parse_args()
     
     data_file = os.path.join(os.path.dirname(__file__), "../data/connections.json")
     output_file = os.path.join(os.path.dirname(__file__), "../data/preprocessed_graphs.pt")
     
-    preprocess_all_puzzles(data_file, output_file, limit=args.limit)
+    preprocess_all_puzzles(data_file, output_file, limit=args.limit, ngram_live=args.ngram_live)

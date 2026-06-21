@@ -7,15 +7,29 @@ class ConnectionsPuzzle:
         self.id = puzzle_data["id"]
         self.date = puzzle_data.get("date", "")
         self.categories = puzzle_data["answers"]
+        if len(self.categories) != 4:
+            raise ValueError(f"Puzzle {self.id} must contain exactly 4 categories.")
         
         # Flatten all words
         self.words = []
         # Keep track of mapping from word to category level and category index
         self.word_to_cat = {}
+        seen_words = set()
         for cat_idx, cat in enumerate(self.categories):
-            for member in cat["members"]:
+            members = cat["members"]
+            if len(members) != 4:
+                raise ValueError(
+                    f"Puzzle {self.id} category {cat.get('group', cat_idx)!r} "
+                    "must contain exactly 4 members."
+                )
+            for member in members:
                 # Clean up word (strip and uppercase)
                 w = member.strip().upper()
+                if not w:
+                    raise ValueError(f"Puzzle {self.id} contains an empty member.")
+                if w in seen_words:
+                    raise ValueError(f"Puzzle {self.id} contains duplicate member {w!r}.")
+                seen_words.add(w)
                 self.words.append(w)
                 self.word_to_cat[w] = {
                     "level": cat["level"],

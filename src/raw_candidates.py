@@ -11,7 +11,35 @@ import torch
 from src.candidate_scoring import score_group_pair_values
 from src.candidates import PartitionCandidate, build_partition_candidates
 from src.dataset import load_preprocessed_dataset
-from src.features import EDGE_FEATURE_DIM
+from src.features import (
+    CLUE_SIMILARITY_DIM,
+    CN_DERIVED_FROM_DIM,
+    CN_DISTINCT_FROM_DIM,
+    CN_ETYMOLOGICAL_DIM,
+    CN_HAS_CONTEXT_DIM,
+    CN_IS_A_DIM,
+    CN_RELATED_TO_DIM,
+    CN_RESIDUAL_BACKWARD_DIM,
+    CN_RESIDUAL_FORWARD_DIM,
+    CN_SYNONYM_DIM,
+    COMPOUND_FRAGMENT_SHARED_DIM,
+    COMPOUND_FRAGMENT_SHARED_THRESHOLD,
+    EDGE_FEATURE_DIM,
+    IS_ANAGRAM_DIM,
+    IS_SUBSTRING_DIM,
+    SENTENCE_SIMILARITY_DIM,
+    SHARED_PREFIX_DIM,
+    SHARED_SUFFIX_DIM,
+    WORDNET_PATH_SIM_DIM,
+    WORDNET_SHARED_HYPERNYM_DIM,
+    PHONEME_EDIT_DISTANCE_DIM,
+    PHONEME_EDIT_DISTANCE_THRESHOLD,
+    RHYME_MATCH_DIM,
+    SOUNDEX_MATCH_DIM,
+    METAPHONE_MATCH_DIM,
+    PHONEME_OVERLAP_DIM,
+    PHONEME_OVERLAP_THRESHOLD,
+)
 from src.graph import (
     LENGTH_SIMILARITY_DIM,
     LENGTH_SIMILARITY_THRESHOLD,
@@ -25,18 +53,31 @@ RawCandidate = Tuple[Tuple[int, ...], float]
 
 
 RAW_FEATURE_WEIGHTS: Dict[int, float] = {
-    0: 1.0,   # WordNet path similarity
-    1: 0.75,  # WordNet shared hypernym
-    2: 1.0,   # ConceptNet forward
-    3: 1.0,   # ConceptNet backward
-    4: 1.25,  # clue TF-IDF
-    5: 1.5,   # anagram
-    6: 1.0,   # shared prefix
-    7: 1.0,   # shared suffix
-    8: 1.0,   # substring
-    9: 0.25,  # sparse length similarity
-    10: 1.25, # sentence embedding
-    11: 0.75, # sparse Levenshtein similarity
+    WORDNET_PATH_SIM_DIM: 1.0,
+    WORDNET_SHARED_HYPERNYM_DIM: 0.75,
+    CN_IS_A_DIM: 1.25,
+    CN_SYNONYM_DIM: 1.25,
+    CN_RELATED_TO_DIM: 0.75,
+    CN_HAS_CONTEXT_DIM: 1.25,
+    CN_DERIVED_FROM_DIM: 1.0,
+    CN_ETYMOLOGICAL_DIM: 0.25,
+    CN_DISTINCT_FROM_DIM: 0.75,
+    CN_RESIDUAL_FORWARD_DIM: 1.0,
+    CN_RESIDUAL_BACKWARD_DIM: 1.0,
+    CLUE_SIMILARITY_DIM: 1.25,
+    IS_ANAGRAM_DIM: 1.5,
+    SHARED_PREFIX_DIM: 1.0,
+    SHARED_SUFFIX_DIM: 1.0,
+    IS_SUBSTRING_DIM: 1.0,
+    LENGTH_SIMILARITY_DIM: 0.25,
+    SENTENCE_SIMILARITY_DIM: 1.25,
+    LEVENSHTEIN_DISTANCE_DIM: 0.75,
+    PHONEME_EDIT_DISTANCE_DIM: 0.25,
+    RHYME_MATCH_DIM: 0.25,
+    SOUNDEX_MATCH_DIM: 0.10,
+    METAPHONE_MATCH_DIM: 0.15,
+    PHONEME_OVERLAP_DIM: 0.10,
+    COMPOUND_FRAGMENT_SHARED_DIM: 1.0,
 }
 
 
@@ -64,18 +105,25 @@ def raw_pair_scores(edge_features: np.ndarray) -> np.ndarray:
 
     for dim, weight in RAW_FEATURE_WEIGHTS.items():
         channel = features[:, :, dim].copy()
-        if dim == 0:
+        if dim == WORDNET_PATH_SIM_DIM:
             channel = np.where(channel >= 0.15, channel, 0.0)
-        elif dim == 4:
+        elif dim == CLUE_SIMILARITY_DIM:
             channel = np.where(channel >= 0.10, channel, 0.0)
         elif dim == LENGTH_SIMILARITY_DIM:
             channel = 1.0 - channel
             channel = np.where(channel >= LENGTH_SIMILARITY_THRESHOLD, channel, 0.0)
-        elif dim == 10:
+        elif dim == SENTENCE_SIMILARITY_DIM:
             channel = np.where(channel >= 0.25, channel, 0.0)
         elif dim == LEVENSHTEIN_DISTANCE_DIM:
             channel = 1.0 - channel
             channel = np.where(channel >= LEVENSHTEIN_SIMILARITY_THRESHOLD, channel, 0.0)
+        elif dim == PHONEME_EDIT_DISTANCE_DIM:
+            channel = 1.0 - channel
+            channel = np.where(channel >= PHONEME_EDIT_DISTANCE_THRESHOLD, channel, 0.0)
+        elif dim == PHONEME_OVERLAP_DIM:
+            channel = np.where(channel >= PHONEME_OVERLAP_THRESHOLD, channel, 0.0)
+        elif dim == COMPOUND_FRAGMENT_SHARED_DIM:
+            channel = np.where(channel >= COMPOUND_FRAGMENT_SHARED_THRESHOLD, channel, 0.0)
 
         channels.append(np.clip(channel, 0.0, 1.0) * weight)
         weights.append(weight)

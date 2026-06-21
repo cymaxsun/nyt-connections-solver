@@ -1,12 +1,27 @@
 import itertools
 import torch
 from typing import List, Dict, Tuple, Any
-from src.features import FeatureExtractor
+from src.features import (
+    CLUE_SIMILARITY_DIM,
+    CLUE_SIMILARITY_THRESHOLD,
+    COMPOUND_FRAGMENT_SHARED_DIM,
+    COMPOUND_FRAGMENT_SHARED_THRESHOLD,
+    FeatureExtractor,
+    LENGTH_DISTANCE_DIM,
+    LENGTH_SIMILARITY_THRESHOLD,
+    LEVENSHTEIN_DISTANCE_DIM,
+    LEVENSHTEIN_SIMILARITY_THRESHOLD,
+    SENTENCE_SIMILARITY_DIM,
+    SENTENCE_SIMILARITY_THRESHOLD,
+    WORDNET_PATH_SIM_DIM,
+    WORDNET_PATH_SIMILARITY_THRESHOLD,
+    PHONEME_EDIT_DISTANCE_DIM,
+    PHONEME_EDIT_DISTANCE_THRESHOLD,
+    PHONEME_OVERLAP_DIM,
+    PHONEME_OVERLAP_THRESHOLD,
+)
 
-LENGTH_SIMILARITY_DIM = 9
-LENGTH_SIMILARITY_THRESHOLD = 0.90
-LEVENSHTEIN_DISTANCE_DIM = 11
-LEVENSHTEIN_SIMILARITY_THRESHOLD = 0.75
+LENGTH_SIMILARITY_DIM = LENGTH_DISTANCE_DIM
 
 
 class ConnectionsGraph:
@@ -59,22 +74,25 @@ class ConnectionsGraph:
         Dimensions:
             0: WordNet path similarity
             1: WordNet shares hypernym
-            2: ConceptNet forward connection weight
-            3: ConceptNet backward connection weight
-            4: Clue description TF-IDF similarity
-            5: Is Anagram
-            6: Shares Prefix
-            7: Shares Suffix
-            8: Is Substring
-            9: Length difference (needs inversion to be adjacency)
-            10: SentenceTransformer cosine similarity
-            11: Levenshtein distance (needs inversion to be adjacency)
+            2-8: ConceptNet relation-type features
+            9: ConceptNet residual forward connection weight
+            10: ConceptNet residual backward connection weight
+            11: Clue description TF-IDF similarity
+            12: Is Anagram
+            13: Shares Prefix
+            14: Shares Suffix
+            15: Is Substring
+            16: Length difference (needs inversion to be adjacency)
+            17: SentenceTransformer cosine similarity
+            18: Levenshtein distance (needs inversion to be adjacency)
         """
         adj = self.edge_features[:, :, dim_idx]
         if dim_idx == LENGTH_SIMILARITY_DIM:
             adj = self._length_similarity_adjacency(adj)
         elif dim_idx == LEVENSHTEIN_DISTANCE_DIM:
             adj = self._levenshtein_similarity_adjacency(adj)
+        elif dim_idx == PHONEME_EDIT_DISTANCE_DIM:
+            adj = self._phoneme_similarity_adjacency(adj)
         active_edges = torch.outer(self.active_node_mask, self.active_node_mask)
         adj = adj * self.adaptive_edge_weights * active_edges
         return adj
@@ -102,14 +120,36 @@ class ConnectionsGraph:
         adj[LEVENSHTEIN_DISTANCE_DIM] = self._levenshtein_similarity_adjacency(
             adj[LEVENSHTEIN_DISTANCE_DIM]
         )
+        adj[PHONEME_EDIT_DISTANCE_DIM] = self._phoneme_similarity_adjacency(
+            adj[PHONEME_EDIT_DISTANCE_DIM]
+        )
         
         # Apply sparsification thresholds to continuous edge features to reduce noise/oversmoothing
-        # Dim 0: WordNet path similarity (threshold 0.15)
-        adj[0] = torch.where(adj[0] >= 0.15, adj[0], torch.zeros_like(adj[0]))
-        # Dim 4: Clue description TF-IDF similarity (threshold 0.10)
-        adj[4] = torch.where(adj[4] >= 0.10, adj[4], torch.zeros_like(adj[4]))
-        # Dim 10: SentenceTransformer cosine similarity (threshold 0.25)
-        adj[10] = torch.where(adj[10] >= 0.25, adj[10], torch.zeros_like(adj[10]))
+        adj[WORDNET_PATH_SIM_DIM] = torch.where(
+            adj[WORDNET_PATH_SIM_DIM] >= WORDNET_PATH_SIMILARITY_THRESHOLD,
+            adj[WORDNET_PATH_SIM_DIM],
+            torch.zeros_like(adj[WORDNET_PATH_SIM_DIM]),
+        )
+        adj[CLUE_SIMILARITY_DIM] = torch.where(
+            adj[CLUE_SIMILARITY_DIM] >= CLUE_SIMILARITY_THRESHOLD,
+            adj[CLUE_SIMILARITY_DIM],
+            torch.zeros_like(adj[CLUE_SIMILARITY_DIM]),
+        )
+        adj[SENTENCE_SIMILARITY_DIM] = torch.where(
+            adj[SENTENCE_SIMILARITY_DIM] >= SENTENCE_SIMILARITY_THRESHOLD,
+            adj[SENTENCE_SIMILARITY_DIM],
+            torch.zeros_like(adj[SENTENCE_SIMILARITY_DIM]),
+        )
+        adj[PHONEME_OVERLAP_DIM] = torch.where(
+            adj[PHONEME_OVERLAP_DIM] >= PHONEME_OVERLAP_THRESHOLD,
+            adj[PHONEME_OVERLAP_DIM],
+            torch.zeros_like(adj[PHONEME_OVERLAP_DIM]),
+        )
+        adj[COMPOUND_FRAGMENT_SHARED_DIM] = torch.where(
+            adj[COMPOUND_FRAGMENT_SHARED_DIM] >= COMPOUND_FRAGMENT_SHARED_THRESHOLD,
+            adj[COMPOUND_FRAGMENT_SHARED_DIM],
+            torch.zeros_like(adj[COMPOUND_FRAGMENT_SHARED_DIM]),
+        )
         
         # Apply adaptive game-state weights and active node mask
         adj = adj * self.adaptive_edge_weights.unsqueeze(0)
@@ -139,6 +179,15 @@ class ConnectionsGraph:
         similarity = 1.0 - distance
         return torch.where(
             similarity >= LEVENSHTEIN_SIMILARITY_THRESHOLD,
+            similarity,
+            torch.zeros_like(similarity),
+        )
+
+    @staticmethod
+    def _phoneme_similarity_adjacency(distance: torch.Tensor) -> torch.Tensor:
+        similarity = 1.0 - distance
+        return torch.where(
+            similarity >= PHONEME_EDIT_DISTANCE_THRESHOLD,
             similarity,
             torch.zeros_like(similarity),
         )

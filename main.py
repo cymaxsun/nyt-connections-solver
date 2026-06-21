@@ -6,11 +6,11 @@ from typing import List
 from src.dataset import ConnectionsPuzzle
 from src.features import DEFAULT_NODE_FEATURE_DIM, EDGE_FEATURE_DIM, FeatureExtractor
 from src.graph import ConnectionsGraph
-from src.gcn import build_gcn_model
+from src.gcn import build_gcn_model, get_hidden_features_from_state_dict
 from src.rl_agent import CANDIDATE_FEATURE_DIM, DQNAgent
 from src.env import ConnectionsEnv
 from src.visualize import plot_connections_graph
-from src.train import train_pipeline, compare_checkpoints
+from src.train import train_pipeline, compare_checkpoints, _gcn_all_time_best_checkpoint_filename
 from src.relation_archetypes import NUM_RELATION_ARCHETYPES
 
 def auto_device() -> str:
@@ -40,7 +40,7 @@ def solve_custom_board(
     
     # Check if models exist
     if gcn_checkpoint == "all-time":
-        gcn_path = os.path.join(model_dir, "gcn_all_time_best.pt")
+        gcn_path = os.path.join(model_dir, _gcn_all_time_best_checkpoint_filename())
         if not os.path.exists(gcn_path):
             gcn_path = os.path.join(model_dir, _gcn_checkpoint_filename())
     else:
@@ -51,16 +51,10 @@ def solve_custom_board(
         print(f"Error: Trained models not found at {model_dir}. Please run training first via: python main.py --train")
         return
         
-    extractor = FeatureExtractor()
+    extractor = FeatureExtractor(ngram_live_lookup=True)
     graph = ConnectionsGraph(words, extractor, device=device)
     
     # Load Models
-    gcn = build_gcn_model(
-        in_features=graph.node_features.shape[1],
-        hidden_features=32,
-        out_features=16,
-        num_relations=EDGE_FEATURE_DIM,
-    ).to(device)
     gcn_state = torch.load(gcn_path, map_location=device)
     if not _is_gcn_checkpoint_compatible(gcn_state, graph.node_features.shape[1]):
         print(
@@ -68,6 +62,13 @@ def solve_custom_board(
             "GCN architecture. Retrain via: python main.py --train"
         )
         return
+    hidden_feats = get_hidden_features_from_state_dict(gcn_state, default=128)
+    gcn = build_gcn_model(
+        in_features=graph.node_features.shape[1],
+        hidden_features=hidden_feats,
+        out_features=16,
+        num_relations=EDGE_FEATURE_DIM,
+    ).to(device)
     gcn.load_state_dict(gcn_state)
     gcn.eval()
     

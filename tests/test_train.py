@@ -1,4 +1,5 @@
 import os
+import json
 import tempfile
 import unittest
 
@@ -11,10 +12,17 @@ from src.relation_archetypes import (
     RELATION_ARCHETYPE_SCHEMA_VERSION,
 )
 from src.train import (
+    _gcn_all_time_best_metadata_is_current,
     _gcn_checkpoint_matches_model,
+    _load_gcn_all_time_best_mrr,
     _preprocessed_features_are_current,
     _preserve_existing_artifact,
+    _save_gcn_all_time_best_checkpoint,
     _save_gcn_best_checkpoint,
+    _parse_numeric_value,
+    _format_comparison,
+    _parse_previous_summary,
+    set_deterministic_seed,
 )
 
 
@@ -61,6 +69,27 @@ class PreprocessedFeatureCompatibilityTests(unittest.TestCase):
         }]
 
         self.assertFalse(_preprocessed_features_are_current(puzzles))
+
+
+class DeterministicSeedTests(unittest.TestCase):
+    def test_set_deterministic_seed_resets_python_numpy_and_torch_rngs(self):
+        import random
+
+        set_deterministic_seed(123)
+        first = (
+            random.random(),
+            float(np.random.rand()),
+            float(torch.rand(1).item()),
+        )
+
+        set_deterministic_seed(123)
+        second = (
+            random.random(),
+            float(np.random.rand()),
+            float(torch.rand(1).item()),
+        )
+
+        self.assertEqual(first, second)
 
 
 class GCNCheckpointTests(unittest.TestCase):
@@ -121,6 +150,147 @@ class GCNCheckpointTests(unittest.TestCase):
             )
 
             self.assertFalse(os.path.exists(os.path.join(temp_dir, "previous.png")))
+
+    def test_save_all_time_best_checkpoint_writes_metadata(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            checkpoint_path = os.path.join(temp_dir, "gcn_all_time_best.pt")
+            metadata_path = os.path.join(temp_dir, "gcn_all_time_best.json")
+            state = {"weight": torch.tensor([5.0])}
+
+            _save_gcn_all_time_best_checkpoint(
+                state,
+                checkpoint_path,
+                metadata_path,
+                val_mrr=0.42,
+                epoch=3,
+            )
+
+            loaded_state = torch.load(checkpoint_path, map_location="cpu")
+            with open(metadata_path, "r", encoding="utf-8") as f:
+                metadata = json.load(f)
+
+            self.assertTrue(torch.equal(loaded_state["weight"], state["weight"]))
+            self.assertEqual(metadata["validation_mrr"], 0.42)
+            self.assertEqual(metadata["epoch"], 3)
+            self.assertTrue(_gcn_all_time_best_metadata_is_current(metadata))
+            self.assertEqual(_load_gcn_all_time_best_mrr(metadata_path), 0.42)
+
+    def test_stale_all_time_best_metadata_is_ignored(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            metadata_path = os.path.join(temp_dir, "gcn_all_time_best.json")
+            with open(metadata_path, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "validation_mrr": 0.99,
+                        "edge_feature_dim": EDGE_FEATURE_DIM + 1,
+                        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+                        "relation_archetype_schema_version": RELATION_ARCHETYPE_SCHEMA_VERSION,
+                    },
+                    f,
+                )
+
+            self.assertEqual(_load_gcn_all_time_best_mrr(metadata_path), 0.0)
+
+    def test_all_time_best_metadata_missing_or_mismatched_node_dim_is_ignored(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            metadata_path = os.path.join(temp_dir, "gcn_all_time_best.json")
+
+            # Missing default_node_feature_dim
+            with open(metadata_path, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "validation_mrr": 0.99,
+                        "edge_feature_dim": EDGE_FEATURE_DIM,
+                        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+                        "relation_archetype_schema_version": RELATION_ARCHETYPE_SCHEMA_VERSION,
+                    },
+                    f,
+                )
+            self.assertEqual(_load_gcn_all_time_best_mrr(metadata_path), 0.0)
+
+            # Mismatched default_node_feature_dim
+            with open(metadata_path, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "validation_mrr": 0.99,
+                        "edge_feature_dim": EDGE_FEATURE_DIM,
+                        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+                        "relation_archetype_schema_version": RELATION_ARCHETYPE_SCHEMA_VERSION,
+                        "default_node_feature_dim": DEFAULT_NODE_FEATURE_DIM + 1,
+                    },
+                    f,
+                )
+            self.assertEqual(_load_gcn_all_time_best_mrr(metadata_path), 0.0)
+
+
+class ValidationArtifactComparisonTests(unittest.TestCase):
+    def test_parse_numeric_value(self):
+        self.assertEqual(_parse_numeric_value("109"), 109.0)
+        self.assertEqual(_parse_numeric_value("85 / 109 (78.0%)"), 78.0)
+        self.assertEqual(_parse_numeric_value("0.72 / 4"), 0.72)
+        self.assertEqual(_parse_numeric_value("4.73"), 4.73)
+        self.assertEqual(_parse_numeric_value("3.0"), 3.0)
+        self.assertEqual(_parse_numeric_value("798"), 798.0)
+        self.assertIsNone(_parse_numeric_value("no numbers here"))
+
+    def test_format_comparison_higher_is_better(self):
+        # Improved
+        prev, change = _format_comparison("Validation puzzles", "115", "109")
+        self.assertEqual(prev, "109")
+        self.assertEqual(change, "🟢 +6 (improved)")
+
+        # Regressed
+        prev, change = _format_comparison("Validation puzzles", "105", "109")
+        self.assertEqual(prev, "109")
+        self.assertEqual(change, "🔴 -4 (regressed)")
+
+        # Unchanged
+        prev, change = _format_comparison("Validation puzzles", "109", "109")
+        self.assertEqual(prev, "109")
+        self.assertEqual(change, "0")
+
+    def test_format_comparison_lower_is_better_rank(self):
+        # Improved (lower rank)
+        prev, change = _format_comparison("Mean rank of true groups found", "4.50", "4.75")
+        self.assertEqual(prev, "4.75")
+        self.assertEqual(change, "🟢 -0.25 (improved)")
+
+        # Regressed (higher rank)
+        prev, change = _format_comparison("Mean rank of true groups found", "5.10", "4.75")
+        self.assertEqual(prev, "4.75")
+        self.assertEqual(change, "🔴 +0.35 (regressed)")
+
+    def test_format_comparison_percentage(self):
+        prev, change = _format_comparison(
+            "Puzzles with complete partition candidates",
+            "85 / 109 (78.0%)",
+            "82 / 109 (75.2%)"
+        )
+        self.assertEqual(prev, "82 / 109 (75.2%)")
+        self.assertEqual(change, "🟢 +2.8% (improved)")
+
+    def test_parse_previous_summary(self):
+        dummy_content = """# Dummy Header
+## Aggregate Summary
+
+| Metric | Current | Previous | Change vs Prev | All-Time Best | Change vs All-Time |
+|---|---:|---:|---:|---:|---:|
+| Validation puzzles | 109 | 109 | 0 | 109 | 0 |
+| Puzzles with complete partition candidates | 85 / 109 (78.0%) | 82 / 109 (75.2%) | 🟢 +2.8% (improved) | 88 / 109 (80.7%) | 🔴 -2.7% (regressed) |
+| Mean rank of true groups found in top-20 | 4.73 | 4.88 | 🟢 -0.15 (improved) | 4.50 | 🔴 +0.23 (regressed) |
+
+### Recall By Relation Archetype
+...
+"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, "candidates_summary.md")
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(dummy_content)
+
+            parsed = _parse_previous_summary(file_path)
+            self.assertEqual(parsed.get("Validation puzzles"), "109")
+            self.assertEqual(parsed.get("Puzzles with complete partition candidates"), "85 / 109 (78.0%)")
+            self.assertEqual(parsed.get("Mean rank of true groups found in top-20"), "4.73")
 
 
 if __name__ == "__main__":

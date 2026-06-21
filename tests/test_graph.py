@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.features import EDGE_FEATURE_DIM
+from src.features import COMPOUND_FRAGMENT_SHARED_DIM, EDGE_FEATURE_DIM
 from src.graph import ConnectionsGraph, LENGTH_SIMILARITY_DIM, LEVENSHTEIN_DISTANCE_DIM
 
 
@@ -141,6 +141,25 @@ class ConnectionsGraphLevenshteinSimilarityTests(unittest.TestCase):
             (single_adj.numpy() > 0.0),
             (multi_adj.numpy() > 0.0),
         )
+
+
+class ConnectionsGraphCompoundFragmentTests(unittest.TestCase):
+    def test_multi_relational_adjacency_sparsifies_compound_fragment_channel(self):
+        node_features = np.zeros((16, 7), dtype=np.float32)
+        edge_features = np.zeros((16, 16, EDGE_FEATURE_DIM), dtype=np.float32)
+        edge_features[0, 1, COMPOUND_FRAGMENT_SHARED_DIM] = 0.20
+        edge_features[0, 2, COMPOUND_FRAGMENT_SHARED_DIM] = 0.50
+
+        graph = ConnectionsGraph(
+            [f"WORD{i}" for i in range(16)],
+            node_features=node_features,
+            edge_features=edge_features,
+        )
+
+        adj = graph.get_multi_relational_adjacency()[COMPOUND_FRAGMENT_SHARED_DIM]
+
+        self.assertEqual(adj[0, 1].item(), 0.0)
+        self.assertEqual(adj[0, 2].item(), 1.0)
 
 
 if __name__ == "__main__":

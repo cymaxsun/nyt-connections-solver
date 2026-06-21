@@ -82,7 +82,6 @@ Every node feature is currently computed **independently of the other 15 words o
 | Proposed Feature | Description | Why It Helps | Logical Strength | Game-Logical Reasoning |
 |---|---|---|---|---|
 | **`word_frequency`** | Log word frequency from a corpus | Common phrases use high-frequency words | **Strong** | Wordplay categories (anagrams, homophones) are almost exclusively restricted to common words. Obsolescent/rare words are usually technical terms or proper nouns. |
-| **`num_common_collocations`** | Count of high-PMI bigrams this word participates in | Helps with idiom and blank-fill categories | **Strong** | Directly indicates a word's likelihood of being part of common idioms, compound phrases, or blank-fill categories. |
 | **`has_adverb_pos`** | Binary: WordNet adverb synsets exist | Expands POS coverage | **Medium** | Helps enforce parts-of-speech homogeneity within groups. |
 
 ---

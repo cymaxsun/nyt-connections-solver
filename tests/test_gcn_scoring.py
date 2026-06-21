@@ -221,8 +221,8 @@ class GCNScoringTests(unittest.TestCase):
 
         self.assertAlmostEqual(float(scores[match][0]), 7.0 / 12.0, places=6)
 
-    def test_candidate_scores_get_small_boost_from_group_archetype_confidence(self):
-        model = ConnectionsGCN()
+    def test_candidate_scores_ignore_group_archetype_confidence_when_disabled(self):
+        model = ConnectionsGCN(group_archetype_score_weight=0.0)
         edge_probs = torch.zeros(16, 16)
         for i, j in [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)]:
             edge_probs[i, j] = 0.5
@@ -235,7 +235,7 @@ class GCNScoringTests(unittest.TestCase):
 
         _, boosted_scores = model.get_candidate_scores_tensor(edge_probs, group_logits)
 
-        self.assertGreater(float(boosted_scores[match][0]), float(base_scores[match][0]))
+        self.assertEqual(float(boosted_scores[match][0]), float(base_scores[match][0]))
 
     def test_candidate_subgraphs_match_tensor_scores(self):
         model = ConnectionsGCN()

@@ -22,7 +22,30 @@ timeline
     Phase 13 : ConceptNet Relation Decomposition : Relation-Type + Residual Edge Channels : Schema v10
     Phase 14 : Phonetic Edge Features : CMUDict Rhymes & Phoneme Edit Distance : Jellyfish Metaphone : Schema v11
     Phase 15 : Metrics Pipeline Redesign : GCN/DQN History Plots : Model Registry : CLI Comparison Tool : Worst-10 Error Analysis
+    Phase 16 : Data Integrity Cleanup : Remove Full-Corpus Collocation Feature : Drop Malformed Puzzle : Schema v12
+    Phase 17 : Archetype Regularization & Gated Boosting : Gated Candidate Scoring : MLP Head Dropout : DropEdge p=0.2 : Class-Balanced Group Weights
+    Phase 18 : Google Ngrams Compound Fragment Edge Feature : Shared Wildcard Completion Channel : Schema v13
 ```
+
+---
+
+## Phase 17: Archetype Regularization & Gated Boosting
+* **Milestone**: Resolved GCN overfitting and auxiliary archetype classifier collapse.
+* **Major Changes**:
+  - **Scoring Head Dropout**: Added `nn.Dropout(p=0.3)` to the classification heads to regularize the GCN prediction maps.
+  - **Gated Candidate Boosting**: Implemented a threshold-and-margin gate (`confidence >= 0.45` and `margin >= 0.10`) to prevent low-confidence false positives from receiving score boosts.
+  - **DropEdge & Weight Decay**: Increased DropEdge rate to `0.2` and weight decay to `1e-4` to delay GCN overfitting.
+  - **Class-Balanced Group Weights**: Implemented a dynamic balanced weight formula with `NO_RELATION` weight set to `0.15` to successfully uncollapse the group relation classifier.
+
+---
+
+## Phase 16: Data Integrity Cleanup
+* **Milestone**: Removed a leakage-prone node feature and a malformed puzzle row to restore cleaner train/validation/test semantics.
+* **Major Changes**:
+  - **Removed Full-Corpus Collocation Feature**: Deleted the in-domain `common_collocation_count` node feature because it derived counts from the entire `data/connections.json` corpus before splitting, contaminating validation/test features.
+  - **Feature Schema Version 12**: Bumped `FEATURE_SCHEMA_VERSION` so stale preprocessed graph caches with the removed node slot are invalidated.
+  - **Malformed Puzzle Removal**: Removed puzzle `660` (`2025-04-01`) because all 16 members were empty strings, collapsing `word_to_cat` and producing an all-positive adjacency matrix.
+  - **Dataset Integrity Test**: Added regression coverage requiring each puzzle to have four groups, four non-empty members per group, and 16 unique board words.
 
 ---
 
@@ -176,3 +199,12 @@ timeline
   - **Worst-Performing Puzzle Diagnostics**: Validation evaluates per-puzzle MRRs to locate the 10 hardest validation boards, outputting a detailed report in `visualizations/val_puzzles/error_analysis.md` summarizing worst puzzles, exact ground-truth groups, and mapping relation archetype failure ratios.
   - **Interactive Model Comparison CLI**: Added `--compare-models` to `main.py` which takes two models, parses registry metrics or evaluates checkpoints on the fly, logs delta metric tables to stdout, and compiles a comprehensive side-by-side Markdown report to `visualizations/model_comparison_report.md`.
 
+---
+
+## Phase 18: Google Ngrams Compound Fragment Edge Feature
+* **Milestone**: Added a cache-backed pairwise compound-fragment edge channel for fill-in-the-blank categories.
+* **Major Changes**:
+  - **Ngram Compound Edge**: Expanded `EDGE_FEATURE_DIM` to `25` with `compound_fragment_shared`, scoring word pairs that share a strong Google Books Ngrams wildcard completion such as `SURF` and `SKATE` before `board`.
+  - **Offline/Live Cache Split**: Added a versioned `data/google_ngram_compound_cache.json`; training and preprocessing default to cache-only, while `src/preprocess.py --ngram-live` and `main.py --solve` can populate missing live profiles.
+  - **Streaming Cache Warmer**: Added `src/warm_ngram_compound_cache.py` to stream Google Books `eng_2019` 2-gram gzip exports, aggregate `1980-2019` match counts for dataset vocabulary, filter filler completions while preserving phrasal particles, and atomically warm `data/google_ngram_compound_cache.json`.
+  - **Feature Schema Version 13**: Bumped `FEATURE_SCHEMA_VERSION` to `13`; preprocessed graph caches and GCN checkpoints must be rebuilt.

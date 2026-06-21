@@ -12,6 +12,7 @@ from src.features import (
     EDGE_FEATURE_DIM,
     FEATURE_SCHEMA_VERSION,
     FeatureExtractor,
+    EDGE_FEATURE_NAMES,
 )
 from src.gcn import (
     ConnectionsGCN,
@@ -20,6 +21,7 @@ from src.gcn import (
     validate_gcn,
     build_relation_targets,
     build_group_relation_targets,
+    get_hidden_features_from_state_dict,
 )
 from src.rl_agent import CANDIDATE_FEATURE_DIM, DQNAgent, train_rl_episodes
 from src.env import ConnectionsEnv
@@ -119,7 +121,7 @@ def train_pipeline(
     # 2. Train or Load GCN
     gcn = build_gcn_model(
         in_features=in_features,
-        hidden_features=32,
+        hidden_features=128,
         out_features=16,
         num_relations=EDGE_FEATURE_DIM # edge features count
     ).to(device)
@@ -165,12 +167,19 @@ def train_pipeline(
                 "Retrain without --skip-gcn."
             )
 
+        hidden_feats = get_hidden_features_from_state_dict(gcn_state, default=128)
+        gcn = build_gcn_model(
+            in_features=in_features,
+            hidden_features=hidden_feats,
+            out_features=16,
+            num_relations=EDGE_FEATURE_DIM,
+        ).to(device)
         gcn.load_state_dict(gcn_state)
         _, best_mrr = validate_gcn(gcn, val_puzzles, extractor, device, visualize=False)
         print(f"Loaded {checkpoint_label} with Validation MRR: {best_mrr:.4f}")
     else:
         print("\n--- Phase 1: Training GCN ---")
-        gcn_optimizer = torch.optim.Adam(gcn.parameters(), lr=1e-3, weight_decay=1e-5)
+        gcn_optimizer = torch.optim.Adam(gcn.parameters(), lr=1e-3, weight_decay=1e-4)
         _preserve_existing_artifact(gcn_weights_path, previous_gcn_weights_path)
         _preserve_existing_artifact(
             os.path.join("visualizations", "val_best.png"),
@@ -253,9 +262,56 @@ def train_pipeline(
         os.makedirs(history_dir, exist_ok=True)
         gcn_history_path = os.path.join(history_dir, "gcn_training_history.json")
         try:
+            existing_history = []
+            if os.path.exists(gcn_history_path):
+                try:
+                    with open(gcn_history_path, "r", encoding="utf-8") as f:
+                        old_data = json.load(f)
+                        if isinstance(old_data, dict) and "history" in old_data:
+                            existing_history = old_data["history"]
+                        elif isinstance(old_data, list):
+                            existing_history = old_data
+                except Exception as e:
+                    print(f"Warning: Failed to load existing GCN training history: {e}. Starting fresh.")
+
+            # Determine start epoch offset if appending
+            epoch_offset = 0
+            if existing_history:
+                epoch_offset = max(item.get("epoch", 0) for item in existing_history if isinstance(item, dict))
+
+            # Adjust new history epoch numbers to be sequential
+            adjusted_new_history = []
+            for item in gcn_history:
+                adjusted_item = item.copy()
+                adjusted_item["epoch"] = item["epoch"] + epoch_offset
+                adjusted_new_history.append(adjusted_item)
+
+            combined_history = existing_history + adjusted_new_history
+
+            gcn_history_data = {
+                "metadata": {
+                    "edge_feature_dim": EDGE_FEATURE_DIM,
+                    "node_feature_dim": in_features,
+                    "edge_features": EDGE_FEATURE_NAMES,
+                    "gcn_hidden_features": 128,
+                    "gcn_out_features": 16,
+                    "params": {
+                        "gcn_epochs": gcn_epochs,
+                        "gcn_lr": 1e-3,
+                        "gcn_weight_decay": 1e-4,
+                        "gcn_patience": gcn_patience,
+                        "seed": seed,
+                    }
+                },
+                "history": combined_history
+            }
             with open(gcn_history_path, "w", encoding="utf-8") as f:
-                json.dump(gcn_history, f, indent=2)
-            plot_gcn_learning_curves(gcn_history_path, os.path.join(history_dir, "gcn_learning_curves.png"))
+                json.dump(gcn_history_data, f, indent=2)
+            plot_gcn_learning_curves(
+                gcn_history_path,
+                os.path.join(history_dir, "gcn_learning_curves.png"),
+                history_override=adjusted_new_history,
+            )
         except Exception as e:
             print(f"Warning: Failed to save or plot GCN training history: {e}")
                 
@@ -265,6 +321,13 @@ def train_pipeline(
             try:
                 state = torch.load(all_time_gcn_weights_path, map_location=device)
                 if _gcn_checkpoint_matches_model(state, in_features):
+                    hidden_feats = get_hidden_features_from_state_dict(state, default=128)
+                    gcn = build_gcn_model(
+                        in_features=in_features,
+                        hidden_features=hidden_feats,
+                        out_features=16,
+                        num_relations=EDGE_FEATURE_DIM,
+                    ).to(device)
                     gcn.load_state_dict(state)
                     checkpoint_label = "all-time best GCN"
                     loaded_gcn = True
@@ -274,7 +337,15 @@ def train_pipeline(
                 print(f"Warning: Failed to load all-time best GCN checkpoint: {e}")
 
         if not loaded_gcn:
-            gcn.load_state_dict(torch.load(gcn_weights_path, map_location=device))
+            state = torch.load(gcn_weights_path, map_location=device)
+            hidden_feats = get_hidden_features_from_state_dict(state, default=128)
+            gcn = build_gcn_model(
+                in_features=in_features,
+                hidden_features=hidden_feats,
+                out_features=16,
+                num_relations=EDGE_FEATURE_DIM,
+            ).to(device)
+            gcn.load_state_dict(state)
             checkpoint_label = "current best GCN"
 
         print(f"GCN training complete. Loaded {checkpoint_label} for RL training.")
@@ -338,8 +409,25 @@ def train_pipeline(
     os.makedirs(history_dir, exist_ok=True)
     dqn_history_path = os.path.join(history_dir, "dqn_training_history.json")
     try:
+        dqn_history_data = {
+            "metadata": {
+                "rl_state_dim": 33,
+                "rl_candidate_dim": CANDIDATE_FEATURE_DIM,
+                "params": {
+                    "rl_episodes": rl_episodes,
+                    "rl_lr": 5e-4,
+                    "rl_gamma": 0.9,
+                    "rl_epsilon_start": 1.0,
+                    "rl_epsilon_end": 0.05,
+                    "rl_epsilon_decay": 0.998,
+                    "batch_size": batch_size,
+                    "seed": seed,
+                }
+            },
+            "history": dqn_history
+        }
         with open(dqn_history_path, "w", encoding="utf-8") as f:
-            json.dump(dqn_history, f, indent=2)
+            json.dump(dqn_history_data, f, indent=2)
         plot_dqn_learning_curves(dqn_history_path, os.path.join(history_dir, "dqn_learning_curves.png"))
     except Exception as e:
         print(f"Warning: Failed to save or plot DQN training history: {e}")
@@ -648,13 +736,15 @@ def update_validation_artifacts(
     if os.path.exists(previous_best_path):
         try:
             print("Evaluating previous best GCN from checkpoint...")
+            state = torch.load(previous_best_path, map_location=device)
+            hidden_feats = get_hidden_features_from_state_dict(state, default=32)
             prev_gcn = ConnectionsGCN(
                 in_features=gcn.input_proj.in_features,
-                hidden_features=32,
+                hidden_features=hidden_feats,
                 out_features=16,
                 num_relations=EDGE_FEATURE_DIM,
             ).to(device)
-            prev_gcn.load_state_dict(torch.load(previous_best_path, map_location=device))
+            prev_gcn.load_state_dict(state)
             
             prev_stats, _, _ = _evaluate_gcn_model_stats(
                 prev_gcn,
@@ -682,19 +772,21 @@ def update_validation_artifacts(
             print(f"Warning: Failed to evaluate previous best GCN checkpoint: {e}")
 
     # 5. Try loading and evaluating all-time best model from checkpoint
-    all_time_best_path = "models/gcn_all_time_best.pt"
+    all_time_best_path = os.path.join(model_dir, _gcn_all_time_best_checkpoint_filename())
     all_time_metrics = None
     all_time_stats = None
     if os.path.exists(all_time_best_path):
         try:
             print("Evaluating all-time best GCN from checkpoint...")
+            state = torch.load(all_time_best_path, map_location=device)
+            hidden_feats = get_hidden_features_from_state_dict(state, default=32)
             all_time_gcn = ConnectionsGCN(
                 in_features=gcn.input_proj.in_features,
-                hidden_features=32,
+                hidden_features=hidden_feats,
                 out_features=16,
                 num_relations=EDGE_FEATURE_DIM,
             ).to(device)
-            all_time_gcn.load_state_dict(torch.load(all_time_best_path, map_location=device))
+            all_time_gcn.load_state_dict(state)
             
             all_time_stats, _, _ = _evaluate_gcn_model_stats(
                 all_time_gcn,
@@ -727,7 +819,7 @@ def update_validation_artifacts(
     if prev_stats is not None:
         _update_model_registry("gcn_previous_best", previous_metrics, prev_stats)
     if all_time_stats is not None:
-        _update_model_registry("gcn_all_time_best", all_time_metrics, all_time_stats)
+        _update_model_registry(f"gcn_all_time_best_v{FEATURE_SCHEMA_VERSION}", all_time_metrics, all_time_stats)
 
     # Write error analysis report
     _write_error_analysis_report(puzzle_mrrs, os.path.join(output_dir, "error_analysis.md"))
@@ -1272,10 +1364,10 @@ def _gcn_previous_best_checkpoint_filename() -> str:
     return "gcn_previous_best.pt"
 
 def _gcn_all_time_best_checkpoint_filename() -> str:
-    return "gcn_all_time_best.pt"
+    return f"gcn_all_time_best_v{FEATURE_SCHEMA_VERSION}.pt"
 
 def _gcn_all_time_best_metadata_filename() -> str:
-    return "gcn_all_time_best.json"
+    return f"gcn_all_time_best_v{FEATURE_SCHEMA_VERSION}.json"
 
 def _save_gcn_best_checkpoint(
     state_dict: Dict[str, torch.Tensor],
@@ -1360,9 +1452,10 @@ def _initialize_all_time_gcn_best(
         state_dict = torch.load(current_checkpoint_path, map_location=device)
         if not _gcn_checkpoint_matches_model(state_dict, in_features):
             return 0.0
+        hidden_feats = get_hidden_features_from_state_dict(state_dict, default=32)
         baseline_gcn = build_gcn_model(
             in_features=in_features,
-            hidden_features=32,
+            hidden_features=hidden_feats,
             out_features=16,
             num_relations=EDGE_FEATURE_DIM,
         ).to(device)
@@ -1623,6 +1716,12 @@ def compare_checkpoints(model_a_ref: str, model_b_ref: str, device: str) -> None
             
     # Helper to get model data (either from registry or evaluate path)
     def get_model_data(ref: str) -> Dict[str, Any]:
+        # Fallback for generic 'gcn_all_time_best' to current schema version
+        if ref == "gcn_all_time_best":
+            schema_ref = f"gcn_all_time_best_v{FEATURE_SCHEMA_VERSION}"
+            if schema_ref in registry:
+                print(f"Resolving 'gcn_all_time_best' to '{schema_ref}' from model registry.")
+                return registry[schema_ref]
         # If it's a key in registry, return it
         if ref in registry:
             print(f"Loaded '{ref}' from model registry.")
@@ -1640,16 +1739,16 @@ def compare_checkpoints(model_a_ref: str, model_b_ref: str, device: str) -> None
         
         # Load GCN
         in_features = val_puzzles[0]["node_features"].shape[1] if val_puzzles else DEFAULT_NODE_FEATURE_DIM
-        gcn = build_gcn_model(
-            in_features=in_features,
-            hidden_features=32,
-            out_features=16,
-            num_relations=EDGE_FEATURE_DIM
-        ).to(device)
-        
         state = torch.load(ref, map_location=device)
         if not _gcn_checkpoint_matches_model(state, in_features):
             raise ValueError(f"Checkpoint '{ref}' is incompatible with current GCN architecture.")
+        hidden_feats = get_hidden_features_from_state_dict(state, default=32)
+        gcn = build_gcn_model(
+            in_features=in_features,
+            hidden_features=hidden_feats,
+            out_features=16,
+            num_relations=EDGE_FEATURE_DIM
+        ).to(device)
         gcn.load_state_dict(state)
         
         extractor = FeatureExtractor()

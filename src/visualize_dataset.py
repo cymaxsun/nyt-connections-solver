@@ -3,7 +3,15 @@ import torch
 import numpy as np
 from typing import List
 from src.dataset import load_dataset, ConnectionsPuzzle
-from src.features import FeatureExtractor
+from src.features import (
+    CLUE_SIMILARITY_DIM,
+    CN_HAS_CONTEXT_DIM,
+    CN_IS_A_DIM,
+    CN_RELATED_TO_DIM,
+    CN_SYNONYM_DIM,
+    FeatureExtractor,
+    WORDNET_PATH_SIM_DIM,
+)
 from src.graph import ConnectionsGraph
 from src.visualize import plot_connections_graph
 
@@ -30,9 +38,15 @@ def visualize_all_raw_puzzles(data_path: str, output_dir: str = "visualizations/
             # Build graph features
             node_feats, edge_feats = extractor.build_graph_matrices(puzzle.words)
             
-            # Combine raw similarity dimensions: WordNet path sim (0) + ConceptNet fwd (2) + Clue TF-IDF sim (4)
-            # Normalize to [0, 1] range
-            raw_sim = (edge_feats[:, :, 0] + edge_feats[:, :, 2] + edge_feats[:, :, 4]) / 3.0
+            # Combine high-signal semantic dimensions and normalize to [0, 1].
+            raw_sim = (
+                edge_feats[:, :, WORDNET_PATH_SIM_DIM]
+                + edge_feats[:, :, CN_IS_A_DIM]
+                + edge_feats[:, :, CN_SYNONYM_DIM]
+                + edge_feats[:, :, CN_RELATED_TO_DIM]
+                + edge_feats[:, :, CN_HAS_CONTEXT_DIM]
+                + edge_feats[:, :, CLUE_SIMILARITY_DIM]
+            ) / 6.0
             
             # Make symmetric
             raw_sim = (raw_sim + raw_sim.T) / 2.0

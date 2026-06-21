@@ -16,7 +16,7 @@ def plot_connections_graph(
 ):
     """
     Plots a 16-node graph of the Connections puzzle, drawing connections based on similarity scores.
-    
+
     Args:
         words: List of 16 word labels.
         similarity_matrix: 16x16 numpy array of pairwise similarity/probability scores.
@@ -28,22 +28,22 @@ def plot_connections_graph(
     """
     n = len(words)
     assert n == 16, "Graph must have exactly 16 nodes."
-    
+
     # Ensure similarity matrix is symmetric (if not already)
     sim = (similarity_matrix + similarity_matrix.T) / 2.0
-    
+
     # Initialize graph
     G = nx.Graph()
     for i, word in enumerate(words):
         G.add_node(i, label=word)
-        
+
     # Add edges with weights above threshold
     for i in range(n):
         for j in range(i + 1, n):
             weight = sim[i, j]
             if weight >= threshold:
                 G.add_edge(i, j, weight=float(weight))
-                
+
     # Define nice palette for the 4 categories (Yellow, Green, Blue, Purple)
     # matching the Connections game aesthetic.
     category_colors = {
@@ -53,7 +53,7 @@ def plot_connections_graph(
         3: "#D6A2E8"  # Purple (Tricky)
     }
     default_node_color = "#E0E0E0"
-    
+
     # Color nodes
     node_colors = []
     for i in range(n):
@@ -62,30 +62,30 @@ def plot_connections_graph(
             node_colors.append(category_colors.get(cat, default_node_color))
         else:
             node_colors.append(default_node_color)
-            
+
     # Set layout
     plt.figure(figsize=(10, 10), facecolor='#FDFDFD')
     pos = nx.spring_layout(G, k=0.45, seed=42)
-    
+
     # Draw nodes
     nx.draw_networkx_nodes(
-        G, pos, 
-        node_color=node_colors, 
-        node_size=2000, 
-        edgecolors='#666666', 
+        G, pos,
+        node_color=node_colors,
+        node_size=2000,
+        edgecolors='#666666',
         linewidths=1.5
     )
-    
+
     # Draw labels (words)
     labels = {i: words[i] for i in range(n)}
     nx.draw_networkx_labels(
-        G, pos, 
-        labels=labels, 
-        font_size=10, 
-        font_weight="bold", 
+        G, pos,
+        labels=labels,
+        font_size=10,
+        font_weight="bold",
         font_family="sans-serif"
     )
-    
+
     # Draw edges with varying thickness and transparency based on similarity
     edges = G.edges(data=True)
     if edges:
@@ -94,7 +94,7 @@ def plot_connections_graph(
         max_w = max(weights) if weights else 1.0
         edge_widths = [max(1, (w / max_w) * 6.0) for w in weights]
         edge_alphas = [max(0.1, min(0.9, w)) for w in weights]
-        
+
         # Color palette for predicted positive relation types.
         archetype_colors = {
             1: "#2ECC71", # SEMANTIC_SET -> Emerald Green
@@ -111,7 +111,7 @@ def plot_connections_graph(
             for idx, name in enumerate(RELATION_ARCHETYPES)
         }
         drawn_types = set()
-        
+
         # We draw edges one-by-one or in groups to support individual alphas and colors
         for (u, v, data), w, alpha in zip(edges, edge_widths, edge_alphas):
             color = "#4A90E2" # default blue
@@ -127,16 +127,16 @@ def plot_connections_graph(
                 if pred_type is not None and pred_type not in drawn_types:
                     drawn_types.add(pred_type)
                     label = archetype_labels.get(pred_type)
-                    
+
             nx.draw_networkx_edges(
-                G, pos, 
-                edgelist=[(u, v)], 
-                width=w, 
-                alpha=alpha, 
+                G, pos,
+                edgelist=[(u, v)],
+                width=w,
+                alpha=alpha,
                 edge_color=color,
                 label=label
             )
-            
+
         if relation_logits is not None and drawn_types:
             import matplotlib.patches as mpatches
             legend_handles = [
@@ -144,11 +144,11 @@ def plot_connections_graph(
                 for t in sorted(list(drawn_types))
             ]
             plt.legend(handles=legend_handles, loc="upper right")
-            
+
     plt.title(title, fontsize=16, fontweight='bold', pad=20)
     plt.axis("off")
     plt.tight_layout()
-    
+
     if filepath:
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         plt.savefig(filepath, dpi=150, facecolor=plt.gcf().get_facecolor(), bbox_inches='tight')
@@ -162,28 +162,39 @@ def plot_connections_graph(
         plt.close()
         print(f"Saved visualization to {default_path}")
 
-def plot_gcn_learning_curves(history_path: str, output_path: str) -> None:
+def plot_gcn_learning_curves(history_path: str, output_path: str, history_override: Optional[List[dict]] = None) -> None:
     """
     Plots the GCN learning curves (losses and validation MRR over epochs).
     """
-    import json
-    if not os.path.exists(history_path):
-        print(f"Warning: History file {history_path} not found. Skipping plot.")
-        return
-        
-    with open(history_path, "r", encoding="utf-8") as f:
-        history = json.load(f)
-        
+    if history_override is not None:
+        history = history_override
+    else:
+        import json
+        if not os.path.exists(history_path):
+            print(f"Warning: History file {history_path} not found. Skipping plot.")
+            return
+
+        with open(history_path, "r", encoding="utf-8") as f:
+            history_data = json.load(f)
+
+        if not history_data:
+            return
+
+        if isinstance(history_data, dict) and "history" in history_data:
+            history = history_data["history"]
+        else:
+            history = history_data
+
     if not history:
         return
-        
+
     epochs = [item["epoch"] for item in history]
     train_losses = [item["train_loss"] for item in history]
     val_losses = [item["val_loss"] for item in history]
     val_mrrs = [item["val_mrr"] for item in history]
-    
+
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    
+
     # Loss plot
     ax1.plot(epochs, train_losses, label="Train Loss", color="#E74C3C", marker="o", linewidth=2)
     ax1.plot(epochs, val_losses, label="Val Loss", color="#3498DB", marker="s", linewidth=2)
@@ -192,7 +203,7 @@ def plot_gcn_learning_curves(history_path: str, output_path: str) -> None:
     ax1.set_title("GCN Loss Curves", fontsize=12, fontweight="bold")
     ax1.grid(True, linestyle="--", alpha=0.6)
     ax1.legend()
-    
+
     # MRR plot
     ax2.plot(epochs, val_mrrs, label="Val MRR", color="#2ECC71", marker="^", linewidth=2)
     ax2.set_xlabel("Epoch", fontweight="bold")
@@ -200,10 +211,10 @@ def plot_gcn_learning_curves(history_path: str, output_path: str) -> None:
     ax2.set_title("GCN Validation MRR", fontsize=12, fontweight="bold")
     ax2.grid(True, linestyle="--", alpha=0.6)
     ax2.legend()
-    
+
     plt.suptitle("GCN Model Training Progress", fontsize=14, fontweight="bold", y=0.98)
     plt.tight_layout()
-    
+
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
@@ -218,21 +229,29 @@ def plot_dqn_learning_curves(history_path: str, output_path: str) -> None:
     if not os.path.exists(history_path):
         print(f"Warning: History file {history_path} not found. Skipping plot.")
         return
-        
+
     with open(history_path, "r", encoding="utf-8") as f:
-        history = json.load(f)
-        
+        history_data = json.load(f)
+
+    if not history_data:
+        return
+
+    if isinstance(history_data, dict) and "history" in history_data:
+        history = history_data["history"]
+    else:
+        history = history_data
+
     if not history:
         return
-        
+
     episodes = [item["episode"] for item in history]
     win_rates = [item["win_rate"] for item in history]
     avg_rewards = [item["avg_reward"] for item in history]
     avg_steps = [item["avg_steps"] for item in history]
     epsilons = [item.get("epsilon", 0.0) for item in history]
-    
+
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 5))
-    
+
     # Win rate and Epsilon plot
     ax1.plot(episodes, win_rates, label="Win Rate", color="#9B59B6", marker="o", linewidth=2)
     ax1_twin = ax1.twinx()
@@ -242,12 +261,12 @@ def plot_dqn_learning_curves(history_path: str, output_path: str) -> None:
     ax1_twin.set_ylabel("Epsilon Exploration", color="#7F8C8D", fontweight="bold")
     ax1.set_title("RL DQN Win Rate & Exploration", fontsize=12, fontweight="bold")
     ax1.grid(True, linestyle="--", alpha=0.6)
-    
+
     # Merge legends from dual axis
     lines, labels = ax1.get_legend_handles_labels()
     lines_twin, labels_twin = ax1_twin.get_legend_handles_labels()
     ax1.legend(lines + lines_twin, labels + labels_twin, loc="upper left")
-    
+
     # Reward plot
     ax2.plot(episodes, avg_rewards, label="Avg Reward", color="#E67E22", marker="s", linewidth=2)
     ax2.set_xlabel("Episode", fontweight="bold")
@@ -255,7 +274,7 @@ def plot_dqn_learning_curves(history_path: str, output_path: str) -> None:
     ax2.set_title("RL DQN Average Reward", fontsize=12, fontweight="bold")
     ax2.grid(True, linestyle="--", alpha=0.6)
     ax2.legend()
-    
+
     # Steps plot
     ax3.plot(episodes, avg_steps, label="Avg Steps", color="#1ABC9C", marker="^", linewidth=2)
     ax3.set_xlabel("Episode", fontweight="bold")
@@ -263,10 +282,10 @@ def plot_dqn_learning_curves(history_path: str, output_path: str) -> None:
     ax3.set_title("RL DQN Average Submissions", fontsize=12, fontweight="bold")
     ax3.grid(True, linestyle="--", alpha=0.6)
     ax3.legend()
-    
+
     plt.suptitle("RL DQN Agent Training Progress", fontsize=14, fontweight="bold", y=0.98)
     plt.tight_layout()
-    
+
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
@@ -291,8 +310,8 @@ if __name__ == "__main__":
                 sim_mat[i, j] = 0.8 + np.random.rand() * 0.2
             else:
                 sim_mat[i, j] = np.random.rand() * 0.1
-                
+
     sim_mat = (sim_mat + sim_mat.T) / 2.0
     true_cats = [i // 4 for i in range(16)]
-    
+
     plot_connections_graph(test_words, sim_mat, true_categories=true_cats, threshold=0.15)

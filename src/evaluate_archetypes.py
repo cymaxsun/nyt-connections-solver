@@ -2,7 +2,12 @@ import os
 import torch
 import numpy as np
 from src.dataset import load_preprocessed_dataset
-from src.gcn import build_gcn_model, build_group_relation_targets, build_relation_targets
+from src.gcn import (
+    build_gcn_model,
+    build_group_relation_targets,
+    build_relation_targets,
+    get_hidden_features_from_state_dict,
+)
 from src.features import DEFAULT_NODE_FEATURE_DIM, EDGE_FEATURE_DIM, FeatureExtractor
 from src.graph import ConnectionsGraph
 from src.relation_archetypes import (
@@ -41,8 +46,22 @@ def main():
         if len(val_puzzles) > 0
         else DEFAULT_NODE_FEATURE_DIM
     )
-    model = build_gcn_model(in_features=in_features, hidden_features=32, out_features=16, num_relations=EDGE_FEATURE_DIM)
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    state = torch.load(model_path, map_location=device)
+    # Check feature dimension compatibility
+    input_proj = state.get("input_proj.weight")
+    if input_proj is not None and input_proj.shape[1] != in_features:
+        print(f"\nError: Checkpoint '{model_path}' has input feature dimension {input_proj.shape[1]}, "
+              f"which is incompatible with the current dataset features ({in_features}).\n"
+              f"Please retrain the model first: python main.py --train")
+        return
+    hidden_feats = get_hidden_features_from_state_dict(state, default=32)
+    model = build_gcn_model(
+        in_features=in_features,
+        hidden_features=hidden_feats,
+        out_features=16,
+        num_relations=EDGE_FEATURE_DIM,
+    )
+    model.load_state_dict(state)
     model.eval()
     
     # Track statistics

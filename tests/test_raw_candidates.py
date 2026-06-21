@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from src.features import EDGE_FEATURE_DIM
+from src.features import EDGE_FEATURE_DIM, SENTENCE_SIMILARITY_DIM, PHONEME_EDIT_DISTANCE_DIM
 from src.raw_candidates import (
     evaluate_raw_candidates,
     raw_candidate_groups,
@@ -16,6 +16,7 @@ class RawCandidateTests(unittest.TestCase):
     def test_raw_pair_scores_sparsify_length_channel(self):
         edge_features = np.zeros((16, 16, EDGE_FEATURE_DIM), dtype=np.float32)
         edge_features[:, :, LEVENSHTEIN_DISTANCE_DIM] = 1.0
+        edge_features[:, :, PHONEME_EDIT_DISTANCE_DIM] = 1.0
         edge_features[0, 1, LENGTH_SIMILARITY_DIM] = 0.0
         edge_features[1, 0, LENGTH_SIMILARITY_DIM] = 0.0
         edge_features[0, 2, LENGTH_SIMILARITY_DIM] = 0.2
@@ -30,6 +31,7 @@ class RawCandidateTests(unittest.TestCase):
         edge_features = np.zeros((16, 16, EDGE_FEATURE_DIM), dtype=np.float32)
         edge_features[:, :, LENGTH_SIMILARITY_DIM] = 1.0
         edge_features[:, :, LEVENSHTEIN_DISTANCE_DIM] = 1.0
+        edge_features[:, :, PHONEME_EDIT_DISTANCE_DIM] = 1.0
         edge_features[0, 1, LEVENSHTEIN_DISTANCE_DIM] = 0.25
         edge_features[1, 0, LEVENSHTEIN_DISTANCE_DIM] = 0.25
         edge_features[0, 2, LEVENSHTEIN_DISTANCE_DIM] = 0.5
@@ -72,6 +74,7 @@ class RawCandidateTests(unittest.TestCase):
         edge_features = np.zeros((16, 16, EDGE_FEATURE_DIM), dtype=np.float32)
         edge_features[:, :, LENGTH_SIMILARITY_DIM] = 1.0
         edge_features[:, :, LEVENSHTEIN_DISTANCE_DIM] = 1.0
+        edge_features[:, :, PHONEME_EDIT_DISTANCE_DIM] = 1.0
         words = [f"WORD{i}" for i in range(16)]
         word_to_cat = {}
         for cat_idx in range(4):
@@ -81,7 +84,7 @@ class RawCandidateTests(unittest.TestCase):
             for i in group_indices:
                 for j in group_indices:
                     if i != j:
-                        edge_features[i, j, 10] = 1.0
+                        edge_features[i, j, SENTENCE_SIMILARITY_DIM] = 1.0
 
         metrics = evaluate_raw_candidates(
             [{
