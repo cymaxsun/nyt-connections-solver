@@ -32,3 +32,7 @@ visualizations/model_comparison_report.md
 visualizations/val_puzzles/
 visualizations/raw_candidates/
 visualizations/raw/
+
+# MLflow tracking files
+mlflow.db
+mlruns/

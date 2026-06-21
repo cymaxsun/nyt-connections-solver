@@ -27,6 +27,8 @@ timeline
     Phase 18 : Google Ngrams Compound Fragment Edge Feature : Shared Wildcard Completion Channel : Schema v13
     Phase 19 : Training Loop & RL Optimization : Batched GCN Training : Vectorized DQN Updates : Redundant GCN Pass Elision
     Phase 20 : Ngrams.dev Cache Warmer : Search-Based Compound Profiles : Cache Schema v2
+    Phase 21 : MLflow Telemetry & Logging Refactor : MLflow Tracking Server : val_mean_node_cosine_similarity : gcn1_W_rel_norm_*
+    Phase 22 : GPU/CPU Dispatch & Precomputation Optimizations : RelationalGCNLayer Matmul : Static Feature Precomputation : Single-Transfer Batching : Batched Validation
 ```
 
 ---
@@ -36,6 +38,28 @@ timeline
 * **Major Changes**:
   - **Search-Based Profiles**: Added an overwrite-oriented cache warmer that queries `token *` and `* token` for puzzle vocabulary, normalizes total corpus scores, and writes `google_ngram_compound_cache.json` profiles directly.
   - **Cache Schema Version 2**: Accepted `ngrams.dev/search` metadata in `FeatureExtractor` while preserving the existing profile shape used by the compound-fragment edge feature.
+
+---
+
+## Phase 22: GPU/CPU Dispatch & Precomputation Optimizations
+* **Milestone**: Resolved training speed bottleneck on MPS and CPU by precomputing static dataset properties and vectorizing training/validation pipelines.
+* **Major Changes**:
+  - **RelationalGCNLayer Matmul Optimization**: Replaced slow and high-overhead custom `torch.einsum` operations with standard PyTorch batched and unbatched `matmul` operations to leverage highly optimized BLAS/GEMM kernels.
+  - **Static Feature Precomputation**: Introduced `_ensure_precomputed_puzzle_fields` to compute static adjacency channels (`adj_multi`), relation targets (`relation_targets`), true group masks (`true_group_mask`), and group classification targets (`static_group_targets`) on CPU once, caching them on the puzzle dictionaries.
+  - **Single-Transfer Batching**: Avoided copying puzzle graph tensors one-by-one to device inside the epoch loop; stacked tensors on CPU first and transferred the final batched tensor in a single GPU/MPS transfer.
+  - **Batched Validation**: Rewrote `validate_gcn` to process validation puzzles in batches of 32 (matching training) instead of one-by-one, removing validation bottlenecks.
+  - **Performance Results**: Epoch loop times were slashed by **4.6x on MPS** (from 39s down to 8.5s) and **2x on CPU** (from 4.0s down to 2.0s).
+
+---
+
+## Phase 21: MLflow Telemetry & Logging Refactor
+* **Milestone**: Refactored metrics and logging across GCN and RL training phases to use MLflow, deprecating local custom JSON trackers and static plotting.
+* **Major Changes**:
+  - **MLflow Tracking Integration**: Wrapped the training pipeline in a parent MLflow run and nested runs for GCN and DQN training, capturing all hyperparameters, step-wise losses, accuracies, rewards, and test set performance.
+  - **Oversmoothing Monitoring**: Logged `val_mean_node_cosine_similarity` of validation node embeddings per epoch to track representation collapse in Relational GCN layers.
+  - **Relation Weights tracking**: Tracked L2 norms of parameters `gcn1.W_rel` and `gcn2.W_rel` for each of the 25 edge relation channels to analyze channel impact.
+  - **Obsolete Logs Cleanup**: Cleaned up the old `model_registry.json`, JSON histories, and static learning curve PNG plots, replacing them with MLflow runs and the MLflow dashboard web UI.
+  - **MLflow-backed CLI Comparisons**: Refactored `--compare-models` to search and load run metadata dynamically from the local MLflow server database.
 
 ---
 

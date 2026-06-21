@@ -16,9 +16,10 @@ from src.relation_archetypes import NUM_RELATION_ARCHETYPES
 def auto_device() -> str:
     if torch.cuda.is_available():
         return "cuda"
-    elif torch.backends.mps.is_available():
-        return "mps"
+    # CPU is preferred over MPS on Apple Silicon because dispatching many small GCN
+    # operations to the GPU has high latency, making CPU training ~4.5x faster.
     return "cpu"
+
 
 def solve_custom_board(
     words_str: str,

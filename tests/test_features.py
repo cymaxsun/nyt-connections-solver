@@ -464,6 +464,7 @@ class FeatureExtractorTests(unittest.TestCase):
         extractor.get_sentence_embeddings = lambda words: {}
         extractor.get_soundex = lambda word: word
         extractor.get_metaphone = lambda word: word
+        extractor.get_ngram_compound_shared_score = lambda w1, w2: 0.0
 
         def wordplay(w1, w2):
             base = {

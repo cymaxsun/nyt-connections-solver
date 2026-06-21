@@ -5,6 +5,7 @@ import json
 import random
 import torch
 import numpy as np
+import mlflow
 from typing import List, Dict, Any, Optional, Tuple
 from src.dataset import load_dataset, ConnectionsPuzzle
 from src.features import (
@@ -22,11 +23,12 @@ from src.gcn import (
     build_relation_targets,
     build_group_relation_targets,
     get_hidden_features_from_state_dict,
+    SliceRelationsGCN,
 )
 from src.rl_agent import CANDIDATE_FEATURE_DIM, DQNAgent, train_rl_episodes
 from src.env import ConnectionsEnv
 from src.graph import ConnectionsGraph
-from src.visualize import plot_connections_graph, plot_gcn_learning_curves, plot_dqn_learning_curves
+from src.visualize import plot_connections_graph
 from src.candidates import build_partition_candidates, partition_groups_for_actions
 from src.relation_archetypes import (
     NUM_RELATION_ARCHETYPES,
@@ -75,6 +77,23 @@ def train_pipeline(
         set_deterministic_seed(seed)
         print(f"Using deterministic seed: {seed}")
     os.makedirs(model_dir, exist_ok=True)
+
+    # Initialize MLflow experiment and parent run
+    try:
+        mlflow.set_experiment("connections_solver")
+        mlflow.start_run(run_name="connections_training_pipeline")
+        mlflow.log_params({
+            "seed": seed,
+            "gcn_epochs": gcn_epochs,
+            "gcn_patience": gcn_patience,
+            "rl_episodes": rl_episodes,
+            "skip_gcn": skip_gcn,
+            "batch_size": batch_size,
+            "gcn_checkpoint": gcn_checkpoint,
+            "device": device,
+        })
+    except Exception as e:
+        print(f"Warning: Failed to initialize MLflow parent run: {e}")
     
     # 1. Load Data
     preprocessed_path = os.path.join(os.path.dirname(data_path), "preprocessed_graphs.pt")
@@ -125,6 +144,13 @@ def train_pipeline(
         out_features=16,
         num_relations=EDGE_FEATURE_DIM # edge features count
     ).to(device)
+
+    # Precompute static graph features on CPU to optimize training speed
+    print("Precomputing static graph features on CPU to optimize training speed...")
+    from src.gcn import _ensure_precomputed_puzzle_fields
+    for p in train_puzzles + val_puzzles + test_puzzles:
+        _ensure_precomputed_puzzle_fields(p, gcn.comb_tensor)
+
     
     gcn_weights_path = os.path.join(model_dir, _gcn_checkpoint_filename())
     previous_gcn_weights_path = os.path.join(model_dir, _gcn_previous_best_checkpoint_filename())
@@ -179,6 +205,19 @@ def train_pipeline(
         print(f"Loaded {checkpoint_label} with Validation MRR: {best_mrr:.4f}")
     else:
         print("\n--- Phase 1: Training GCN ---")
+        try:
+            mlflow.start_run(run_name="GCN-Training", nested=True)
+            mlflow.log_params({
+                "gcn_epochs": gcn_epochs,
+                "gcn_patience": gcn_patience,
+                "gcn_lr": 1e-3,
+                "gcn_weight_decay": 1e-4,
+                "in_features": in_features,
+                "edge_feature_dim": EDGE_FEATURE_DIM,
+            })
+        except Exception as e:
+            print(f"Warning: Failed to start nested GCN-Training run in MLflow: {e}")
+
         gcn_optimizer = torch.optim.Adam(gcn.parameters(), lr=1e-3, weight_decay=1e-4)
         _preserve_existing_artifact(gcn_weights_path, previous_gcn_weights_path)
         _preserve_existing_artifact(
@@ -200,10 +239,26 @@ def train_pipeline(
         gcn_history = []
         for epoch in range(1, gcn_epochs + 1):
             loss = train_gcn_epoch(gcn, train_puzzles, extractor, gcn_optimizer, device)
-            val_loss, val_mrr = validate_gcn(gcn, val_puzzles, extractor, device, visualize=False)
+            val_loss, val_mrr = validate_gcn(gcn, val_puzzles, extractor, device, visualize=False, epoch=epoch)
             
             print(f"Epoch {epoch:02d}/{gcn_epochs:02d} | Train Loss: {loss:.4f} | Val Loss: {val_loss:.4f} | Val MRR: {val_mrr:.4f}")
             
+            try:
+                if mlflow.active_run():
+                    mlflow.log_metric("gcn_train_loss", loss, step=epoch)
+                    mlflow.log_metric("gcn_val_loss", val_loss, step=epoch)
+                    mlflow.log_metric("gcn_val_mrr", val_mrr, step=epoch)
+                    
+                    # Track per relation weights L2 norm
+                    with torch.no_grad():
+                        for r_idx, name in enumerate(EDGE_FEATURE_NAMES):
+                            norm_val1 = torch.norm(gcn.gcn1.W_rel[r_idx]).item()
+                            mlflow.log_metric(f"gcn1_W_rel_norm_{name}", norm_val1, step=epoch)
+                            norm_val2 = torch.norm(gcn.gcn2.W_rel[r_idx]).item()
+                            mlflow.log_metric(f"gcn2_W_rel_norm_{name}", norm_val2, step=epoch)
+            except Exception as e:
+                print(f"Warning: Failed to log metrics to MLflow: {e}")
+
             gcn_history.append({
                 "epoch": epoch,
                 "train_loss": float(loss),
@@ -257,63 +312,29 @@ def train_pipeline(
                 print(f"Early stopping GCN training at epoch {epoch}. No validation MRR improvement for {gcn_patience} epochs.")
                 break
                 
-        # Save training history and plot learning curves
-        history_dir = "visualizations"
-        os.makedirs(history_dir, exist_ok=True)
-        gcn_history_path = os.path.join(history_dir, "gcn_training_history.json")
+        # Log GCN checkpoints to MLflow and end GCN-Training run
         try:
-            existing_history = []
-            if os.path.exists(gcn_history_path):
-                try:
-                    with open(gcn_history_path, "r", encoding="utf-8") as f:
-                        old_data = json.load(f)
-                        if isinstance(old_data, dict) and "history" in old_data:
-                            existing_history = old_data["history"]
-                        elif isinstance(old_data, list):
-                            existing_history = old_data
-                except Exception as e:
-                    print(f"Warning: Failed to load existing GCN training history: {e}. Starting fresh.")
-
-            # Determine start epoch offset if appending
-            epoch_offset = 0
-            if existing_history:
-                epoch_offset = max(item.get("epoch", 0) for item in existing_history if isinstance(item, dict))
-
-            # Adjust new history epoch numbers to be sequential
-            adjusted_new_history = []
-            for item in gcn_history:
-                adjusted_item = item.copy()
-                adjusted_item["epoch"] = item["epoch"] + epoch_offset
-                adjusted_new_history.append(adjusted_item)
-
-            combined_history = existing_history + adjusted_new_history
-
-            gcn_history_data = {
-                "metadata": {
-                    "edge_feature_dim": EDGE_FEATURE_DIM,
-                    "node_feature_dim": in_features,
-                    "edge_features": EDGE_FEATURE_NAMES,
-                    "gcn_hidden_features": 128,
-                    "gcn_out_features": 16,
-                    "params": {
-                        "gcn_epochs": gcn_epochs,
-                        "gcn_lr": 1e-3,
-                        "gcn_weight_decay": 1e-4,
-                        "gcn_patience": gcn_patience,
-                        "seed": seed,
-                    }
-                },
-                "history": combined_history
-            }
-            with open(gcn_history_path, "w", encoding="utf-8") as f:
-                json.dump(gcn_history_data, f, indent=2)
-            plot_gcn_learning_curves(
-                gcn_history_path,
-                os.path.join(history_dir, "gcn_learning_curves.png"),
-                history_override=adjusted_new_history,
-            )
+            if mlflow.active_run():
+                if os.path.exists(gcn_weights_path):
+                    mlflow.log_artifact(gcn_weights_path)
+                if os.path.exists(all_time_gcn_weights_path):
+                    mlflow.log_artifact(all_time_gcn_weights_path)
+                if os.path.exists(all_time_gcn_metadata_path):
+                    mlflow.log_artifact(all_time_gcn_metadata_path)
+                
+                best_filepath = os.path.join("visualizations", "val_best.png")
+                if os.path.exists(best_filepath):
+                    mlflow.log_artifact(best_filepath)
+                all_time_best_filepath = os.path.join("visualizations", "val_all_time_best.png")
+                if os.path.exists(all_time_best_filepath):
+                    mlflow.log_artifact(all_time_best_filepath)
         except Exception as e:
-            print(f"Warning: Failed to save or plot GCN training history: {e}")
+            print(f"Warning: Failed to log GCN artifacts to MLflow: {e}")
+        finally:
+            try:
+                mlflow.end_run()
+            except Exception:
+                pass
                 
         # Load GCN for RL training - default to all-time best if requested and compatible
         loaded_gcn = False
@@ -357,6 +378,7 @@ def train_pipeline(
             val_puzzles,
             extractor,
             device,
+            model_dir=model_dir,
             checkpoint_label=os.path.join(model_dir, _gcn_checkpoint_filename()),
         )
     else:
@@ -382,6 +404,20 @@ def train_pipeline(
     )
     
     # Train DQN agent
+    try:
+        mlflow.start_run(run_name="DQN-Training", nested=True)
+        mlflow.log_params({
+            "rl_episodes": rl_episodes,
+            "rl_lr": 5e-4,
+            "rl_gamma": 0.9,
+            "rl_epsilon_start": 1.0,
+            "rl_epsilon_end": 0.05,
+            "rl_epsilon_decay": 0.998,
+            "batch_size": batch_size,
+        })
+    except Exception as e:
+        print(f"Warning: Failed to start nested DQN-Training run in MLflow: {e}")
+
     # We log success statistics periodically
     eval_freq = max(5, rl_episodes // 10)
     dqn_history = []
@@ -396,6 +432,16 @@ def train_pipeline(
         
         print(f"RL Episode {i + chunk_episodes:04d}/{rl_episodes:04d} | Win Rate: {win_rate:.2%} | Avg Reward: {avg_reward:.2f} | Avg Steps: {avg_steps:.1f} | Epsilon: {agent.epsilon:.3f}")
         
+        try:
+            if mlflow.active_run():
+                step_idx = i + chunk_episodes
+                mlflow.log_metric("rl_win_rate", win_rate, step=step_idx)
+                mlflow.log_metric("rl_avg_reward", avg_reward, step=step_idx)
+                mlflow.log_metric("rl_avg_steps", avg_steps, step=step_idx)
+                mlflow.log_metric("rl_epsilon", agent.epsilon, step=step_idx)
+        except Exception as e:
+            print(f"Warning: Failed to log DQN metrics to MLflow: {e}")
+
         dqn_history.append({
             "episode": i + chunk_episodes,
             "win_rate": float(win_rate),
@@ -404,41 +450,33 @@ def train_pipeline(
             "epsilon": float(agent.epsilon)
         })
         
-    # Save training history and plot learning curves
-    history_dir = "visualizations"
-    os.makedirs(history_dir, exist_ok=True)
-    dqn_history_path = os.path.join(history_dir, "dqn_training_history.json")
-    try:
-        dqn_history_data = {
-            "metadata": {
-                "rl_state_dim": 33,
-                "rl_candidate_dim": CANDIDATE_FEATURE_DIM,
-                "params": {
-                    "rl_episodes": rl_episodes,
-                    "rl_lr": 5e-4,
-                    "rl_gamma": 0.9,
-                    "rl_epsilon_start": 1.0,
-                    "rl_epsilon_end": 0.05,
-                    "rl_epsilon_decay": 0.998,
-                    "batch_size": batch_size,
-                    "seed": seed,
-                }
-            },
-            "history": dqn_history
-        }
-        with open(dqn_history_path, "w", encoding="utf-8") as f:
-            json.dump(dqn_history_data, f, indent=2)
-        plot_dqn_learning_curves(dqn_history_path, os.path.join(history_dir, "dqn_learning_curves.png"))
-    except Exception as e:
-        print(f"Warning: Failed to save or plot DQN training history: {e}")
-
     # Save DQN weights
-    torch.save(agent.q_net.state_dict(), os.path.join(model_dir, "dqn_q_net.pt"))
+    dqn_weights_path = os.path.join(model_dir, "dqn_q_net.pt")
+    torch.save(agent.q_net.state_dict(), dqn_weights_path)
     print("DQN Agent training complete. Saved models.")
+    
+    # Log DQN artifacts and end DQN-Training run
+    try:
+        if mlflow.active_run():
+            if os.path.exists(dqn_weights_path):
+                mlflow.log_artifact(dqn_weights_path)
+    except Exception as e:
+        print(f"Warning: Failed to log DQN artifacts to MLflow: {e}")
+    finally:
+        try:
+            mlflow.end_run()
+        except Exception:
+            pass
     
     # 4. Final Evaluation
     print("\n--- Phase 3: Evaluating System on Test Set ---")
-    evaluate_system(gcn, agent, test_puzzles, extractor, device)
+    try:
+        evaluate_system(gcn, agent, test_puzzles, extractor, device)
+    finally:
+        try:
+            mlflow.end_run()
+        except Exception:
+            pass
 
 def evaluate_system(gcn: ConnectionsGCN, agent: DQNAgent, test_puzzles: List[ConnectionsPuzzle], extractor: FeatureExtractor, device: str) -> float:
     gcn.eval()
@@ -502,10 +540,22 @@ def evaluate_system(gcn: ConnectionsGCN, agent: DQNAgent, test_puzzles: List[Con
         steps_list.append(steps)
         
     test_win_rate = successes / len(test_puzzles)
+    avg_reward = total_reward / len(test_puzzles)
+    avg_submissions = np.mean(steps_list) if steps_list else 0.0
+
     print(f"Test Set Evaluation | Total Puzzles: {len(test_puzzles)}")
     print(f"Win Rate: {test_win_rate:.2%}")
-    print(f"Average Reward: {total_reward / len(test_puzzles):.2f}")
-    print(f"Average Submissions: {np.mean(steps_list):.1f}")
+    print(f"Average Reward: {avg_reward:.2f}")
+    print(f"Average Submissions: {avg_submissions:.1f}")
+
+    try:
+        if mlflow.active_run():
+            mlflow.log_metric("test_win_rate", test_win_rate)
+            mlflow.log_metric("test_avg_reward", avg_reward)
+            mlflow.log_metric("test_avg_submissions", avg_submissions)
+    except Exception as e:
+        print(f"Warning: Failed to log test evaluation metrics to MLflow: {e}")
+
     return test_win_rate
 
 def _evaluate_gcn_model_stats(
@@ -690,7 +740,8 @@ def update_validation_artifacts(
     val_puzzles: list,
     extractor: FeatureExtractor,
     device: str,
-    output_dir: str = "visualizations/val_puzzles",
+    model_dir: str = "models",
+    output_dir: str = "visualizations/reports",
     best_filepath: str = "visualizations/val_best.png",
     top_k: int = 5,
     checkpoint_label: str = "current GCN checkpoint",
@@ -713,7 +764,7 @@ def update_validation_artifacts(
         extractor,
         device,
         top_k=top_k,
-        visualize_prefix="val",
+        visualize_prefix=None,
         output_dir=output_dir,
         collect_puzzle_details=True,
     )
@@ -730,7 +781,7 @@ def update_validation_artifacts(
     )
 
     # 4. Try loading and evaluating previous best model from checkpoint
-    previous_best_path = "models/gcn_previous_best.pt"
+    previous_best_path = os.path.join(model_dir, _gcn_previous_best_checkpoint_filename())
     previous_metrics = previous_stats_parsed
     prev_stats = None
     if os.path.exists(previous_best_path):
@@ -738,13 +789,16 @@ def update_validation_artifacts(
             print("Evaluating previous best GCN from checkpoint...")
             state = torch.load(previous_best_path, map_location=device)
             hidden_feats = get_hidden_features_from_state_dict(state, default=32)
+            checkpoint_relations = state['gcn1.W_rel'].shape[0] if 'gcn1.W_rel' in state else EDGE_FEATURE_DIM
             prev_gcn = ConnectionsGCN(
                 in_features=gcn.input_proj.in_features,
                 hidden_features=hidden_feats,
                 out_features=16,
-                num_relations=EDGE_FEATURE_DIM,
+                num_relations=checkpoint_relations,
             ).to(device)
             prev_gcn.load_state_dict(state)
+            if checkpoint_relations != EDGE_FEATURE_DIM:
+                prev_gcn = SliceRelationsGCN(prev_gcn, checkpoint_relations, gcn.input_proj.in_features, hidden_feats)
             
             prev_stats, _, _ = _evaluate_gcn_model_stats(
                 prev_gcn,
@@ -752,7 +806,7 @@ def update_validation_artifacts(
                 extractor,
                 device,
                 top_k=top_k,
-                visualize_prefix="val_previous_best",
+                visualize_prefix=None,
                 output_dir=output_dir,
                 collect_puzzle_details=False,
             )
@@ -780,13 +834,16 @@ def update_validation_artifacts(
             print("Evaluating all-time best GCN from checkpoint...")
             state = torch.load(all_time_best_path, map_location=device)
             hidden_feats = get_hidden_features_from_state_dict(state, default=32)
+            checkpoint_relations = state['gcn1.W_rel'].shape[0] if 'gcn1.W_rel' in state else EDGE_FEATURE_DIM
             all_time_gcn = ConnectionsGCN(
                 in_features=gcn.input_proj.in_features,
                 hidden_features=hidden_feats,
                 out_features=16,
-                num_relations=EDGE_FEATURE_DIM,
+                num_relations=checkpoint_relations,
             ).to(device)
             all_time_gcn.load_state_dict(state)
+            if checkpoint_relations != EDGE_FEATURE_DIM:
+                all_time_gcn = SliceRelationsGCN(all_time_gcn, checkpoint_relations, gcn.input_proj.in_features, hidden_feats)
             
             all_time_stats, _, _ = _evaluate_gcn_model_stats(
                 all_time_gcn,
@@ -794,7 +851,7 @@ def update_validation_artifacts(
                 extractor,
                 device,
                 top_k=top_k,
-                visualize_prefix="val_all_time_best",
+                visualize_prefix=None,
                 output_dir=output_dir,
                 collect_puzzle_details=False,
             )
@@ -813,13 +870,19 @@ def update_validation_artifacts(
         except Exception as e:
             print(f"Warning: Failed to evaluate all-time best GCN checkpoint: {e}")
 
-    # Register checkpoints in model registry
+    # Log metrics and artifacts to MLflow
     curr_metrics = _stats_to_metric_dict(aggregate_stats)
-    _update_model_registry("gcn_best", curr_metrics, aggregate_stats)
-    if prev_stats is not None:
-        _update_model_registry("gcn_previous_best", previous_metrics, prev_stats)
-    if all_time_stats is not None:
-        _update_model_registry(f"gcn_all_time_best_v{FEATURE_SCHEMA_VERSION}", all_time_metrics, all_time_stats)
+    try:
+        if mlflow.active_run():
+            flat_metrics = {}
+            for k, v in curr_metrics.items():
+                num = _parse_numeric_value(v)
+                if num is not None:
+                    clean_k = k.replace(" ", "_").replace("-", "_").replace("(", "").replace(")", "").replace("%", "pct").lower()
+                    flat_metrics[f"val_{clean_k}"] = num
+            mlflow.log_metrics(flat_metrics)
+    except Exception as e:
+        print(f"Warning: Failed to log validation metrics to MLflow: {e}")
 
     # Write error analysis report
     _write_error_analysis_report(puzzle_mrrs, os.path.join(output_dir, "error_analysis.md"))
@@ -844,6 +907,24 @@ def update_validation_artifacts(
     with open(summary_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines).rstrip() + "\n")
     print(f"Updated validation candidate summary: {summary_path}")
+
+    try:
+        if mlflow.active_run():
+            if os.path.exists(summary_path):
+                mlflow.log_artifact(summary_path, artifact_path="validation_artifacts")
+            err_path = os.path.join(output_dir, "error_analysis.md")
+            if os.path.exists(err_path):
+                mlflow.log_artifact(err_path, artifact_path="validation_artifacts")
+            if os.path.exists(best_filepath):
+                mlflow.log_artifact(best_filepath, artifact_path="validation_artifacts")
+            prev_best_filepath = "visualizations/val_previous_best.png"
+            if os.path.exists(prev_best_filepath):
+                mlflow.log_artifact(prev_best_filepath, artifact_path="validation_artifacts")
+            all_time_best_filepath = "visualizations/val_all_time_best.png"
+            if os.path.exists(all_time_best_filepath):
+                mlflow.log_artifact(all_time_best_filepath, artifact_path="validation_artifacts")
+    except Exception as e:
+        print(f"Warning: Failed to log validation artifacts to MLflow: {e}")
 
 def _puzzle_value(puzzle: Any, field: str):
     return puzzle[field] if isinstance(puzzle, dict) else getattr(puzzle, field)
@@ -1526,87 +1607,7 @@ def _candidate_status(candidate_words: List[str], word_to_cat: Dict[str, Dict[st
     )
 
 
-def _update_model_registry(
-    model_name: str,
-    metrics: Dict[str, str],
-    stats: Dict[str, Any],
-    registry_path: str = "models/model_registry.json"
-) -> None:
-    import datetime
-    registry = {}
-    if os.path.exists(registry_path):
-        try:
-            with open(registry_path, "r", encoding="utf-8") as f:
-                registry = json.load(f)
-        except Exception as e:
-            print(f"Warning: Failed to load model registry: {e}")
-            
-    # Convert archetype stats
-    archetype_metrics = {}
-    if stats and "archetypes" in stats:
-        for arch, arch_stats in stats["archetypes"].items():
-            rank_count = arch_stats.get("rank_count", 0)
-            avg_rank = arch_stats.get("rank_sum", 0) / rank_count if rank_count > 0 else 0.0
-            exact_mrr = arch_stats.get("exact_mrr_sum", 0.0) / arch_stats.get("total", 1) if arch_stats.get("total", 0) > 0 else 0.0
-            p_correct = arch_stats.get("pairwise_correct", 0)
-            p_total = arch_stats.get("pairwise_total", 0)
-            p_acc = p_correct / p_total if p_total > 0 else 0.0
-            
-            g_correct = arch_stats.get("group_correct", 0)
-            g_total = arch_stats.get("group_total", 0)
-            g_acc = g_correct / g_total if g_total > 0 else 0.0
-            
-            archetype_metrics[arch] = {
-                "total": arch_stats.get("total", 0),
-                "hit_top_candidates": arch_stats.get("hit_top_candidates", 0),
-                "recall": arch_stats.get("hit_top_candidates", 0) / arch_stats.get("total", 1) if arch_stats.get("total", 0) > 0 else 0.0,
-                "hit_top_5": arch_stats.get("hit_top_5", 0),
-                "avg_best_rank": avg_rank,
-                "exact_mrr": exact_mrr,
-                "pairwise_acc": p_acc,
-                "group_acc": g_acc
-            }
-            
-    flat_metrics = {}
-    for k, v in metrics.items():
-        num = _parse_numeric_value(v)
-        flat_metrics[k] = num if num is not None else v
-        
-    registry[model_name] = {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "feature_schema_version": FEATURE_SCHEMA_VERSION,
-        "edge_feature_dim": EDGE_FEATURE_DIM,
-        "metrics": flat_metrics,
-        "archetypes": archetype_metrics
-    }
-    
-    # Also register raw_baseline if it exists and hasn't been registered yet
-    raw_metrics_path = "visualizations/raw_candidates/raw_candidates_metrics.json"
-    if "raw_baseline" not in registry and os.path.exists(raw_metrics_path):
-        try:
-            with open(raw_metrics_path, "r", encoding="utf-8") as f:
-                raw_data = json.load(f)
-            registry["raw_baseline"] = {
-                "timestamp": datetime.datetime.fromtimestamp(os.path.getmtime(raw_metrics_path)).isoformat(),
-                "feature_schema_version": FEATURE_SCHEMA_VERSION,
-                "metrics": {
-                    "Validation puzzles": float(raw_data.get("puzzles", 0)),
-                    "Overall GCN Candidate MRR": float(raw_data.get("mrr", 0.0)),
-                    "Puzzles with complete partition candidates": float(raw_data.get("partitions_found", 0)),
-                    "Avg correct groups in top partition": float(raw_data.get("avg_exact_groups_in_best_partition", 0.0)),
-                    "Top partition solves all 4 groups": float(raw_data.get("perfect_best_partitions", 0.0))
-                },
-                "archetypes": {}
-            }
-        except Exception as e:
-            print(f"Warning: Failed to auto-register raw baseline in registry: {e}")
 
-    try:
-        with open(registry_path, "w", encoding="utf-8") as f:
-            json.dump(registry, f, indent=2, sort_keys=True)
-        print(f"Registered model '{model_name}' in {registry_path}")
-    except Exception as e:
-        print(f"Warning: Failed to save model registry: {e}")
 
 
 def _write_error_analysis_report(puzzle_mrrs: List[Dict[str, Any]], output_path: str) -> None:
@@ -1703,96 +1704,124 @@ def compare_checkpoints(model_a_ref: str, model_b_ref: str, device: str) -> None
     Compares two models (by registry name or checkpoint path) on the validation set,
     prints a comparison table to the terminal, and writes visualizations/model_comparison_report.md.
     """
-    import json
-    # 1. Load registry to see if we can resolve names
-    registry_path = "models/model_registry.json"
-    registry = {}
-    if os.path.exists(registry_path):
-        try:
-            with open(registry_path, "r", encoding="utf-8") as f:
-                registry = json.load(f)
-        except Exception:
-            pass
-            
-    # Helper to get model data (either from registry or evaluate path)
+    # Helper to get model data (either from MLflow or evaluate path)
     def get_model_data(ref: str) -> Dict[str, Any]:
-        # Fallback for generic 'gcn_all_time_best' to current schema version
-        if ref == "gcn_all_time_best":
-            schema_ref = f"gcn_all_time_best_v{FEATURE_SCHEMA_VERSION}"
-            if schema_ref in registry:
-                print(f"Resolving 'gcn_all_time_best' to '{schema_ref}' from model registry.")
-                return registry[schema_ref]
-        # If it's a key in registry, return it
-        if ref in registry:
-            print(f"Loaded '{ref}' from model registry.")
-            return registry[ref]
+        # If it's a valid checkpoint file path, load and evaluate it
+        if os.path.exists(ref):
+            print(f"Evaluating checkpoint '{ref}' on validation set...")
+            # Load validation dataset
+            preprocessed_path = "data/preprocessed_graphs.pt"
+            from src.dataset import load_preprocessed_dataset
+            _, val_puzzles, _ = load_preprocessed_dataset(preprocessed_path)
             
-        # Otherwise, assume it's a checkpoint path
-        if not os.path.exists(ref):
-            raise FileNotFoundError(f"Could not find model registry key or file path: {ref}")
+            # Load GCN
+            in_features = val_puzzles[0]["node_features"].shape[1] if val_puzzles else DEFAULT_NODE_FEATURE_DIM
+            state = torch.load(ref, map_location=device)
+            if not _gcn_checkpoint_matches_model(state, in_features):
+                raise ValueError(f"Checkpoint '{ref}' is incompatible with current GCN architecture.")
+            hidden_feats = get_hidden_features_from_state_dict(state, default=32)
+            gcn = build_gcn_model(
+                in_features=in_features,
+                hidden_features=hidden_feats,
+                out_features=16,
+                num_relations=EDGE_FEATURE_DIM
+            ).to(device)
+            gcn.load_state_dict(state)
             
-        print(f"Evaluating checkpoint '{ref}' on validation set...")
-        # Load validation dataset
-        preprocessed_path = "data/preprocessed_graphs.pt"
-        from src.dataset import load_preprocessed_dataset
-        _, val_puzzles, _ = load_preprocessed_dataset(preprocessed_path)
-        
-        # Load GCN
-        in_features = val_puzzles[0]["node_features"].shape[1] if val_puzzles else DEFAULT_NODE_FEATURE_DIM
-        state = torch.load(ref, map_location=device)
-        if not _gcn_checkpoint_matches_model(state, in_features):
-            raise ValueError(f"Checkpoint '{ref}' is incompatible with current GCN architecture.")
-        hidden_feats = get_hidden_features_from_state_dict(state, default=32)
-        gcn = build_gcn_model(
-            in_features=in_features,
-            hidden_features=hidden_feats,
-            out_features=16,
-            num_relations=EDGE_FEATURE_DIM
-        ).to(device)
-        gcn.load_state_dict(state)
-        
-        extractor = FeatureExtractor()
-        stats, _, _ = _evaluate_gcn_model_stats(
-            gcn, val_puzzles, extractor, device, top_k=5, collect_puzzle_details=False
-        )
-        
-        # Format metrics and convert archetype stats
-        metrics = _stats_to_metric_dict(stats)
-        flat_metrics = {}
-        for k, v in metrics.items():
-            num = _parse_numeric_value(v)
-            flat_metrics[k] = num if num is not None else v
+            extractor = FeatureExtractor()
+            stats, _, _ = _evaluate_gcn_model_stats(
+                gcn, val_puzzles, extractor, device, top_k=5, collect_puzzle_details=False
+            )
             
-        archetype_metrics = {}
-        for arch, arch_stats in stats.get("archetypes", {}).items():
-            rank_count = arch_stats.get("rank_count", 0)
-            avg_rank = arch_stats.get("rank_sum", 0) / rank_count if rank_count > 0 else 0.0
-            exact_mrr = arch_stats.get("exact_mrr_sum", 0.0) / arch_stats.get("total", 1) if arch_stats.get("total", 0) > 0 else 0.0
-            p_correct = arch_stats.get("pairwise_correct", 0)
-            p_total = arch_stats.get("pairwise_total", 0)
-            p_acc = p_correct / p_total if p_total > 0 else 0.0
-            
-            g_correct = arch_stats.get("group_correct", 0)
-            g_total = arch_stats.get("group_total", 0)
-            g_acc = g_correct / g_total if g_total > 0 else 0.0
-            
-            archetype_metrics[arch] = {
-                "total": arch_stats.get("total", 0),
-                "hit_top_candidates": arch_stats.get("hit_top_candidates", 0),
-                "recall": arch_stats.get("hit_top_candidates", 0) / arch_stats.get("total", 1) if arch_stats.get("total", 0) > 0 else 0.0,
-                "hit_top_5": arch_stats.get("hit_top_5", 0),
-                "avg_best_rank": avg_rank,
-                "exact_mrr": exact_mrr,
-                "pairwise_acc": p_acc,
-                "group_acc": g_acc
+            # Format metrics and convert archetype stats
+            metrics = _stats_to_metric_dict(stats)
+            flat_metrics = {}
+            for k, v in metrics.items():
+                num = _parse_numeric_value(v)
+                flat_metrics[k] = num if num is not None else v
+                
+            archetype_metrics = {}
+            for arch, arch_stats in stats.get("archetypes", {}).items():
+                rank_count = arch_stats.get("rank_count", 0)
+                avg_rank = arch_stats.get("rank_sum", 0) / rank_count if rank_count > 0 else 0.0
+                exact_mrr = arch_stats.get("exact_mrr_sum", 0.0) / arch_stats.get("total", 1) if arch_stats.get("total", 0) > 0 else 0.0
+                p_correct = arch_stats.get("pairwise_correct", 0)
+                p_total = arch_stats.get("pairwise_total", 0)
+                p_acc = p_correct / p_total if p_total > 0 else 0.0
+                
+                g_correct = arch_stats.get("group_correct", 0)
+                g_total = arch_stats.get("group_total", 0)
+                g_acc = g_correct / g_total if g_total > 0 else 0.0
+                
+                archetype_metrics[arch] = {
+                    "total": arch_stats.get("total", 0),
+                    "hit_top_candidates": arch_stats.get("hit_top_candidates", 0),
+                    "recall": arch_stats.get("hit_top_candidates", 0) / arch_stats.get("total", 1) if arch_stats.get("total", 0) > 0 else 0.0,
+                    "hit_top_5": arch_stats.get("hit_top_5", 0),
+                    "avg_best_rank": avg_rank,
+                    "exact_mrr": exact_mrr,
+                    "pairwise_acc": p_acc,
+                    "group_acc": g_acc
+                }
+                
+            import datetime
+            return {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "metrics": flat_metrics,
+                "archetypes": archetype_metrics
             }
+
+        # Otherwise, try looking up in MLflow
+        try:
+            import mlflow
+            mlflow.set_experiment("connections_solver")
+            runs = mlflow.search_runs(
+                experiment_names=["connections_solver"],
+                filter_string=f"run_id = '{ref}'",
+                output_format="list"
+            )
+            if not runs:
+                runs = mlflow.search_runs(
+                    experiment_names=["connections_solver"],
+                    filter_string=f"tags.mlflow.runName = '{ref}'",
+                    output_format="list"
+                )
+            if runs:
+                run = runs[0]
+                print(f"Loaded run '{ref}' from MLflow (Run ID: {run.info.run_id}).")
+                
+                MLFLOW_KEY_MAPPING = {
+                    "val_overall_gcn_candidate_mrr": "Overall GCN Candidate MRR",
+                    "val_overall_pairwise_relation_accuracy": "Overall Pairwise Relation Accuracy",
+                    "val_overall_group_relation_accuracy": "Overall Group Relation Accuracy",
+                    "val_puzzles_with_complete_partition_candidates": "Puzzles with complete partition candidates",
+                    "val_top_partition_solves_all_4_groups": "Top partition solves all 4 groups",
+                    "val_any_top_5_partition_solves_all_4_groups": "Any top-5 partition solves all 4 groups",
+                    "val_avg_correct_groups_in_top_partition": "Avg correct groups in top partition",
+                    "val_avg_best_correct_groups_across_top_partitions": "Avg best correct groups across top partitions",
+                    "val_true_groups_in_top_20_candidates": "True groups in top-20 candidates",
+                    "val_mean_rank_of_true_groups_found_in_top_20": "Mean rank of true groups found in top-20",
+                    "val_median_rank_of_true_groups_found_in_top_20": "Median rank of true groups found in top-20",
+                    "test_win_rate": "Test Set Win Rate",
+                    "test_avg_reward": "Test Set Avg Reward",
+                    "test_avg_submissions": "Test Set Avg Submissions",
+                }
+                
+                metrics = {}
+                for k, v in run.data.metrics.items():
+                    mapped_k = MLFLOW_KEY_MAPPING.get(k, k)
+                    metrics[mapped_k] = v
+                    
+                import datetime
+                return {
+                    "timestamp": datetime.datetime.fromtimestamp(run.info.start_time / 1000.0).isoformat(),
+                    "metrics": metrics,
+                    "archetypes": {}
+                }
+        except Exception as e:
+            print(f"Warning: Failed to fetch model '{ref}' from MLflow: {e}")
             
-        import datetime
-        return {
-            "timestamp": datetime.datetime.now().isoformat(),
-            "metrics": flat_metrics,
-            "archetypes": archetype_metrics
-        }
+        raise FileNotFoundError(f"Could not find MLflow run or file path: {ref}")
         
     data_a = get_model_data(model_a_ref)
     data_b = get_model_data(model_b_ref)
@@ -1893,7 +1922,7 @@ def compare_checkpoints(model_a_ref: str, model_b_ref: str, device: str) -> None
                 
     print("="*80)
     
-    report_path = "visualizations/model_comparison_report.md"
+    report_path = "visualizations/reports/model_comparison_report.md"
     os.makedirs(os.path.dirname(report_path), exist_ok=True)
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines).rstrip() + "\n")

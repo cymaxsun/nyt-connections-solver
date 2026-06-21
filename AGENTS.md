@@ -40,13 +40,9 @@ To analyze, compare, and debug model performance, use the following tools, repor
   ```bash
   python main.py --compare-models [MODEL_A] [MODEL_B]
   ```
-  Both inputs can be registry keys (e.g., `gcn_best`, `gcn_previous_best`, `gcn_all_time_best`, `raw_baseline`) or direct file paths (e.g., `models/gcn_best.pt`). This outputs a delta performance table to the terminal and compiles a comprehensive Markdown comparison to `visualizations/model_comparison_report.md`.
+  Both inputs can be MLflow run names/IDs (e.g., `GCN-Training`, `parent_run_id`) or direct file paths (e.g., `models/gcn_best.pt`). This outputs a delta performance table to the terminal and compiles a comprehensive Markdown comparison to `visualizations/model_comparison_report.md`.
 
-* **Model Registry (`models/model_registry.json`)**: Persistent JSON catalog recording evaluation metrics and archetype recall profiles for all GCN checkpoints and baseline configurations.
-
-* **Training Progress Curves**: Check training history plots to diagnose overfitting/convergence rate:
-  - `visualizations/gcn_learning_curves.png` (Train/val loss and validation MRR progression; logged to `visualizations/gcn_training_history.json`)
-  - `visualizations/dqn_learning_curves.png` (DQN win rate, rewards, steps, and epsilon exploration; logged to `visualizations/dqn_training_history.json`)
+* **MLflow Telemetry Dashboard**: Hyperparameters, step-wise GCN and DQN training metrics (such as loss, validation MRR, validation Mean Cosine Similarity, and L2 norms of relation weights), and generated checkpoints/reports are automatically logged to a local MLflow database. To view the dashboard, run `mlflow ui` in the terminal and navigate to `http://localhost:5000`.
 
 * **Worst-Performing Puzzles Error Analysis**: After training, the validation suite identifies the 10 hardest boards (by candidate MRR) and outputs a detailed diagnostic report in `visualizations/val_puzzles/error_analysis.md`. This details words, category levels, failure archetypes, and relation archetype failure distributions to pinpoint semantic vs. orthographic GCN weakness.
 
@@ -59,9 +55,8 @@ To analyze, compare, and debug model performance, use the following tools, repor
   - `visualizations/val_puzzles/candidates_summary.md` (Current run's validation candidates and partitions breakdown)
   - `visualizations/val_puzzles/candidates_previous_best_summary.md` (Previous best run's predictions, preserved for regression checks)
 
-* **Validation Graphs & Plots**: Individual graph plots showing predicted link probabilities and node clusters are written to:
-  - `visualizations/val_best.png` (Overall summary plot)
-  - `visualizations/val_puzzles/val_puzzle_<id>.png` (Individual puzzle graphs)
+* **Validation Graphs & Plots**: Individual puzzle visual generation has been optimized and disabled to reduce training time. The overall best summary validation plot is saved to:
+  - `visualizations/val_best.png` (Overall validation summary plot)
 
 ## Coding Style & Naming Conventions
 

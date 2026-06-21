@@ -10,3 +10,4 @@ networkx
 sentence-transformers
 wordfreq
 jellyfish
+mlflow

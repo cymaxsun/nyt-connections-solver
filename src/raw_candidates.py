@@ -293,7 +293,7 @@ def main():
     parser.add_argument("--data", default="data/preprocessed_graphs.pt", help="Preprocessed graph .pt file")
     parser.add_argument("--split", choices=("train", "val", "test", "all"), default="val")
     parser.add_argument("--limit", type=int, default=None, help="Limit puzzles from the selected split")
-    parser.add_argument("--output-dir", default="visualizations/raw_candidates")
+    parser.add_argument("--output-dir", default="visualizations/reports")
     parser.add_argument("--top-k", type=int, nargs="+", default=[5, 10, 20, 50])
     args = parser.parse_args()
 

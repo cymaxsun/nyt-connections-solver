@@ -1,0 +1,3461 @@
+# Raw Preprocessed Graph Candidate Evaluation
+
+Evaluated puzzles: 109
+MRR over true groups: 0.0962
+Average best true-group rank per puzzle: 38.63
+Partitions found: 93/109
+Average exact groups in best partition: 0.19/4
+Perfect best partitions: 0/109
+
+## Recall
+- Recall@5: 12.61%
+- Recall@10: 16.06%
+- Recall@20: 19.95%
+- Recall@50: 27.29%
+
+## Puzzle 0 (ID: 688)
+Words: MOUNTAIN, ROPE, RHOMBUS, PLATE, INFIELD, TREE, BATTER, DOUGH, GEMSTONE, CANDLESTICK, MIXTURE, SUIT, PASTE, PLACEMAT, PITCHER, LADDER
+
+### Top Raw Candidate Groups
+1. **0.1272** | PLATE, INFIELD, BATTER, PITCHER | max overlap 2/4
+2. **0.0968** | ROPE, PLATE, BATTER, PITCHER | max overlap 2/4
+3. **0.0910** | PLATE, BATTER, DOUGH, PITCHER | max overlap 2/4
+4. **0.0832** | ROPE, PLATE, BATTER, DOUGH | max overlap 2/4
+5. **0.0790** | PLATE, TREE, BATTER, PITCHER | max overlap 2/4
+6. **0.0782** | ROPE, PLATE, INFIELD, BATTER | max overlap 1/4
+7. **0.0773** | MOUNTAIN, ROPE, BATTER, SUIT | max overlap 2/4
+8. **0.0741** | ROPE, BATTER, DOUGH, SUIT | max overlap 2/4
+9. **0.0730** | MOUNTAIN, ROPE, DOUGH, SUIT | max overlap 2/4
+10. **0.0725** | ROPE, INFIELD, BATTER, PITCHER | max overlap 1/4
+11. **0.0712** | MOUNTAIN, PLATE, BATTER, PITCHER | max overlap 2/4
+12. **0.0706** | ROPE, PLATE, INFIELD, PITCHER | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0208** | exact groups: 0/4
+   - 0.0247 | RHOMBUS, INFIELD, BATTER, PITCHER
+   - 0.0242 | PLATE, TREE, CANDLESTICK, MIXTURE
+   - 0.0227 | MOUNTAIN, ROPE, GEMSTONE, LADDER
+   - 0.0182 | DOUGH, SUIT, PASTE, PLACEMAT
+2. **0.0205** | exact groups: 0/4
+   - 0.0275 | MOUNTAIN, DOUGH, SUIT, PLACEMAT
+   - 0.0241 | RHOMBUS, PLATE, INFIELD, PITCHER
+   - 0.0222 | ROPE, TREE, CANDLESTICK, LADDER
+   - 0.0178 | BATTER, GEMSTONE, MIXTURE, PASTE
+3. **0.0194** | exact groups: 0/4
+   - 0.0275 | MOUNTAIN, DOUGH, SUIT, PLACEMAT
+   - 0.0258 | PLATE, TREE, CANDLESTICK, LADDER
+   - 0.0178 | BATTER, GEMSTONE, MIXTURE, PASTE
+   - 0.0170 | ROPE, RHOMBUS, INFIELD, PITCHER
+
+## Puzzle 1 (ID: 993)
+Words: BEAM, POPCORN, STATION, POSITION, FUNKY, STRIKE, STANDING, SAFE, VAULT, FOUL, RANK, BALL, RINGS, SPRING, RUBBER, HORSE
+
+### Top Raw Candidate Groups
+1. **0.1293** | POSITION, STRIKE, FOUL, BALL | max overlap 3/4
+2. **0.1275** | STRIKE, FOUL, BALL, RUBBER | max overlap 3/4
+3. **0.1244** | STATION, POSITION, STANDING, RANK | EXACT
+4. **0.1193** | SAFE, FOUL, BALL, RUBBER | max overlap 3/4
+5. **0.1188** | STRIKE, SAFE, BALL, RUBBER | max overlap 3/4
+6. **0.1187** | STRIKE, FOUL, BALL, SPRING | max overlap 3/4
+7. **0.1132** | STRIKE, BALL, SPRING, RUBBER | max overlap 2/4
+8. **0.1108** | STRIKE, SAFE, FOUL, BALL | EXACT
+9. **0.1108** | FUNKY, STRIKE, FOUL, BALL | max overlap 3/4
+10. **0.1048** | STATION, POSITION, RANK, HORSE | max overlap 3/4
+11. **0.1042** | SAFE, BALL, SPRING, RUBBER | max overlap 2/4
+12. **0.1017** | STRIKE, FOUL, BALL, HORSE | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0602** | exact groups: 2/4
+   - 0.1244 | STATION, POSITION, STANDING, RANK
+   - 0.0742 | FUNKY, SAFE, SPRING, RUBBER
+   - 0.0627 | BEAM, VAULT, RINGS, HORSE
+   - 0.0519 | POPCORN, STRIKE, FOUL, BALL
+2. **0.0553** | exact groups: 0/4
+   - 0.0771 | STATION, FUNKY, SPRING, RUBBER
+   - 0.0683 | BEAM, POSITION, STANDING, RANK
+   - 0.0519 | POPCORN, STRIKE, FOUL, BALL
+   - 0.0505 | SAFE, VAULT, RINGS, HORSE
+3. **0.0553** | exact groups: 1/4
+   - 0.0771 | STATION, FUNKY, SPRING, RUBBER
+   - 0.0627 | BEAM, VAULT, RINGS, HORSE
+   - 0.0545 | POSITION, STANDING, SAFE, RANK
+   - 0.0519 | POPCORN, STRIKE, FOUL, BALL
+
+## Puzzle 2 (ID: 320)
+Words: SIGHT, IMPACT, TASTE, TOUCH, BAKE, ELEGANCE, STYLE, SUN, SEN, BASK, SOUR, TAN, GRACE, MOVE, AFFECT, SINE
+
+### Top Raw Candidate Groups
+1. **0.1144** | IMPACT, TOUCH, MOVE, AFFECT | EXACT
+2. **0.1052** | IMPACT, TOUCH, GRACE, AFFECT | max overlap 3/4
+3. **0.0911** | SIGHT, TASTE, TOUCH, STYLE | max overlap 2/4
+4. **0.0823** | TOUCH, GRACE, MOVE, AFFECT | max overlap 3/4
+5. **0.0770** | SIGHT, TOUCH, MOVE, AFFECT | max overlap 3/4
+6. **0.0768** | IMPACT, TOUCH, STYLE, AFFECT | max overlap 3/4
+7. **0.0753** | TOUCH, SOUR, MOVE, AFFECT | max overlap 3/4
+8. **0.0744** | TASTE, TOUCH, MOVE, AFFECT | max overlap 3/4
+9. **0.0736** | IMPACT, TOUCH, SOUR, AFFECT | max overlap 3/4
+10. **0.0731** | SIGHT, IMPACT, TOUCH, AFFECT | max overlap 3/4
+11. **0.0730** | TOUCH, STYLE, MOVE, AFFECT | max overlap 3/4
+12. **0.0721** | TASTE, TOUCH, STYLE, GRACE | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0429** | exact groups: 0/4
+   - 0.0499 | SIGHT, TASTE, ELEGANCE, STYLE
+   - 0.0478 | IMPACT, GRACE, MOVE, AFFECT
+   - 0.0417 | TOUCH, BAKE, SEN, SOUR
+   - 0.0410 | SUN, BASK, TAN, SINE
+2. **0.0415** | exact groups: 0/4
+   - 0.0476 | TASTE, TOUCH, BAKE, SEN
+   - 0.0461 | SIGHT, ELEGANCE, STYLE, GRACE
+   - 0.0410 | SUN, BASK, TAN, SINE
+   - 0.0394 | IMPACT, SOUR, MOVE, AFFECT
+3. **0.0392** | exact groups: 0/4
+   - 0.0499 | SIGHT, TASTE, ELEGANCE, STYLE
+   - 0.0410 | SUN, BASK, TAN, SINE
+   - 0.0394 | IMPACT, SOUR, MOVE, AFFECT
+   - 0.0383 | TOUCH, BAKE, SEN, GRACE
+
+## Puzzle 3 (ID: 731)
+Words: STRUT, NUMBER, DAGGER, EYEBROW, ELVES, PARENS, BANANA, LEPRECHAUN, ASTERISK, RAINBOW, FLIGHT PATH, BLUSTER, CROW, COUNT, ROOSTER, SHOW OFF
+
+### Top Raw Candidate Groups
+1. **0.0671** | NUMBER, ASTERISK, RAINBOW, ROOSTER | max overlap 2/4
+2. **0.0542** | NUMBER, BANANA, RAINBOW, ROOSTER | max overlap 2/4
+3. **0.0430** | NUMBER, BANANA, ASTERISK, ROOSTER | max overlap 2/4
+4. **0.0419** | NUMBER, DAGGER, ASTERISK, ROOSTER | max overlap 3/4
+5. **0.0404** | NUMBER, DAGGER, ASTERISK, RAINBOW | max overlap 3/4
+6. **0.0393** | NUMBER, BANANA, CROW, ROOSTER | max overlap 1/4
+7. **0.0379** | DAGGER, ASTERISK, RAINBOW, ROOSTER | max overlap 2/4
+8. **0.0375** | NUMBER, RAINBOW, CROW, ROOSTER | max overlap 1/4
+9. **0.0369** | NUMBER, DAGGER, BANANA, ROOSTER | max overlap 2/4
+10. **0.0363** | NUMBER, ASTERISK, CROW, ROOSTER | max overlap 2/4
+11. **0.0345** | ASTERISK, RAINBOW, CROW, ROOSTER | max overlap 1/4
+12. **0.0342** | RAINBOW, BLUSTER, CROW, ROOSTER | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0145** | exact groups: 0/4
+   - 0.0194 | NUMBER, BANANA, FLIGHT PATH, ROOSTER
+   - 0.0170 | DAGGER, ELVES, PARENS, LEPRECHAUN
+   - 0.0152 | ASTERISK, RAINBOW, BLUSTER, COUNT
+   - 0.0129 | STRUT, EYEBROW, CROW, SHOW OFF
+2. **0.0145** | exact groups: 0/4
+   - 0.0170 | DAGGER, ELVES, PARENS, LEPRECHAUN
+   - 0.0165 | BANANA, BLUSTER, COUNT, ROOSTER
+   - 0.0155 | NUMBER, ASTERISK, RAINBOW, FLIGHT PATH
+   - 0.0129 | STRUT, EYEBROW, CROW, SHOW OFF
+3. **0.0141** | exact groups: 0/4
+   - 0.0170 | DAGGER, ELVES, PARENS, LEPRECHAUN
+   - 0.0167 | NUMBER, ASTERISK, FLIGHT PATH, ROOSTER
+   - 0.0138 | BANANA, RAINBOW, BLUSTER, COUNT
+   - 0.0129 | STRUT, EYEBROW, CROW, SHOW OFF
+
+## Puzzle 4 (ID: 206)
+Words: CHECK, TIP, MIKE, PAIN, COLE, TAP, WIRE, TICK, MARK, 40, GLIDE, SOAR, X, BUG, FLY, FLOAT
+
+### Top Raw Candidate Groups
+1. **0.1503** | CHECK, TIP, TICK, MARK | max overlap 3/4
+2. **0.1469** | CHECK, TICK, MARK, X | EXACT
+3. **0.1269** | CHECK, TICK, MARK, FLY | max overlap 3/4
+4. **0.1235** | CHECK, WIRE, TICK, MARK | max overlap 3/4
+5. **0.1149** | TIP, TAP, TICK, MARK | max overlap 2/4
+6. **0.1134** | GLIDE, SOAR, FLY, FLOAT | EXACT
+7. **0.1090** | TIP, TICK, MARK, X | max overlap 3/4
+8. **0.1073** | TIP, TAP, TICK, BUG | max overlap 2/4
+9. **0.1065** | CHECK, TIP, MARK, X | max overlap 3/4
+10. **0.1057** | TAP, TICK, BUG, FLY | max overlap 2/4
+11. **0.1057** | TAP, BUG, FLY, FLOAT | max overlap 2/4
+12. **0.1040** | CHECK, TAP, TICK, MARK | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0560** | exact groups: 0/4
+   - 0.0877 | TAP, TICK, 40, BUG
+   - 0.0850 | CHECK, TIP, X, FLOAT
+   - 0.0487 | MIKE, GLIDE, SOAR, FLY
+   - 0.0452 | PAIN, COLE, WIRE, MARK
+2. **0.0560** | exact groups: 0/4
+   - 0.0862 | TIP, TAP, TICK, 40
+   - 0.0848 | CHECK, X, BUG, FLOAT
+   - 0.0487 | MIKE, GLIDE, SOAR, FLY
+   - 0.0452 | PAIN, COLE, WIRE, MARK
+3. **0.0551** | exact groups: 0/4
+   - 0.0897 | CHECK, TIP, BUG, FLOAT
+   - 0.0815 | TAP, TICK, 40, X
+   - 0.0487 | MIKE, GLIDE, SOAR, FLY
+   - 0.0452 | PAIN, COLE, WIRE, MARK
+
+## Puzzle 5 (ID: 707)
+Words: DRILL, EXCELLENT, EXERCISE, NOT QUITE, AREA, LESSON, ATHLETIC, ALMOST, ONE, WARM, OPEN, EASY, CLOSE, GAME, FLEXIBLE, ASSIGNMENT
+
+### Top Raw Candidate Groups
+1. **0.0964** | AREA, ONE, OPEN, CLOSE | max overlap 2/4
+2. **0.0882** | AREA, ONE, OPEN, GAME | max overlap 2/4
+3. **0.0821** | DRILL, EXERCISE, ATHLETIC, GAME | max overlap 2/4
+4. **0.0801** | DRILL, ATHLETIC, CLOSE, GAME | max overlap 1/4
+5. **0.0779** | DRILL, AREA, ATHLETIC, GAME | max overlap 2/4
+6. **0.0777** | DRILL, AREA, OPEN, CLOSE | max overlap 1/4
+7. **0.0760** | EXERCISE, ONE, WARM, GAME | max overlap 1/4
+8. **0.0760** | EXERCISE, ONE, EASY, GAME | max overlap 2/4
+9. **0.0752** | AREA, OPEN, CLOSE, GAME | max overlap 2/4
+10. **0.0751** | AREA, ATHLETIC, CLOSE, GAME | max overlap 2/4
+11. **0.0748** | ONE, OPEN, CLOSE, GAME | max overlap 2/4
+12. **0.0745** | EXERCISE, ONE, OPEN, GAME | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0391** | exact groups: 0/4
+   - 0.0575 | AREA, ONE, EASY, GAME
+   - 0.0512 | DRILL, LESSON, OPEN, ASSIGNMENT
+   - 0.0387 | EXERCISE, ATHLETIC, WARM, FLEXIBLE
+   - 0.0333 | EXCELLENT, NOT QUITE, ALMOST, CLOSE
+2. **0.0379** | exact groups: 0/4
+   - 0.0471 | NOT QUITE, ALMOST, ONE, CLOSE
+   - 0.0441 | DRILL, AREA, EASY, GAME
+   - 0.0387 | EXERCISE, ATHLETIC, WARM, FLEXIBLE
+   - 0.0344 | EXCELLENT, LESSON, OPEN, ASSIGNMENT
+3. **0.0379** | exact groups: 0/4
+   - 0.0512 | DRILL, LESSON, OPEN, ASSIGNMENT
+   - 0.0433 | EXERCISE, ONE, WARM, EASY
+   - 0.0416 | AREA, ATHLETIC, GAME, FLEXIBLE
+   - 0.0333 | EXCELLENT, NOT QUITE, ALMOST, CLOSE
+
+## Puzzle 6 (ID: 1043)
+Words: MOTHER, DEVOTE, SKIRT, WHAMMY, PULP, NEIGHBOR, EDUCATED, HISTORICAL, TOTORO, FLANK, ASIAGO, MY, TOUCH, SCIENCE, LITERARY, VERY
+
+### Top Raw Candidate Groups
+1. **0.0766** | MOTHER, SKIRT, PULP, TOUCH | max overlap 2/4
+2. **0.0474** | SKIRT, PULP, FLANK, TOUCH | max overlap 3/4
+3. **0.0438** | MOTHER, SKIRT, FLANK, TOUCH | max overlap 3/4
+4. **0.0405** | EDUCATED, HISTORICAL, SCIENCE, LITERARY | max overlap 3/4
+5. **0.0393** | HISTORICAL, SCIENCE, LITERARY, VERY | max overlap 3/4
+6. **0.0359** | SKIRT, PULP, HISTORICAL, TOUCH | max overlap 2/4
+7. **0.0358** | MOTHER, PULP, FLANK, TOUCH | max overlap 2/4
+8. **0.0353** | SKIRT, PULP, TOUCH, VERY | max overlap 2/4
+9. **0.0346** | MOTHER, SKIRT, NEIGHBOR, TOUCH | max overlap 3/4
+10. **0.0345** | MOTHER, PULP, EDUCATED, TOUCH | max overlap 2/4
+11. **0.0341** | MOTHER, SKIRT, EDUCATED, TOUCH | max overlap 2/4
+12. **0.0341** | MOTHER, SKIRT, HISTORICAL, TOUCH | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0189** | exact groups: 1/4
+   - 0.0474 | SKIRT, PULP, FLANK, TOUCH
+   - 0.0393 | HISTORICAL, SCIENCE, LITERARY, VERY
+   - 0.0138 | MOTHER, NEIGHBOR, EDUCATED, MY
+   - 0.0113 | DEVOTE, WHAMMY, TOTORO, ASIAGO
+2. **0.0159** | exact groups: 2/4
+   - 0.0287 | PULP, HISTORICAL, SCIENCE, LITERARY
+   - 0.0269 | SKIRT, FLANK, TOUCH, VERY
+   - 0.0138 | MOTHER, NEIGHBOR, EDUCATED, MY
+   - 0.0113 | DEVOTE, WHAMMY, TOTORO, ASIAGO
+3. **0.0153** | exact groups: 1/4
+   - 0.0249 | MOTHER, SKIRT, NEIGHBOR, EDUCATED
+   - 0.0210 | PULP, FLANK, TOUCH, VERY
+   - 0.0176 | HISTORICAL, MY, SCIENCE, LITERARY
+   - 0.0113 | DEVOTE, WHAMMY, TOTORO, ASIAGO
+
+## Puzzle 7 (ID: 986)
+Words: POSTURE, CHRISTMAS TREE, BOLT, MASQUERADE, WEDDING, BLARNEY STONE, PARTY HAT, BLUFF, VOLCANO, FRONT, MISTLETOE, INHALE, CONE, GORGE, NEW YEAR'S EVE, SCARF
+
+### Top Raw Candidate Groups
+1. **0.0897** | BLUFF, FRONT, GORGE, SCARF | max overlap 2/4
+2. **0.0872** | BOLT, BLUFF, GORGE, SCARF | max overlap 3/4
+3. **0.0838** | FRONT, CONE, GORGE, SCARF | max overlap 2/4
+4. **0.0777** | BLUFF, FRONT, CONE, SCARF | max overlap 2/4
+5. **0.0761** | BLUFF, FRONT, CONE, GORGE | max overlap 2/4
+6. **0.0740** | BLUFF, CONE, GORGE, SCARF | max overlap 2/4
+7. **0.0653** | BOLT, BLUFF, CONE, SCARF | max overlap 2/4
+8. **0.0649** | BOLT, CONE, GORGE, SCARF | max overlap 3/4
+9. **0.0613** | BOLT, BLUFF, CONE, GORGE | max overlap 2/4
+10. **0.0602** | BOLT, BLUFF, FRONT, GORGE | max overlap 2/4
+11. **0.0583** | BOLT, BLUFF, FRONT, SCARF | max overlap 2/4
+12. **0.0571** | BOLT, FRONT, GORGE, SCARF | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0177** | exact groups: 0/4
+   - 0.0277 | POSTURE, BOLT, BLUFF, FRONT
+   - 0.0266 | BLARNEY STONE, VOLCANO, CONE, GORGE
+   - 0.0252 | CHRISTMAS TREE, WEDDING, MISTLETOE, NEW YEAR'S EVE
+   - 0.0095 | MASQUERADE, PARTY HAT, INHALE, SCARF
+2. **0.0164** | exact groups: 0/4
+   - 0.0277 | POSTURE, BOLT, BLUFF, FRONT
+   - 0.0266 | BLARNEY STONE, VOLCANO, CONE, GORGE
+   - 0.0221 | CHRISTMAS TREE, WEDDING, PARTY HAT, NEW YEAR'S EVE
+   - 0.0085 | MASQUERADE, MISTLETOE, INHALE, SCARF
+3. **0.0163** | exact groups: 0/4
+   - 0.0305 | POSTURE, BOLT, BLUFF, GORGE
+   - 0.0252 | CHRISTMAS TREE, WEDDING, MISTLETOE, NEW YEAR'S EVE
+   - 0.0211 | BLARNEY STONE, VOLCANO, FRONT, CONE
+   - 0.0095 | MASQUERADE, PARTY HAT, INHALE, SCARF
+
+## Puzzle 8 (ID: 925)
+Words: UNCONSCIOUS, DOWNFALL, LITTLE RED RIDING HOOD, SOFT SPOT, OEDIPUS COMPLEX, DRACULA, DARTH VADER, LINKLATER, BRATZ, FRANKENSTEIN, SUPEREGO, FIXATION, SUPERMAN, DOGMA, ACHILLES’ HEEL, KRYPTONITE
+
+### Top Raw Candidate Groups
+1. **0.0298** | UNCONSCIOUS, SUPEREGO, SUPERMAN, KRYPTONITE | max overlap 2/4
+2. **0.0259** | UNCONSCIOUS, OEDIPUS COMPLEX, SUPEREGO, SUPERMAN | max overlap 3/4
+3. **0.0227** | UNCONSCIOUS, DOWNFALL, SUPEREGO, SUPERMAN | max overlap 2/4
+4. **0.0221** | LITTLE RED RIDING HOOD, DRACULA, DARTH VADER, SUPERMAN | EXACT
+5. **0.0210** | UNCONSCIOUS, DOWNFALL, FRANKENSTEIN, SUPERMAN | max overlap 1/4
+6. **0.0207** | UNCONSCIOUS, DOWNFALL, SUPERMAN, KRYPTONITE | max overlap 2/4
+7. **0.0201** | LITTLE RED RIDING HOOD, DARTH VADER, FRANKENSTEIN, SUPERMAN | max overlap 3/4
+8. **0.0200** | UNCONSCIOUS, OEDIPUS COMPLEX, FRANKENSTEIN, SUPEREGO | max overlap 3/4
+9. **0.0199** | LITTLE RED RIDING HOOD, DRACULA, DARTH VADER, FRANKENSTEIN | max overlap 3/4
+10. **0.0194** | UNCONSCIOUS, OEDIPUS COMPLEX, SUPEREGO, KRYPTONITE | max overlap 3/4
+11. **0.0194** | DOWNFALL, FRANKENSTEIN, SUPERMAN, ACHILLES’ HEEL | max overlap 2/4
+12. **0.0193** | LITTLE RED RIDING HOOD, DARTH VADER, BRATZ, SUPERMAN | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0133** | exact groups: 1/4
+   - 0.0221 | LITTLE RED RIDING HOOD, DRACULA, DARTH VADER, SUPERMAN
+   - 0.0200 | UNCONSCIOUS, OEDIPUS COMPLEX, FRANKENSTEIN, SUPEREGO
+   - 0.0185 | DOWNFALL, FIXATION, DOGMA, ACHILLES’ HEEL
+   - 0.0074 | SOFT SPOT, LINKLATER, BRATZ, KRYPTONITE
+2. **0.0133** | exact groups: 0/4
+   - 0.0259 | UNCONSCIOUS, OEDIPUS COMPLEX, SUPEREGO, SUPERMAN
+   - 0.0199 | LITTLE RED RIDING HOOD, DRACULA, DARTH VADER, FRANKENSTEIN
+   - 0.0185 | DOWNFALL, FIXATION, DOGMA, ACHILLES’ HEEL
+   - 0.0074 | SOFT SPOT, LINKLATER, BRATZ, KRYPTONITE
+3. **0.0119** | exact groups: 0/4
+   - 0.0201 | LITTLE RED RIDING HOOD, DARTH VADER, FRANKENSTEIN, SUPERMAN
+   - 0.0185 | DOWNFALL, FIXATION, DOGMA, ACHILLES’ HEEL
+   - 0.0143 | UNCONSCIOUS, OEDIPUS COMPLEX, DRACULA, SUPEREGO
+   - 0.0074 | SOFT SPOT, LINKLATER, BRATZ, KRYPTONITE
+
+## Puzzle 9 (ID: 1021)
+Words: PLANK, CALF RAISE, CRUNCH, CHICK FLICK, KIT KAT, ABSENCE, DEFICIT, WIRELESS, SPORTS, FRY COOK, JOLLY ROGER, PLUNGE, CANNON, PINCH, PUSH-UP, CROW'S NEST
+
+### Top Raw Candidate Groups
+1. **0.0906** | PLANK, CRUNCH, PLUNGE, PINCH | max overlap 2/4
+2. **0.0739** | PLANK, CRUNCH, CHICK FLICK, PLUNGE | max overlap 1/4
+3. **0.0716** | PLANK, CHICK FLICK, PLUNGE, PINCH | max overlap 1/4
+4. **0.0697** | CRUNCH, CHICK FLICK, PLUNGE, PINCH | max overlap 2/4
+5. **0.0664** | PLANK, CRUNCH, CHICK FLICK, PINCH | max overlap 2/4
+6. **0.0399** | PLANK, CRUNCH, SPORTS, PLUNGE | max overlap 2/4
+7. **0.0392** | PLANK, CRUNCH, PLUNGE, PUSH-UP | max overlap 2/4
+8. **0.0377** | PLANK, CHICK FLICK, PINCH, CROW'S NEST | max overlap 2/4
+9. **0.0372** | PLANK, PLUNGE, PINCH, PUSH-UP | max overlap 2/4
+10. **0.0362** | PLANK, PLUNGE, PINCH, CROW'S NEST | max overlap 2/4
+11. **0.0352** | CRUNCH, PLUNGE, PINCH, PUSH-UP | max overlap 2/4
+12. **0.0350** | CRUNCH, SPORTS, PLUNGE, PINCH | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0119** | exact groups: 0/4
+   - 0.0201 | PLANK, CRUNCH, FRY COOK, PINCH
+   - 0.0175 | WIRELESS, SPORTS, PLUNGE, CANNON
+   - 0.0134 | CALF RAISE, CHICK FLICK, JOLLY ROGER, CROW'S NEST
+   - 0.0084 | KIT KAT, ABSENCE, DEFICIT, PUSH-UP
+2. **0.0117** | exact groups: 0/4
+   - 0.0254 | PLANK, FRY COOK, PLUNGE, PINCH
+   - 0.0166 | CRUNCH, WIRELESS, SPORTS, CANNON
+   - 0.0134 | CALF RAISE, CHICK FLICK, JOLLY ROGER, CROW'S NEST
+   - 0.0084 | KIT KAT, ABSENCE, DEFICIT, PUSH-UP
+3. **0.0113** | exact groups: 0/4
+   - 0.0254 | PLANK, FRY COOK, PLUNGE, PINCH
+   - 0.0145 | CRUNCH, KIT KAT, DEFICIT, PUSH-UP
+   - 0.0134 | CALF RAISE, CHICK FLICK, JOLLY ROGER, CROW'S NEST
+   - 0.0087 | ABSENCE, WIRELESS, SPORTS, CANNON
+
+## Puzzle 10 (ID: 434)
+Words: NERD, GRUMP, RUNT, WHAT IF, SLEEP, SAY, DO, SNOOZE, ALARM, PERHAPS, DOPE, SUPPOSE, TIME SET, KISS, HOUR, WHOPPER
+
+### Top Raw Candidate Groups
+1. **0.0484** | SLEEP, SNOOZE, ALARM, HOUR | max overlap 3/4
+2. **0.0424** | NERD, DO, DOPE, HOUR | max overlap 2/4
+3. **0.0406** | NERD, RUNT, DO, DOPE | max overlap 2/4
+4. **0.0374** | RUNT, SLEEP, DO, HOUR | max overlap 2/4
+5. **0.0367** | SLEEP, SAY, DO, KISS | max overlap 2/4
+6. **0.0365** | NERD, DO, DOPE, KISS | max overlap 2/4
+7. **0.0353** | GRUMP, SLEEP, SNOOZE, ALARM | max overlap 2/4
+8. **0.0352** | RUNT, SLEEP, SNOOZE, ALARM | max overlap 2/4
+9. **0.0347** | DO, DOPE, KISS, HOUR | max overlap 2/4
+10. **0.0347** | SAY, DO, PERHAPS, KISS | max overlap 2/4
+11. **0.0344** | SLEEP, DO, DOPE, HOUR | max overlap 3/4
+12. **0.0335** | SLEEP, SAY, SNOOZE, ALARM | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0197** | exact groups: 0/4
+   - 0.0280 | SLEEP, SNOOZE, ALARM, TIME SET
+   - 0.0272 | SAY, DO, KISS, HOUR
+   - 0.0174 | NERD, GRUMP, RUNT, DOPE
+   - 0.0171 | WHAT IF, PERHAPS, SUPPOSE, WHOPPER
+2. **0.0194** | exact groups: 1/4
+   - 0.0280 | SLEEP, SNOOZE, ALARM, TIME SET
+   - 0.0246 | RUNT, DO, KISS, HOUR
+   - 0.0206 | NERD, GRUMP, DOPE, WHOPPER
+   - 0.0162 | WHAT IF, SAY, PERHAPS, SUPPOSE
+3. **0.0193** | exact groups: 0/4
+   - 0.0353 | GRUMP, SLEEP, SNOOZE, ALARM
+   - 0.0333 | RUNT, SAY, DO, KISS
+   - 0.0171 | WHAT IF, PERHAPS, SUPPOSE, WHOPPER
+   - 0.0134 | NERD, DOPE, TIME SET, HOUR
+
+## Puzzle 11 (ID: 622)
+Words: GLITTER, GOOSE, PAPER, CELTIC, PACKER, CURL, YANKEE, ROD, FEATHER, PARACHUTE, CRIMP, MACARONI, TEASE, DOODLE, CANADIEN, GLUE
+
+### Top Raw Candidate Groups
+1. **0.0806** | GOOSE, PAPER, YANKEE, ROD | max overlap 2/4
+2. **0.0738** | GOOSE, PAPER, YANKEE, DOODLE | max overlap 2/4
+3. **0.0736** | GOOSE, PAPER, ROD, DOODLE | max overlap 3/4
+4. **0.0714** | GOOSE, YANKEE, ROD, DOODLE | max overlap 3/4
+5. **0.0707** | PAPER, PACKER, YANKEE, ROD | max overlap 2/4
+6. **0.0641** | PAPER, YANKEE, ROD, DOODLE | max overlap 2/4
+7. **0.0553** | GOOSE, PACKER, YANKEE, ROD | max overlap 2/4
+8. **0.0550** | GOOSE, PAPER, YANKEE, FEATHER | max overlap 1/4
+9. **0.0541** | GOOSE, PAPER, PACKER, YANKEE | max overlap 2/4
+10. **0.0503** | GOOSE, PAPER, FEATHER, DOODLE | max overlap 2/4
+11. **0.0498** | GOOSE, PAPER, ROD, FEATHER | max overlap 2/4
+12. **0.0484** | GOOSE, PAPER, PACKER, ROD | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0207** | exact groups: 1/4
+   - 0.0251 | CELTIC, PACKER, YANKEE, CANADIEN
+   - 0.0230 | GLITTER, FEATHER, PARACHUTE, GLUE
+   - 0.0223 | PAPER, ROD, CRIMP, DOODLE
+   - 0.0187 | GOOSE, CURL, MACARONI, TEASE
+2. **0.0186** | exact groups: 0/4
+   - 0.0230 | GLITTER, FEATHER, PARACHUTE, GLUE
+   - 0.0223 | PAPER, ROD, CRIMP, DOODLE
+   - 0.0198 | GOOSE, CELTIC, CURL, TEASE
+   - 0.0161 | PACKER, YANKEE, MACARONI, CANADIEN
+3. **0.0175** | exact groups: 0/4
+   - 0.0230 | GLITTER, FEATHER, PARACHUTE, GLUE
+   - 0.0227 | GOOSE, ROD, CRIMP, DOODLE
+   - 0.0161 | PACKER, YANKEE, MACARONI, CANADIEN
+   - 0.0155 | PAPER, CELTIC, CURL, TEASE
+
+## Puzzle 12 (ID: 541)
+Words: OSCAR, CUZ, CECE, JUNIOR, EDIE, EMMY, TONY, COUNT, GRAMMY, COOKIE, KATIE, MEADOW, MUMMY, POP, CARMELA, SNUFFY
+
+### Top Raw Candidate Groups
+1. **0.0716** | COUNT, COOKIE, MUMMY, POP | max overlap 2/4
+2. **0.0701** | CUZ, COUNT, MUMMY, POP | max overlap 3/4
+3. **0.0697** | CUZ, COUNT, COOKIE, MUMMY | max overlap 2/4
+4. **0.0646** | CUZ, COUNT, COOKIE, POP | max overlap 2/4
+5. **0.0640** | CUZ, COOKIE, MUMMY, POP | max overlap 3/4
+6. **0.0481** | CUZ, GRAMMY, COOKIE, MUMMY | max overlap 3/4
+7. **0.0462** | OSCAR, EMMY, GRAMMY, MUMMY | max overlap 2/4
+8. **0.0446** | CUZ, GRAMMY, MUMMY, POP | EXACT
+9. **0.0413** | CUZ, JUNIOR, GRAMMY, COOKIE | max overlap 2/4
+10. **0.0388** | CUZ, JUNIOR, GRAMMY, POP | max overlap 3/4
+11. **0.0385** | OSCAR, JUNIOR, EMMY, GRAMMY | max overlap 1/4
+12. **0.0382** | CUZ, JUNIOR, COUNT, POP | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0204** | exact groups: 0/4
+   - 0.0325 | OSCAR, CECE, EMMY, GRAMMY
+   - 0.0220 | EDIE, TONY, KATIE, CARMELA
+   - 0.0220 | CUZ, JUNIOR, COOKIE, SNUFFY
+   - 0.0188 | COUNT, MEADOW, MUMMY, POP
+2. **0.0204** | exact groups: 0/4
+   - 0.0233 | OSCAR, CECE, EDIE, GRAMMY
+   - 0.0220 | CUZ, JUNIOR, COOKIE, SNUFFY
+   - 0.0219 | EMMY, TONY, KATIE, CARMELA
+   - 0.0188 | COUNT, MEADOW, MUMMY, POP
+3. **0.0202** | exact groups: 0/4
+   - 0.0256 | COUNT, COOKIE, POP, SNUFFY
+   - 0.0234 | OSCAR, EMMY, KATIE, MUMMY
+   - 0.0196 | CUZ, JUNIOR, GRAMMY, MEADOW
+   - 0.0189 | CECE, EDIE, TONY, CARMELA
+
+## Puzzle 13 (ID: 1005)
+Words: SPORK, FROG, CORNER, SPROCKET, SMOG, BOGART, MONOPOLIZE, HOG, GEAR, COG, MOTEL, DOZE, BLOG, PINION, DOG, HORN
+
+### Top Raw Candidate Groups
+1. **0.0909** | CORNER, GEAR, DOG, HORN | max overlap 2/4
+2. **0.0856** | HOG, GEAR, DOG, HORN | max overlap 2/4
+3. **0.0825** | SPROCKET, GEAR, COG, PINION | EXACT
+4. **0.0825** | GEAR, BLOG, DOG, HORN | max overlap 2/4
+5. **0.0818** | GEAR, DOZE, BLOG, HORN | max overlap 2/4
+6. **0.0791** | CORNER, SPROCKET, GEAR, COG | max overlap 3/4
+7. **0.0789** | GEAR, DOZE, DOG, HORN | max overlap 3/4
+8. **0.0777** | DOZE, BLOG, DOG, HORN | max overlap 3/4
+9. **0.0764** | HOG, DOZE, DOG, HORN | max overlap 3/4
+10. **0.0758** | HOG, BLOG, DOG, HORN | max overlap 2/4
+11. **0.0757** | HOG, GEAR, DOZE, HORN | max overlap 2/4
+12. **0.0755** | HOG, GEAR, BLOG, HORN | max overlap 1/4
+
+### Top Raw Partitions
+1. **0.0218** | exact groups: 0/4
+   - 0.0272 | CORNER, MOTEL, DOG, HORN
+   - 0.0261 | SPORK, SPROCKET, GEAR, PINION
+   - 0.0218 | FROG, MONOPOLIZE, HOG, COG
+   - 0.0196 | SMOG, BOGART, DOZE, BLOG
+2. **0.0208** | exact groups: 0/4
+   - 0.0432 | SPROCKET, GEAR, COG, MOTEL
+   - 0.0230 | CORNER, MONOPOLIZE, PINION, HORN
+   - 0.0207 | SPORK, FROG, HOG, DOG
+   - 0.0196 | SMOG, BOGART, DOZE, BLOG
+3. **0.0207** | exact groups: 0/4
+   - 0.0261 | SPORK, SPROCKET, GEAR, PINION
+   - 0.0225 | FROG, CORNER, MONOPOLIZE, HORN
+   - 0.0212 | HOG, COG, MOTEL, DOG
+   - 0.0196 | SMOG, BOGART, DOZE, BLOG
+
+## Puzzle 14 (ID: 170)
+Words: ISLAND, CRAM, KEY, BAG, BEDROOM, ATOLL, KITCHEN, PACK, STUDY, DEN, SPROUT, BAR, JAM, COUNTER, DIP, STUFF
+
+### Top Raw Candidate Groups
+1. **0.1562** | BAG, PACK, JAM, STUFF | max overlap 3/4
+2. **0.1337** | KEY, KITCHEN, BAR, COUNTER | max overlap 2/4
+3. **0.1312** | KITCHEN, STUDY, BAR, COUNTER | max overlap 2/4
+4. **0.1306** | CRAM, BAG, JAM, STUFF | max overlap 3/4
+5. **0.1278** | CRAM, PACK, JAM, STUFF | EXACT
+6. **0.1256** | CRAM, STUDY, JAM, STUFF | max overlap 3/4
+7. **0.1185** | KEY, PACK, JAM, STUFF | max overlap 3/4
+8. **0.1125** | KITCHEN, BAR, JAM, COUNTER | max overlap 1/4
+9. **0.1117** | KEY, BAG, JAM, STUFF | max overlap 2/4
+10. **0.1105** | KEY, STUDY, BAR, COUNTER | max overlap 2/4
+11. **0.1080** | KEY, KITCHEN, STUDY, BAR | max overlap 2/4
+12. **0.1080** | KEY, BAG, PACK, STUFF | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0452** | exact groups: 1/4
+   - 0.0687 | BEDROOM, KITCHEN, STUDY, DEN
+   - 0.0537 | ISLAND, ATOLL, BAR, COUNTER
+   - 0.0506 | CRAM, SPROUT, JAM, STUFF
+   - 0.0383 | KEY, BAG, PACK, DIP
+2. **0.0428** | exact groups: 0/4
+   - 0.0621 | BAG, DEN, BAR, DIP
+   - 0.0499 | ISLAND, KEY, ATOLL, COUNTER
+   - 0.0467 | PACK, SPROUT, JAM, STUFF
+   - 0.0374 | CRAM, BEDROOM, KITCHEN, STUDY
+3. **0.0413** | exact groups: 0/4
+   - 0.0537 | ISLAND, ATOLL, BAR, COUNTER
+   - 0.0467 | PACK, SPROUT, JAM, STUFF
+   - 0.0438 | KEY, BAG, DEN, DIP
+   - 0.0374 | CRAM, BEDROOM, KITCHEN, STUDY
+
+## Puzzle 15 (ID: 563)
+Words: JENNY, RUDOLPH, ROBIN HOOD, FEY, STRONG, CUPID, VIXEN, SAGITTARIUS, STAR, SHANNON, HAWKEYE, MOON, PLANET, COMET, QUEEN, NANNY
+
+### Top Raw Candidate Groups
+1. **0.1463** | STAR, MOON, PLANET, COMET | EXACT
+2. **0.1326** | SAGITTARIUS, STAR, MOON, PLANET | max overlap 3/4
+3. **0.1205** | SAGITTARIUS, STAR, PLANET, COMET | max overlap 3/4
+4. **0.1146** | SAGITTARIUS, STAR, MOON, COMET | max overlap 3/4
+5. **0.1022** | CUPID, STAR, PLANET, COMET | max overlap 3/4
+6. **0.0929** | SAGITTARIUS, MOON, PLANET, COMET | max overlap 3/4
+7. **0.0837** | CUPID, STAR, MOON, PLANET | max overlap 3/4
+8. **0.0656** | CUPID, MOON, PLANET, COMET | max overlap 3/4
+9. **0.0652** | STAR, MOON, PLANET, QUEEN | max overlap 3/4
+10. **0.0650** | CUPID, STAR, MOON, COMET | max overlap 3/4
+11. **0.0634** | STRONG, STAR, MOON, PLANET | max overlap 3/4
+12. **0.0619** | CUPID, SAGITTARIUS, STAR, COMET | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0228** | exact groups: 0/4
+   - 0.0520 | CUPID, SAGITTARIUS, PLANET, COMET
+   - 0.0468 | STRONG, SHANNON, MOON, QUEEN
+   - 0.0160 | RUDOLPH, ROBIN HOOD, FEY, HAWKEYE
+   - 0.0142 | JENNY, VIXEN, STAR, NANNY
+2. **0.0225** | exact groups: 0/4
+   - 0.1205 | SAGITTARIUS, STAR, PLANET, COMET
+   - 0.0468 | STRONG, SHANNON, MOON, QUEEN
+   - 0.0160 | RUDOLPH, ROBIN HOOD, FEY, HAWKEYE
+   - 0.0135 | JENNY, CUPID, VIXEN, NANNY
+3. **0.0217** | exact groups: 0/4
+   - 0.0416 | STRONG, SAGITTARIUS, STAR, MOON
+   - 0.0298 | JENNY, SHANNON, QUEEN, NANNY
+   - 0.0251 | CUPID, VIXEN, PLANET, COMET
+   - 0.0160 | RUDOLPH, ROBIN HOOD, FEY, HAWKEYE
+
+## Puzzle 16 (ID: 487)
+Words: DOE, HER, EYE, ELF, TEA, RAD, ILL, LEG, BIG, SEW, BAD, HIP, ARM, FAR, FLY, SAW
+
+### Top Raw Candidate Groups
+1. **0.1067** | BIG, ARM, FAR, FLY | max overlap 1/4
+2. **0.1055** | EYE, ARM, FAR, FLY | max overlap 2/4
+3. **0.1045** | EYE, HIP, ARM, FLY | max overlap 3/4
+4. **0.1036** | HIP, ARM, FLY, SAW | max overlap 2/4
+5. **0.1034** | EYE, BIG, HIP, ARM | max overlap 3/4
+6. **0.1030** | ILL, BIG, BAD, HIP | max overlap 2/4
+7. **0.1022** | BAD, ARM, FAR, FLY | max overlap 2/4
+8. **0.1020** | BAD, ARM, FLY, SAW | max overlap 2/4
+9. **0.1017** | BIG, HIP, ARM, FLY | max overlap 2/4
+10. **0.1010** | ILL, LEG, BAD, ARM | max overlap 2/4
+11. **0.1005** | BIG, HIP, ARM, SAW | max overlap 2/4
+12. **0.1004** | BIG, ARM, FLY, SAW | max overlap 2/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 17 (ID: 676)
+Words: YOUNG, CHEESE, MIDRIFF, BONDS, TRUNK, TORSO, CRUST, SAUCE, SIX-PACK, CASE, TOPPINGS, FORTY, GROWLER, TROUT, MANTLE, CORE
+
+### Top Raw Candidate Groups
+1. **0.0711** | TRUNK, CASE, GROWLER, CORE | max overlap 2/4
+2. **0.0688** | CHEESE, SAUCE, FORTY, GROWLER | max overlap 2/4
+3. **0.0639** | TRUNK, SAUCE, CASE, GROWLER | max overlap 2/4
+4. **0.0498** | CRUST, CASE, MANTLE, CORE | max overlap 1/4
+5. **0.0495** | TRUNK, SAUCE, GROWLER, TROUT | max overlap 1/4
+6. **0.0477** | TRUNK, CRUST, CASE, CORE | max overlap 2/4
+7. **0.0475** | TRUNK, SAUCE, FORTY, GROWLER | max overlap 2/4
+8. **0.0473** | CRUST, SAUCE, CASE, GROWLER | max overlap 2/4
+9. **0.0471** | YOUNG, CHEESE, SAUCE, FORTY | max overlap 2/4
+10. **0.0466** | TRUNK, SAUCE, GROWLER, CORE | max overlap 2/4
+11. **0.0465** | TRUNK, SAUCE, CASE, CORE | max overlap 2/4
+12. **0.0457** | TRUNK, GROWLER, TROUT, CORE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0277** | exact groups: 0/4
+   - 0.0383 | CHEESE, BONDS, SAUCE, FORTY
+   - 0.0382 | YOUNG, CRUST, CASE, MANTLE
+   - 0.0320 | MIDRIFF, TRUNK, GROWLER, TROUT
+   - 0.0203 | TORSO, SIX-PACK, TOPPINGS, CORE
+2. **0.0266** | exact groups: 0/4
+   - 0.0386 | TRUNK, CASE, GROWLER, TROUT
+   - 0.0383 | CHEESE, BONDS, SAUCE, FORTY
+   - 0.0266 | YOUNG, TORSO, CRUST, MANTLE
+   - 0.0207 | MIDRIFF, SIX-PACK, TOPPINGS, CORE
+3. **0.0261** | exact groups: 0/4
+   - 0.0325 | YOUNG, CHEESE, BONDS, FORTY
+   - 0.0320 | MIDRIFF, TRUNK, GROWLER, TROUT
+   - 0.0319 | CRUST, SAUCE, CASE, MANTLE
+   - 0.0203 | TORSO, SIX-PACK, TOPPINGS, CORE
+
+## Puzzle 18 (ID: 132)
+Words: HOOK, TRIPE, BUNK, SPAM, WIRE, SAUCER, CUP, STRAP, DISH, BALONEY, LASER, SCUBA, BOWL, CROCK, PLATE, RADAR
+
+### Top Raw Candidate Groups
+1. **0.2112** | CUP, DISH, BOWL, PLATE | max overlap 3/4
+2. **0.1738** | SAUCER, CUP, DISH, PLATE | max overlap 3/4
+3. **0.1455** | HOOK, CUP, BOWL, PLATE | max overlap 2/4
+4. **0.1352** | SAUCER, DISH, BOWL, PLATE | EXACT
+5. **0.1294** | SAUCER, CUP, DISH, BOWL | max overlap 3/4
+6. **0.1294** | SAUCER, CUP, BOWL, PLATE | max overlap 3/4
+7. **0.1268** | HOOK, CUP, DISH, PLATE | max overlap 2/4
+8. **0.1241** | HOOK, CUP, DISH, BOWL | max overlap 2/4
+9. **0.1226** | HOOK, DISH, BOWL, PLATE | max overlap 3/4
+10. **0.1066** | HOOK, BUNK, CUP, DISH | max overlap 2/4
+11. **0.1049** | HOOK, BUNK, WIRE, STRAP | max overlap 3/4
+12. **0.1022** | HOOK, WIRE, DISH, BOWL | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0420** | exact groups: 0/4
+   - 0.0643 | SAUCER, DISH, PLATE, RADAR
+   - 0.0529 | TRIPE, CUP, STRAP, CROCK
+   - 0.0456 | HOOK, BUNK, SPAM, BALONEY
+   - 0.0347 | WIRE, LASER, SCUBA, BOWL
+2. **0.0414** | exact groups: 1/4
+   - 0.0643 | SAUCER, DISH, PLATE, RADAR
+   - 0.0574 | TRIPE, BUNK, BALONEY, CROCK
+   - 0.0386 | HOOK, SPAM, CUP, STRAP
+   - 0.0347 | WIRE, LASER, SCUBA, BOWL
+3. **0.0397** | exact groups: 0/4
+   - 0.0643 | SAUCER, DISH, PLATE, RADAR
+   - 0.0463 | TRIPE, CUP, BALONEY, CROCK
+   - 0.0429 | HOOK, BUNK, SPAM, STRAP
+   - 0.0347 | WIRE, LASER, SCUBA, BOWL
+
+## Puzzle 19 (ID: 129)
+Words: PANT, TONG, SNOOZE, BOXER, PUFF, BREEZE, KICK, DRAG, GOGGLE, DRAFT, YAWN, TANG, GUST, ZIP, BORE, BITE
+
+### Top Raw Candidate Groups
+1. **0.1017** | PUFF, KICK, DRAG, ZIP | max overlap 2/4
+2. **0.0955** | KICK, DRAG, TANG, BITE | max overlap 3/4
+3. **0.0933** | PUFF, DRAG, TANG, BITE | max overlap 2/4
+4. **0.0913** | PUFF, KICK, DRAG, BITE | max overlap 2/4
+5. **0.0912** | KICK, DRAG, ZIP, BITE | max overlap 3/4
+6. **0.0862** | KICK, DRAG, TANG, ZIP | max overlap 3/4
+7. **0.0860** | PUFF, KICK, DRAG, TANG | max overlap 2/4
+8. **0.0849** | PUFF, KICK, ZIP, BITE | max overlap 3/4
+9. **0.0815** | PANT, PUFF, KICK, DRAG | max overlap 1/4
+10. **0.0812** | PANT, PUFF, DRAG, ZIP | max overlap 1/4
+11. **0.0805** | PUFF, KICK, TANG, BITE | max overlap 3/4
+12. **0.0801** | PUFF, KICK, TANG, ZIP | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0341** | exact groups: 1/4
+   - 0.0551 | DRAG, ZIP, BORE, BITE
+   - 0.0512 | PUFF, BREEZE, DRAFT, GUST
+   - 0.0315 | TONG, BOXER, KICK, TANG
+   - 0.0269 | PANT, SNOOZE, GOGGLE, YAWN
+2. **0.0334** | exact groups: 0/4
+   - 0.0521 | BREEZE, DRAG, DRAFT, GUST
+   - 0.0481 | PUFF, ZIP, BORE, BITE
+   - 0.0315 | TONG, BOXER, KICK, TANG
+   - 0.0269 | PANT, SNOOZE, GOGGLE, YAWN
+3. **0.0333** | exact groups: 1/4
+   - 0.0512 | PUFF, BREEZE, DRAFT, GUST
+   - 0.0434 | PANT, DRAG, ZIP, BITE
+   - 0.0315 | TONG, BOXER, KICK, TANG
+   - 0.0290 | SNOOZE, GOGGLE, YAWN, BORE
+
+## Puzzle 20 (ID: 785)
+Words: EFFORT, BEETLE, BEECH, CEDAR, ZITI, YEW, APPLE, COOKIE, DECAY, EASY, APHID, VENDETTA, PINE, MITE, GEO, TICK
+
+### Top Raw Candidate Groups
+1. **0.0916** | BEECH, CEDAR, YEW, PINE | EXACT
+2. **0.0752** | BEETLE, BEECH, CEDAR, PINE | max overlap 3/4
+3. **0.0747** | CEDAR, APPLE, COOKIE, TICK | max overlap 2/4
+4. **0.0589** | BEECH, CEDAR, APPLE, PINE | max overlap 3/4
+5. **0.0541** | BEETLE, CEDAR, APPLE, COOKIE | max overlap 2/4
+6. **0.0528** | BEECH, CEDAR, YEW, APPLE | max overlap 3/4
+7. **0.0528** | BEETLE, BEECH, CEDAR, APPLE | max overlap 2/4
+8. **0.0494** | BEETLE, CEDAR, APPLE, PINE | max overlap 2/4
+9. **0.0490** | BEETLE, BEECH, APPLE, PINE | max overlap 2/4
+10. **0.0473** | BEETLE, BEECH, YEW, PINE | max overlap 3/4
+11. **0.0465** | BEETLE, BEECH, CEDAR, YEW | max overlap 3/4
+12. **0.0459** | CEDAR, YEW, APPLE, PINE | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0175** | exact groups: 0/4
+   - 0.0210 | BEECH, YEW, PINE, GEO
+   - 0.0207 | EFFORT, ZITI, APPLE, EASY
+   - 0.0175 | CEDAR, COOKIE, VENDETTA, TICK
+   - 0.0160 | BEETLE, DECAY, APHID, MITE
+2. **0.0171** | exact groups: 0/4
+   - 0.0207 | EFFORT, ZITI, APPLE, EASY
+   - 0.0188 | BEECH, YEW, VENDETTA, PINE
+   - 0.0175 | CEDAR, COOKIE, GEO, TICK
+   - 0.0160 | BEETLE, DECAY, APHID, MITE
+3. **0.0170** | exact groups: 0/4
+   - 0.0211 | CEDAR, ZITI, COOKIE, TICK
+   - 0.0188 | BEECH, YEW, VENDETTA, PINE
+   - 0.0171 | EFFORT, APPLE, EASY, GEO
+   - 0.0160 | BEETLE, DECAY, APHID, MITE
+
+## Puzzle 21 (ID: 546)
+Words: WEDGE, SLUG, PUMA, SEOUL, CATERPILLAR, DOVE, BLOW, GREYHOUND, SOCK, INDY, SHOEHORN, WRAP, METTLE, SQUEEZE, SANDWICH, BELT
+
+### Top Raw Candidate Groups
+1. **0.1355** | SLUG, BLOW, SOCK, BELT | EXACT
+2. **0.1144** | SLUG, BLOW, SOCK, SQUEEZE | max overlap 3/4
+3. **0.1126** | BLOW, SOCK, SQUEEZE, BELT | max overlap 3/4
+4. **0.1107** | WEDGE, SLUG, BLOW, SQUEEZE | max overlap 2/4
+5. **0.1103** | SLUG, BLOW, SQUEEZE, BELT | max overlap 3/4
+6. **0.1099** | WEDGE, SLUG, BLOW, SOCK | max overlap 3/4
+7. **0.1094** | SLUG, SOCK, SQUEEZE, BELT | max overlap 3/4
+8. **0.1093** | WEDGE, BLOW, SOCK, SQUEEZE | max overlap 2/4
+9. **0.1083** | SLUG, PUMA, SOCK, BELT | max overlap 3/4
+10. **0.1066** | WEDGE, BLOW, SQUEEZE, BELT | max overlap 2/4
+11. **0.1031** | WEDGE, SLUG, SOCK, SQUEEZE | max overlap 2/4
+12. **0.1004** | WEDGE, SLUG, SOCK, BELT | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0241** | exact groups: 0/4
+   - 0.0413 | WEDGE, SHOEHORN, WRAP, SQUEEZE
+   - 0.0251 | SEOUL, BLOW, INDY, SANDWICH
+   - 0.0239 | PUMA, SOCK, METTLE, BELT
+   - 0.0237 | SLUG, CATERPILLAR, DOVE, GREYHOUND
+
+## Puzzle 22 (ID: 1046)
+Words: DICK, CLIFF, PITCH, POLYHEDRON, SPOT, CATCH, REGISTER, FINE PRINT, STRINGS, MOTHER, RANGE, CAVEAT, TONE, BUILDING, JANE, CLOCK
+
+### Top Raw Candidate Groups
+1. **0.1030** | PITCH, CATCH, RANGE, TONE | max overlap 3/4
+2. **0.1024** | CATCH, STRINGS, RANGE, TONE | max overlap 2/4
+3. **0.0947** | PITCH, CATCH, STRINGS, RANGE | max overlap 2/4
+4. **0.0945** | PITCH, CATCH, STRINGS, TONE | max overlap 2/4
+5. **0.0929** | CATCH, REGISTER, RANGE, TONE | max overlap 3/4
+6. **0.0926** | CLIFF, PITCH, CATCH, RANGE | max overlap 2/4
+7. **0.0924** | CATCH, REGISTER, STRINGS, RANGE | max overlap 2/4
+8. **0.0909** | REGISTER, STRINGS, RANGE, TONE | max overlap 3/4
+9. **0.0895** | PITCH, SPOT, REGISTER, RANGE | max overlap 3/4
+10. **0.0890** | PITCH, REGISTER, STRINGS, RANGE | max overlap 3/4
+11. **0.0889** | PITCH, CATCH, REGISTER, RANGE | max overlap 3/4
+12. **0.0880** | PITCH, CATCH, REGISTER, TONE | max overlap 3/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 23 (ID: 71)
+Words: MUG, SOPRANO, MONTANA, SPRITE, SQUIRT, COLORADO, YES, STARK, UTAH, NEVADA, CRUSH, ARIZONA, HAWK, KANSAS, GENESIS, RUSH
+
+### Top Raw Candidate Groups
+1. **0.0844** | COLORADO, UTAH, NEVADA, ARIZONA | EXACT
+2. **0.0775** | MONTANA, COLORADO, NEVADA, ARIZONA | max overlap 3/4
+3. **0.0753** | MONTANA, COLORADO, UTAH, NEVADA | max overlap 3/4
+4. **0.0717** | COLORADO, NEVADA, ARIZONA, KANSAS | max overlap 3/4
+5. **0.0702** | MUG, SQUIRT, YES, RUSH | max overlap 2/4
+6. **0.0701** | MUG, SQUIRT, CRUSH, RUSH | max overlap 3/4
+7. **0.0694** | COLORADO, UTAH, NEVADA, KANSAS | max overlap 3/4
+8. **0.0662** | MONTANA, COLORADO, UTAH, ARIZONA | max overlap 3/4
+9. **0.0644** | MONTANA, NEVADA, ARIZONA, KANSAS | max overlap 2/4
+10. **0.0625** | COLORADO, UTAH, ARIZONA, KANSAS | max overlap 3/4
+11. **0.0623** | MONTANA, UTAH, ARIZONA, KANSAS | max overlap 2/4
+12. **0.0619** | MONTANA, UTAH, NEVADA, KANSAS | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0211** | exact groups: 0/4
+   - 0.0753 | MONTANA, COLORADO, UTAH, NEVADA
+   - 0.0429 | MUG, SQUIRT, YES, CRUSH
+   - 0.0168 | ARIZONA, KANSAS, GENESIS, RUSH
+   - 0.0123 | SOPRANO, SPRITE, STARK, HAWK
+2. **0.0208** | exact groups: 0/4
+   - 0.0271 | MUG, SPRITE, SQUIRT, YES
+   - 0.0239 | COLORADO, NEVADA, ARIZONA, GENESIS
+   - 0.0236 | MONTANA, UTAH, KANSAS, RUSH
+   - 0.0179 | SOPRANO, STARK, CRUSH, HAWK
+3. **0.0207** | exact groups: 0/4
+   - 0.0429 | MUG, SQUIRT, YES, CRUSH
+   - 0.0228 | SPRITE, COLORADO, UTAH, NEVADA
+   - 0.0201 | SOPRANO, STARK, HAWK, RUSH
+   - 0.0200 | MONTANA, ARIZONA, KANSAS, GENESIS
+
+## Puzzle 24 (ID: 836)
+Words: PEPPER, SCATTER, CREPE PAPER, SPRINKLE, PICTURE, FLICK, LITTER, TOOTH, POTATO, TALK, FILM, PRUNE, SHAR PEI, BRAIN, FEATURE, SIXTEEN
+
+### Top Raw Candidate Groups
+1. **0.1033** | PICTURE, FLICK, FILM, FEATURE | EXACT
+2. **0.0778** | PEPPER, POTATO, TALK, BRAIN | max overlap 2/4
+3. **0.0651** | POTATO, TALK, PRUNE, BRAIN | max overlap 2/4
+4. **0.0597** | PICTURE, FLICK, TOOTH, FILM | max overlap 3/4
+5. **0.0552** | PICTURE, FLICK, FILM, SIXTEEN | max overlap 3/4
+6. **0.0502** | SCATTER, PICTURE, FLICK, FILM | max overlap 3/4
+7. **0.0484** | PICTURE, FLICK, FILM, BRAIN | max overlap 3/4
+8. **0.0483** | SPRINKLE, PICTURE, FLICK, FILM | max overlap 3/4
+9. **0.0474** | PEPPER, PICTURE, FLICK, FILM | max overlap 3/4
+10. **0.0465** | PICTURE, FLICK, LITTER, FILM | max overlap 3/4
+11. **0.0464** | PICTURE, FLICK, FILM, SHAR PEI | max overlap 3/4
+12. **0.0463** | PICTURE, FLICK, POTATO, FILM | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0187** | exact groups: 0/4
+   - 0.0430 | CREPE PAPER, PICTURE, FLICK, FILM
+   - 0.0386 | PEPPER, TALK, PRUNE, BRAIN
+   - 0.0153 | SPRINKLE, TOOTH, POTATO, SHAR PEI
+   - 0.0105 | SCATTER, LITTER, FEATURE, SIXTEEN
+2. **0.0177** | exact groups: 0/4
+   - 0.0778 | PEPPER, POTATO, TALK, BRAIN
+   - 0.0430 | CREPE PAPER, PICTURE, FLICK, FILM
+   - 0.0105 | SCATTER, LITTER, FEATURE, SIXTEEN
+   - 0.0087 | SPRINKLE, TOOTH, PRUNE, SHAR PEI
+3. **0.0172** | exact groups: 0/4
+   - 0.0273 | PEPPER, SCATTER, LITTER, POTATO
+   - 0.0206 | CREPE PAPER, PICTURE, FILM, FEATURE
+   - 0.0196 | TALK, PRUNE, BRAIN, SIXTEEN
+   - 0.0144 | SPRINKLE, FLICK, TOOTH, SHAR PEI
+
+## Puzzle 25 (ID: 498)
+Words: MUNG, PULL, DEAD, NAVY, DRIVE, NEUTRAL, DRAW, KIDNEY, LIVER, GRAB, REVERSE, PINTO, CAR, LOW, HOOK, WHIRL
+
+### Top Raw Candidate Groups
+1. **0.1605** | PULL, DRIVE, DRAW, HOOK | max overlap 3/4
+2. **0.1425** | PULL, DRIVE, DRAW, CAR | max overlap 2/4
+3. **0.1305** | PULL, DEAD, DRIVE, DRAW | max overlap 2/4
+4. **0.1269** | PULL, DEAD, DRAW, HOOK | max overlap 3/4
+5. **0.1195** | PULL, DRIVE, CAR, HOOK | max overlap 2/4
+6. **0.1125** | DEAD, DRIVE, DRAW, HOOK | max overlap 2/4
+7. **0.1094** | PULL, DEAD, DRIVE, CAR | max overlap 2/4
+8. **0.1062** | PULL, DRAW, LOW, HOOK | max overlap 3/4
+9. **0.1012** | DRIVE, DRAW, CAR, HOOK | max overlap 2/4
+10. **0.0999** | DEAD, DRAW, LOW, HOOK | max overlap 2/4
+11. **0.0975** | PULL, DRAW, CAR, HOOK | max overlap 3/4
+12. **0.0951** | PULL, DRIVE, REVERSE, CAR | max overlap 2/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 26 (ID: 750)
+Words: AIRPLANE, DRIVE, VELVET, CIRCUS, BLACK, HOT TUB NOZZLE, ROLLER COASTER, NFL PLAYER, BRIDGE, CROWN, HIGHWAY, WHIRLWIND, VENEER, FILLING, SOAP OPERA, PEAKS
+
+### Top Raw Candidate Groups
+1. **0.0962** | DRIVE, BLACK, BRIDGE, CROWN | max overlap 2/4
+2. **0.0773** | DRIVE, BRIDGE, CROWN, FILLING | max overlap 3/4
+3. **0.0772** | DRIVE, CIRCUS, BLACK, CROWN | max overlap 1/4
+4. **0.0728** | CIRCUS, BLACK, BRIDGE, CROWN | max overlap 2/4
+5. **0.0687** | DRIVE, CIRCUS, BRIDGE, CROWN | max overlap 2/4
+6. **0.0678** | DRIVE, CIRCUS, BLACK, BRIDGE | max overlap 1/4
+7. **0.0589** | BLACK, BRIDGE, CROWN, FILLING | max overlap 3/4
+8. **0.0588** | AIRPLANE, DRIVE, BRIDGE, CROWN | max overlap 2/4
+9. **0.0584** | VELVET, CIRCUS, BLACK, CROWN | max overlap 1/4
+10. **0.0576** | VELVET, BLACK, BRIDGE, CROWN | max overlap 2/4
+11. **0.0571** | AIRPLANE, DRIVE, BLACK, CROWN | max overlap 2/4
+12. **0.0560** | AIRPLANE, DRIVE, CIRCUS, CROWN | max overlap 1/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 27 (ID: 88)
+Words: ROGER, ROAD, MET, FRAMED, PICTURE, MAX, WHO, MAD, WHEN, HARRY, HORROR, SALLY, ROCKY, RABBIT, SHOW, FURY
+
+### Top Raw Candidate Groups
+1. **0.0697** | ROGER, MAX, MAD, SALLY | max overlap 2/4
+2. **0.0553** | ROAD, MET, RABBIT, SHOW | max overlap 1/4
+3. **0.0478** | ROAD, SALLY, ROCKY, RABBIT | max overlap 1/4
+4. **0.0445** | ROAD, MET, ROCKY, RABBIT | max overlap 1/4
+5. **0.0442** | ROGER, MAD, HARRY, SALLY | max overlap 2/4
+6. **0.0441** | ROAD, MET, SALLY, RABBIT | max overlap 2/4
+7. **0.0437** | ROAD, MET, ROCKY, SHOW | max overlap 2/4
+8. **0.0430** | ROGER, MAX, HARRY, SALLY | max overlap 2/4
+9. **0.0413** | ROAD, MET, HORROR, SHOW | max overlap 2/4
+10. **0.0411** | ROGER, MAX, MAD, HARRY | max overlap 2/4
+11. **0.0410** | ROGER, HARRY, SALLY, ROCKY | max overlap 2/4
+12. **0.0404** | ROGER, HARRY, SALLY, RABBIT | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0210** | exact groups: 0/4
+   - 0.0314 | ROGER, MAX, WHO, MAD
+   - 0.0301 | ROAD, PICTURE, SALLY, RABBIT
+   - 0.0211 | HARRY, HORROR, ROCKY, FURY
+   - 0.0163 | MET, FRAMED, WHEN, SHOW
+2. **0.0207** | exact groups: 0/4
+   - 0.0314 | ROGER, MAX, WHO, MAD
+   - 0.0216 | MET, FRAMED, PICTURE, SHOW
+   - 0.0211 | HARRY, HORROR, ROCKY, FURY
+   - 0.0200 | ROAD, WHEN, SALLY, RABBIT
+3. **0.0206** | exact groups: 0/4
+   - 0.0335 | ROGER, MAX, MAD, FURY
+   - 0.0301 | ROAD, PICTURE, SALLY, RABBIT
+   - 0.0193 | MET, WHEN, HORROR, SHOW
+   - 0.0165 | FRAMED, WHO, HARRY, ROCKY
+
+## Puzzle 28 (ID: 81)
+Words: SCRATCH, NICK, NACHO, DING, BINGO, LUMBER, WING, APPLE, POPPER, FRY, YES, RIGHT, CRACKER, CHIP, CORRECT, FLAP
+
+### Top Raw Candidate Groups
+1. **0.1355** | SCRATCH, NICK, DING, CHIP | EXACT
+2. **0.1176** | NICK, DING, FRY, CHIP | max overlap 3/4
+3. **0.1132** | NICK, FRY, CRACKER, CHIP | max overlap 2/4
+4. **0.1109** | SCRATCH, NICK, CRACKER, CHIP | max overlap 3/4
+5. **0.1048** | NICK, DING, WING, CHIP | max overlap 3/4
+6. **0.1017** | DING, WING, FRY, CHIP | max overlap 2/4
+7. **0.1017** | NICK, WING, RIGHT, CHIP | max overlap 2/4
+8. **0.0996** | NICK, WING, FRY, CHIP | max overlap 2/4
+9. **0.0992** | SCRATCH, DING, WING, CHIP | max overlap 3/4
+10. **0.0986** | SCRATCH, NICK, DING, WING | max overlap 3/4
+11. **0.0941** | NICK, FRY, RIGHT, CHIP | max overlap 2/4
+12. **0.0926** | WING, FRY, CRACKER, CHIP | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0586** | exact groups: 0/4
+   - 0.0781 | SCRATCH, NICK, DING, FRY
+   - 0.0763 | WING, RIGHT, CORRECT, FLAP
+   - 0.0635 | BINGO, LUMBER, APPLE, YES
+   - 0.0473 | NACHO, POPPER, CRACKER, CHIP
+2. **0.0552** | exact groups: 0/4
+   - 0.0781 | SCRATCH, NICK, DING, FRY
+   - 0.0695 | BINGO, LUMBER, APPLE, FLAP
+   - 0.0566 | WING, YES, RIGHT, CORRECT
+   - 0.0473 | NACHO, POPPER, CRACKER, CHIP
+3. **0.0547** | exact groups: 0/4
+   - 0.0667 | SCRATCH, NICK, DING, BINGO
+   - 0.0663 | LUMBER, APPLE, YES, FLAP
+   - 0.0579 | WING, FRY, RIGHT, CORRECT
+   - 0.0473 | NACHO, POPPER, CRACKER, CHIP
+
+## Puzzle 29 (ID: 1018)
+Words: PITCHER, ENTER, BOARD, MOMENTUM, ACCELERATION, POWER, FIGURE, ILLUSTRATION, FORCE, MOUNT, EMBARK, PLATE, MASS, ROBERT, PICTURE, FACE
+
+### Top Raw Candidate Groups
+1. **0.1392** | MOMENTUM, POWER, FORCE, MASS | max overlap 3/4
+2. **0.1228** | FIGURE, ILLUSTRATION, PLATE, PICTURE | EXACT
+3. **0.1200** | MOMENTUM, ACCELERATION, FORCE, MASS | EXACT
+4. **0.1031** | ACCELERATION, POWER, FORCE, MASS | max overlap 3/4
+5. **0.1022** | FIGURE, ILLUSTRATION, PICTURE, FACE | max overlap 3/4
+6. **0.0999** | MOMENTUM, ACCELERATION, POWER, FORCE | max overlap 3/4
+7. **0.0916** | MOMENTUM, ACCELERATION, POWER, MASS | max overlap 3/4
+8. **0.0909** | ENTER, FIGURE, ILLUSTRATION, PICTURE | max overlap 3/4
+9. **0.0880** | BOARD, FIGURE, ILLUSTRATION, PICTURE | max overlap 3/4
+10. **0.0844** | ENTER, BOARD, FIGURE, EMBARK | max overlap 3/4
+11. **0.0843** | ENTER, FIGURE, PLATE, FACE | max overlap 2/4
+12. **0.0828** | ENTER, BOARD, FIGURE, PLATE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0488** | exact groups: 0/4
+   - 0.0999 | MOMENTUM, ACCELERATION, POWER, FORCE
+   - 0.0771 | PITCHER, FIGURE, ILLUSTRATION, PICTURE
+   - 0.0440 | ENTER, BOARD, EMBARK, ROBERT
+   - 0.0371 | MOUNT, PLATE, MASS, FACE
+2. **0.0448** | exact groups: 0/4
+   - 0.0999 | MOMENTUM, ACCELERATION, POWER, FORCE
+   - 0.0551 | FIGURE, ILLUSTRATION, ROBERT, PICTURE
+   - 0.0498 | PITCHER, ENTER, BOARD, EMBARK
+   - 0.0371 | MOUNT, PLATE, MASS, FACE
+3. **0.0435** | exact groups: 0/4
+   - 0.0916 | MOMENTUM, ACCELERATION, POWER, MASS
+   - 0.0771 | PITCHER, FIGURE, ILLUSTRATION, PICTURE
+   - 0.0457 | ENTER, FORCE, MOUNT, EMBARK
+   - 0.0257 | BOARD, PLATE, ROBERT, FACE
+
+## Puzzle 30 (ID: 915)
+Words: ARE, PALAZZO, GAUCHO, GOODEN, HAREM, SEAVER, PIAZZA, STRAWBERRY, MORTGAGE, HER, CULOTTE, POIROT, HERCULE, AJA, APOSTLE, DEPOT
+
+### Top Raw Candidate Groups
+1. **0.0275** | PALAZZO, GAUCHO, PIAZZA, POIROT | max overlap 2/4
+2. **0.0246** | GAUCHO, SEAVER, PIAZZA, POIROT | max overlap 2/4
+3. **0.0238** | PALAZZO, GAUCHO, CULOTTE, POIROT | max overlap 3/4
+4. **0.0188** | ARE, GOODEN, PIAZZA, DEPOT | max overlap 2/4
+5. **0.0185** | GOODEN, SEAVER, PIAZZA, POIROT | max overlap 3/4
+6. **0.0182** | PALAZZO, SEAVER, PIAZZA, POIROT | max overlap 2/4
+7. **0.0180** | GAUCHO, GOODEN, PIAZZA, POIROT | max overlap 2/4
+8. **0.0177** | ARE, HAREM, HER, AJA | max overlap 3/4
+9. **0.0163** | ARE, HAREM, MORTGAGE, APOSTLE | max overlap 2/4
+10. **0.0163** | GAUCHO, PIAZZA, CULOTTE, POIROT | max overlap 2/4
+11. **0.0162** | ARE, GOODEN, HAREM, APOSTLE | max overlap 1/4
+12. **0.0160** | PALAZZO, CULOTTE, POIROT, HERCULE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0084** | exact groups: 0/4
+   - 0.0177 | ARE, HAREM, HER, AJA
+   - 0.0160 | PALAZZO, CULOTTE, POIROT, HERCULE
+   - 0.0072 | PIAZZA, MORTGAGE, APOSTLE, DEPOT
+   - 0.0051 | GAUCHO, GOODEN, SEAVER, STRAWBERRY
+2. **0.0082** | exact groups: 0/4
+   - 0.0185 | GOODEN, SEAVER, PIAZZA, POIROT
+   - 0.0177 | ARE, HAREM, HER, AJA
+   - 0.0070 | PALAZZO, HERCULE, APOSTLE, DEPOT
+   - 0.0040 | GAUCHO, STRAWBERRY, MORTGAGE, CULOTTE
+3. **0.0081** | exact groups: 0/4
+   - 0.0177 | ARE, HAREM, HER, AJA
+   - 0.0128 | GOODEN, SEAVER, PIAZZA, DEPOT
+   - 0.0110 | GAUCHO, STRAWBERRY, CULOTTE, POIROT
+   - 0.0043 | PALAZZO, MORTGAGE, HERCULE, APOSTLE
+
+## Puzzle 31 (ID: 247)
+Words: SNACK, DAIRY, MOZZARELLA, JAWBREAKER, GOAD, PRODUCE, URGE, SPUR, BANANAS, FROZEN, FIGURE, ORANGE, STEADY, EGG, MEATBALL, FISH
+
+### Top Raw Candidate Groups
+1. **0.0494** | FROZEN, EGG, MEATBALL, FISH | max overlap 1/4
+2. **0.0482** | PRODUCE, FIGURE, EGG, FISH | max overlap 2/4
+3. **0.0475** | PRODUCE, FROZEN, FIGURE, FISH | max overlap 2/4
+4. **0.0472** | SNACK, EGG, MEATBALL, FISH | max overlap 1/4
+5. **0.0430** | PRODUCE, FIGURE, ORANGE, FISH | max overlap 2/4
+6. **0.0427** | SNACK, DAIRY, FROZEN, EGG | max overlap 3/4
+7. **0.0424** | FROZEN, ORANGE, EGG, FISH | max overlap 1/4
+8. **0.0421** | PRODUCE, FROZEN, EGG, FISH | max overlap 2/4
+9. **0.0415** | MOZZARELLA, EGG, MEATBALL, FISH | max overlap 2/4
+10. **0.0412** | FROZEN, FIGURE, EGG, FISH | max overlap 2/4
+11. **0.0409** | PRODUCE, EGG, MEATBALL, FISH | max overlap 1/4
+12. **0.0402** | FROZEN, FIGURE, ORANGE, FISH | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0227** | exact groups: 0/4
+   - 0.0320 | DAIRY, PRODUCE, BANANAS, EGG
+   - 0.0283 | FROZEN, FIGURE, ORANGE, STEADY
+   - 0.0261 | GOAD, URGE, SPUR, FISH
+   - 0.0182 | SNACK, MOZZARELLA, JAWBREAKER, MEATBALL
+2. **0.0218** | exact groups: 0/4
+   - 0.0320 | DAIRY, PRODUCE, BANANAS, EGG
+   - 0.0306 | FROZEN, FIGURE, STEADY, FISH
+   - 0.0203 | GOAD, URGE, SPUR, ORANGE
+   - 0.0182 | SNACK, MOZZARELLA, JAWBREAKER, MEATBALL
+3. **0.0218** | exact groups: 1/4
+   - 0.0283 | FROZEN, FIGURE, ORANGE, STEADY
+   - 0.0278 | DAIRY, PRODUCE, BANANAS, FISH
+   - 0.0230 | GOAD, URGE, SPUR, EGG
+   - 0.0182 | SNACK, MOZZARELLA, JAWBREAKER, MEATBALL
+
+## Puzzle 32 (ID: 60)
+Words: ANKLET, CHARM, PLEASE, TICKLE, RING, FIELD, PURGE, DIAMOND, BANGLE, RINK, SCREAM, BROOCH, SAW, PENDANT, COURT, DELIGHT
+
+### Top Raw Candidate Groups
+1. **0.1115** | RING, FIELD, DIAMOND, COURT | max overlap 3/4
+2. **0.1064** | RING, FIELD, DIAMOND, RINK | max overlap 3/4
+3. **0.1036** | ANKLET, RING, BROOCH, PENDANT | max overlap 3/4
+4. **0.0891** | ANKLET, RING, BANGLE, PENDANT | max overlap 3/4
+5. **0.0830** | RING, FIELD, DIAMOND, BANGLE | max overlap 2/4
+6. **0.0808** | RING, FIELD, DIAMOND, PENDANT | max overlap 2/4
+7. **0.0801** | ANKLET, RING, BANGLE, BROOCH | max overlap 3/4
+8. **0.0797** | CHARM, RING, FIELD, DIAMOND | max overlap 2/4
+9. **0.0787** | ANKLET, RING, FIELD, DIAMOND | max overlap 2/4
+10. **0.0787** | RING, FIELD, DIAMOND, SAW | max overlap 2/4
+11. **0.0782** | ANKLET, BANGLE, BROOCH, PENDANT | EXACT
+12. **0.0760** | RING, BANGLE, BROOCH, PENDANT | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0371** | exact groups: 1/4
+   - 0.1064 | RING, FIELD, DIAMOND, RINK
+   - 0.0782 | ANKLET, BANGLE, BROOCH, PENDANT
+   - 0.0270 | CHARM, PURGE, SAW, COURT
+   - 0.0216 | PLEASE, TICKLE, SCREAM, DELIGHT
+2. **0.0339** | exact groups: 0/4
+   - 0.1064 | RING, FIELD, DIAMOND, RINK
+   - 0.0413 | ANKLET, TICKLE, BANGLE, BROOCH
+   - 0.0315 | CHARM, PLEASE, SCREAM, DELIGHT
+   - 0.0314 | PURGE, SAW, PENDANT, COURT
+3. **0.0335** | exact groups: 0/4
+   - 0.1064 | RING, FIELD, DIAMOND, RINK
+   - 0.0413 | ANKLET, TICKLE, BANGLE, BROOCH
+   - 0.0351 | SCREAM, SAW, PENDANT, COURT
+   - 0.0287 | CHARM, PLEASE, PURGE, DELIGHT
+
+## Puzzle 33 (ID: 246)
+Words: LAG, PARROT, APOLLO, CANDLES, DROP, MIME, MONKEY, FANTASTIC, FREEZE, SAILOR, SAMURAI, PRISONER, PRINCESS, REFEREE, GENIE, ECHO
+
+### Top Raw Candidate Groups
+1. **0.0458** | LAG, DROP, MONKEY, FREEZE | max overlap 3/4
+2. **0.0407** | LAG, DROP, MONKEY, ECHO | max overlap 3/4
+3. **0.0380** | LAG, DROP, MONKEY, REFEREE | max overlap 2/4
+4. **0.0371** | PARROT, APOLLO, MONKEY, ECHO | max overlap 2/4
+5. **0.0358** | PARROT, SAILOR, PRISONER, PRINCESS | max overlap 2/4
+6. **0.0351** | LAG, DROP, MONKEY, SAILOR | max overlap 2/4
+7. **0.0350** | DROP, MONKEY, SAILOR, REFEREE | max overlap 2/4
+8. **0.0339** | PARROT, SAMURAI, PRISONER, PRINCESS | max overlap 2/4
+9. **0.0337** | PARROT, DROP, MONKEY, ECHO | max overlap 2/4
+10. **0.0336** | DROP, MONKEY, FREEZE, ECHO | max overlap 3/4
+11. **0.0335** | PARROT, APOLLO, MONKEY, SAILOR | max overlap 2/4
+12. **0.0334** | DROP, MONKEY, FREEZE, REFEREE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0187** | exact groups: 0/4
+   - 0.0263 | PARROT, MIME, PRISONER, PRINCESS
+   - 0.0246 | APOLLO, SAILOR, GENIE, ECHO
+   - 0.0235 | LAG, DROP, FANTASTIC, FREEZE
+   - 0.0133 | CANDLES, MONKEY, SAMURAI, REFEREE
+2. **0.0168** | exact groups: 0/4
+   - 0.0358 | PARROT, SAILOR, PRISONER, PRINCESS
+   - 0.0235 | LAG, DROP, FANTASTIC, FREEZE
+   - 0.0172 | APOLLO, MIME, GENIE, ECHO
+   - 0.0133 | CANDLES, MONKEY, SAMURAI, REFEREE
+3. **0.0168** | exact groups: 0/4
+   - 0.0235 | LAG, DROP, FANTASTIC, FREEZE
+   - 0.0209 | MIME, MONKEY, SAMURAI, PRISONER
+   - 0.0194 | PARROT, SAILOR, PRINCESS, REFEREE
+   - 0.0134 | APOLLO, CANDLES, GENIE, ECHO
+
+## Puzzle 34 (ID: 315)
+Words: CYMBAL, SYMBOL, CAR, WIG, MODEL, SIMMER, TRACK, IDEAL, WAX, SCIMITAR, DRUM, EXAMPLE, CONDUCTOR, STATION, SYMPHONY, MARK
+
+### Top Raw Candidate Groups
+1. **0.0905** | CAR, TRACK, STATION, SYMPHONY | max overlap 3/4
+2. **0.0855** | TRACK, DRUM, CONDUCTOR, SYMPHONY | max overlap 2/4
+3. **0.0829** | CAR, TRACK, WAX, STATION | max overlap 3/4
+4. **0.0805** | CAR, MODEL, TRACK, STATION | max overlap 3/4
+5. **0.0803** | CAR, TRACK, DRUM, STATION | max overlap 3/4
+6. **0.0785** | CAR, TRACK, DRUM, SYMPHONY | max overlap 2/4
+7. **0.0766** | CAR, WAX, STATION, SYMPHONY | max overlap 2/4
+8. **0.0755** | CYMBAL, DRUM, CONDUCTOR, SYMPHONY | max overlap 2/4
+9. **0.0751** | CAR, WAX, DRUM, SYMPHONY | max overlap 2/4
+10. **0.0707** | CAR, TRACK, STATION, MARK | max overlap 3/4
+11. **0.0665** | CAR, MODEL, TRACK, MARK | max overlap 2/4
+12. **0.0661** | CAR, WAX, DRUM, STATION | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0324** | exact groups: 0/4
+   - 0.0521 | MODEL, IDEAL, EXAMPLE, MARK
+   - 0.0404 | CAR, TRACK, SCIMITAR, STATION
+   - 0.0386 | CYMBAL, SYMBOL, CONDUCTOR, SYMPHONY
+   - 0.0253 | WIG, SIMMER, WAX, DRUM
+2. **0.0322** | exact groups: 0/4
+   - 0.0455 | CYMBAL, SYMBOL, DRUM, SYMPHONY
+   - 0.0404 | CAR, TRACK, SCIMITAR, STATION
+   - 0.0371 | MODEL, IDEAL, EXAMPLE, CONDUCTOR
+   - 0.0257 | WIG, SIMMER, WAX, MARK
+3. **0.0319** | exact groups: 1/4
+   - 0.0755 | CYMBAL, DRUM, CONDUCTOR, SYMPHONY
+   - 0.0404 | CAR, TRACK, SCIMITAR, STATION
+   - 0.0359 | SYMBOL, MODEL, IDEAL, EXAMPLE
+   - 0.0257 | WIG, SIMMER, WAX, MARK
+
+## Puzzle 35 (ID: 827)
+Words: TILE, COAST, LAMINATE, PIP, WOOD, FIREWORKS, SHORE, WAILER, BANSHEE, CHEMISTRY, CARPET, CONNECTION, STRAND, BANK, HEARTBREAKER, SPARK
+
+### Top Raw Candidate Groups
+1. **0.1050** | COAST, SHORE, STRAND, BANK | EXACT
+2. **0.0826** | CARPET, STRAND, BANK, SPARK | max overlap 2/4
+3. **0.0811** | PIP, CARPET, STRAND, SPARK | max overlap 1/4
+4. **0.0776** | COAST, WOOD, STRAND, BANK | max overlap 3/4
+5. **0.0756** | COAST, WOOD, SHORE, STRAND | max overlap 3/4
+6. **0.0738** | WOOD, CARPET, BANK, SPARK | max overlap 2/4
+7. **0.0720** | TILE, LAMINATE, CARPET, BANK | max overlap 3/4
+8. **0.0677** | COAST, WOOD, SHORE, BANK | max overlap 3/4
+9. **0.0658** | COAST, WOOD, CARPET, BANK | max overlap 2/4
+10. **0.0654** | COAST, CARPET, STRAND, BANK | max overlap 3/4
+11. **0.0652** | COAST, PIP, SHORE, STRAND | max overlap 3/4
+12. **0.0646** | COAST, SHORE, STRAND, SPARK | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0216** | exact groups: 0/4
+   - 0.0379 | TILE, LAMINATE, PIP, CARPET
+   - 0.0361 | COAST, SHORE, STRAND, HEARTBREAKER
+   - 0.0184 | WAILER, BANSHEE, BANK, SPARK
+   - 0.0159 | WOOD, FIREWORKS, CHEMISTRY, CONNECTION
+2. **0.0201** | exact groups: 0/4
+   - 0.0361 | COAST, SHORE, STRAND, HEARTBREAKER
+   - 0.0252 | TILE, LAMINATE, WAILER, BANK
+   - 0.0231 | PIP, BANSHEE, CARPET, SPARK
+   - 0.0159 | WOOD, FIREWORKS, CHEMISTRY, CONNECTION
+3. **0.0199** | exact groups: 0/4
+   - 0.0361 | COAST, SHORE, STRAND, HEARTBREAKER
+   - 0.0240 | PIP, WAILER, CARPET, SPARK
+   - 0.0239 | TILE, LAMINATE, BANSHEE, BANK
+   - 0.0159 | WOOD, FIREWORKS, CHEMISTRY, CONNECTION
+
+## Puzzle 36 (ID: 852)
+Words: THIRD, DEVIL, MAGICIAN, STAR, CONTINENT, BIG, MAJOR, NAKED, SERIOUS, LOVERS, DEADLY SIN, MAGIC, WONDER, EVIL, SISTER, IMPORTANT
+
+### Top Raw Candidate Groups
+1. **0.0910** | BIG, MAGIC, EVIL, SISTER | max overlap 2/4
+2. **0.0905** | DEVIL, BIG, EVIL, SISTER | max overlap 1/4
+3. **0.0890** | DEVIL, MAGICIAN, MAGIC, EVIL | max overlap 2/4
+4. **0.0832** | DEVIL, BIG, MAGIC, EVIL | max overlap 2/4
+5. **0.0766** | DEVIL, MAGIC, EVIL, SISTER | max overlap 2/4
+6. **0.0750** | DEVIL, BIG, MAGIC, SISTER | max overlap 1/4
+7. **0.0727** | BIG, MAJOR, SERIOUS, IMPORTANT | EXACT
+8. **0.0704** | STAR, BIG, MAJOR, WONDER | max overlap 2/4
+9. **0.0653** | STAR, BIG, MAJOR, IMPORTANT | max overlap 3/4
+10. **0.0632** | STAR, BIG, MAGIC, EVIL | max overlap 2/4
+11. **0.0600** | THIRD, BIG, MAJOR, IMPORTANT | max overlap 3/4
+12. **0.0586** | BIG, MAGIC, EVIL, IMPORTANT | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0241** | exact groups: 0/4
+   - 0.0350 | BIG, MAJOR, SERIOUS, EVIL
+   - 0.0348 | DEVIL, DEADLY SIN, MAGIC, SISTER
+   - 0.0231 | THIRD, CONTINENT, NAKED, IMPORTANT
+   - 0.0193 | MAGICIAN, STAR, LOVERS, WONDER
+2. **0.0231** | exact groups: 0/4
+   - 0.0387 | THIRD, CONTINENT, MAJOR, IMPORTANT
+   - 0.0276 | DEVIL, NAKED, SERIOUS, MAGIC
+   - 0.0263 | BIG, DEADLY SIN, EVIL, SISTER
+   - 0.0193 | MAGICIAN, STAR, LOVERS, WONDER
+3. **0.0231** | exact groups: 0/4
+   - 0.0348 | DEVIL, DEADLY SIN, MAGIC, SISTER
+   - 0.0338 | THIRD, MAJOR, NAKED, IMPORTANT
+   - 0.0201 | CONTINENT, BIG, SERIOUS, EVIL
+   - 0.0193 | MAGICIAN, STAR, LOVERS, WONDER
+
+## Puzzle 37 (ID: 900)
+Words: STRESS, BEAT, PROPER, FRET, TAKE, PEG, STRING, FAIR, RHYTHM, RIGHT, LOUDNESS, PICKUP, JUST, INTONATION, BEST, WORST
+
+### Top Raw Candidate Groups
+1. **0.1009** | BEAT, PROPER, RIGHT, JUST | max overlap 3/4
+2. **0.0921** | BEAT, FRET, TAKE, STRING | max overlap 2/4
+3. **0.0889** | BEAT, TAKE, STRING, FAIR | max overlap 2/4
+4. **0.0882** | PROPER, FAIR, RIGHT, JUST | EXACT
+5. **0.0863** | BEAT, PROPER, TAKE, RIGHT | max overlap 2/4
+6. **0.0860** | STRESS, PROPER, TAKE, STRING | max overlap 1/4
+7. **0.0857** | PROPER, STRING, RIGHT, JUST | max overlap 3/4
+8. **0.0853** | BEAT, PROPER, FRET, STRING | max overlap 2/4
+9. **0.0852** | PROPER, PEG, STRING, JUST | max overlap 2/4
+10. **0.0845** | BEAT, PROPER, FRET, TAKE | max overlap 2/4
+11. **0.0838** | BEAT, STRING, FAIR, JUST | max overlap 2/4
+12. **0.0829** | BEAT, PROPER, PEG, JUST | max overlap 2/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 38 (ID: 372)
+Words: SEND, MAIL, BALM, FIX, LINER, STAIN, ANGLE, HOLE, CORNER, POST, TEMPERATURE, GLOSS, EDUCATION, CRIME, SPOT, SHIP
+
+### Top Raw Candidate Groups
+1. **0.1953** | SEND, MAIL, POST, SHIP | EXACT
+2. **0.1691** | SEND, MAIL, POST, SPOT | max overlap 3/4
+3. **0.1350** | MAIL, POST, SPOT, SHIP | max overlap 3/4
+4. **0.1321** | SEND, POST, SPOT, SHIP | max overlap 3/4
+5. **0.1220** | HOLE, CORNER, POST, SPOT | max overlap 3/4
+6. **0.1171** | SEND, HOLE, POST, SHIP | max overlap 3/4
+7. **0.1167** | SEND, MAIL, ANGLE, POST | max overlap 3/4
+8. **0.1159** | ANGLE, HOLE, CORNER, SPOT | max overlap 3/4
+9. **0.1140** | ANGLE, HOLE, CORNER, POST | max overlap 2/4
+10. **0.1134** | ANGLE, CORNER, POST, SPOT | max overlap 2/4
+11. **0.1122** | SEND, MAIL, LINER, SHIP | max overlap 3/4
+12. **0.1092** | HOLE, POST, SPOT, SHIP | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0311** | exact groups: 0/4
+   - 0.0366 | ANGLE, HOLE, CORNER, TEMPERATURE
+   - 0.0353 | STAIN, POST, GLOSS, CRIME
+   - 0.0315 | SEND, BALM, LINER, SHIP
+   - 0.0288 | MAIL, FIX, EDUCATION, SPOT
+
+## Puzzle 39 (ID: 953)
+Words: BROOKLYN, KILLER, WEAVE, GOLDEN GATE, RIALTO, CARPENTER, CRAVEN, WANTON, TWIST, NEEDLE, DESIREE, BUMBLE, TOWER, HONEY, WIND, LACE
+
+### Top Raw Candidate Groups
+1. **0.1580** | WEAVE, TWIST, WIND, LACE | EXACT
+2. **0.0695** | WEAVE, CRAVEN, TWIST, WIND | max overlap 3/4
+3. **0.0672** | KILLER, WEAVE, TWIST, WIND | max overlap 3/4
+4. **0.0635** | WEAVE, TWIST, TOWER, WIND | max overlap 3/4
+5. **0.0627** | WEAVE, TWIST, NEEDLE, LACE | max overlap 3/4
+6. **0.0621** | KILLER, TWIST, WIND, LACE | max overlap 3/4
+7. **0.0620** | WEAVE, NEEDLE, WIND, LACE | max overlap 3/4
+8. **0.0595** | WEAVE, TWIST, HONEY, WIND | max overlap 3/4
+9. **0.0584** | WEAVE, WANTON, TWIST, WIND | max overlap 3/4
+10. **0.0583** | WEAVE, CRAVEN, WIND, LACE | max overlap 3/4
+11. **0.0567** | WEAVE, CRAVEN, TWIST, LACE | max overlap 3/4
+12. **0.0564** | WEAVE, CARPENTER, TWIST, WIND | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0161** | exact groups: 0/4
+   - 0.0454 | BROOKLYN, WEAVE, TWIST, WIND
+   - 0.0273 | KILLER, RIALTO, NEEDLE, LACE
+   - 0.0130 | WANTON, DESIREE, BUMBLE, HONEY
+   - 0.0121 | GOLDEN GATE, CARPENTER, CRAVEN, TOWER
+2. **0.0161** | exact groups: 0/4
+   - 0.0454 | WEAVE, GOLDEN GATE, TWIST, WIND
+   - 0.0273 | KILLER, RIALTO, NEEDLE, LACE
+   - 0.0130 | WANTON, DESIREE, BUMBLE, HONEY
+   - 0.0120 | BROOKLYN, CARPENTER, CRAVEN, TOWER
+3. **0.0135** | exact groups: 0/4
+   - 0.0454 | WEAVE, RIALTO, TWIST, WIND
+   - 0.0169 | BROOKLYN, KILLER, NEEDLE, LACE
+   - 0.0130 | WANTON, DESIREE, BUMBLE, HONEY
+   - 0.0121 | GOLDEN GATE, CARPENTER, CRAVEN, TOWER
+
+## Puzzle 40 (ID: 20)
+Words: BROWN, RICE, BONG, LEE, PRINCE, KING, SPELT, BARLEY, RYE, DUKE, EARL, OAT, FORD, HOWARD, STONE, BARON
+
+### Top Raw Candidate Groups
+1. **0.1043** | RICE, BARLEY, RYE, OAT | max overlap 3/4
+2. **0.0934** | PRINCE, KING, DUKE, BARON | max overlap 3/4
+3. **0.0797** | BROWN, KING, DUKE, STONE | max overlap 2/4
+4. **0.0770** | KING, DUKE, EARL, BARON | max overlap 3/4
+5. **0.0754** | BROWN, KING, DUKE, BARON | max overlap 2/4
+6. **0.0747** | BROWN, PRINCE, KING, DUKE | max overlap 2/4
+7. **0.0703** | BROWN, RICE, KING, STONE | max overlap 2/4
+8. **0.0702** | PRINCE, KING, DUKE, EARL | max overlap 3/4
+9. **0.0627** | BROWN, KING, STONE, BARON | max overlap 2/4
+10. **0.0627** | RICE, SPELT, RYE, STONE | max overlap 2/4
+11. **0.0625** | PRINCE, KING, DUKE, STONE | max overlap 2/4
+12. **0.0621** | BROWN, PRINCE, KING, BARON | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0327** | exact groups: 0/4
+   - 0.0366 | LEE, DUKE, EARL, BARON
+   - 0.0346 | RICE, SPELT, FORD, STONE
+   - 0.0323 | BROWN, PRINCE, KING, HOWARD
+   - 0.0319 | BONG, BARLEY, RYE, OAT
+2. **0.0320** | exact groups: 0/4
+   - 0.0404 | RICE, LEE, SPELT, STONE
+   - 0.0323 | BROWN, PRINCE, KING, HOWARD
+   - 0.0321 | DUKE, EARL, FORD, BARON
+   - 0.0319 | BONG, BARLEY, RYE, OAT
+3. **0.0318** | exact groups: 0/4
+   - 0.0543 | BROWN, RICE, SPELT, STONE
+   - 0.0536 | PRINCE, DUKE, EARL, BARON
+   - 0.0319 | BONG, BARLEY, RYE, OAT
+   - 0.0209 | LEE, KING, FORD, HOWARD
+
+## Puzzle 41 (ID: 501)
+Words: BILL, ADIEU, GAMES, AUDIO, SCHEDULE, NEWS, PROGRAM, TEMPS, AIRPLANE, FORTUNE TELLER, BELLE, PAIN, SLATE, COOKING, FAN, CRANE
+
+### Top Raw Candidate Groups
+1. **0.0859** | BILL, AIRPLANE, SLATE, CRANE | max overlap 2/4
+2. **0.0666** | BILL, SCHEDULE, PROGRAM, SLATE | EXACT
+3. **0.0637** | BILL, SCHEDULE, AIRPLANE, SLATE | max overlap 3/4
+4. **0.0591** | BILL, SCHEDULE, NEWS, PROGRAM | max overlap 3/4
+5. **0.0575** | BILL, SCHEDULE, SLATE, CRANE | max overlap 3/4
+6. **0.0503** | BILL, SCHEDULE, TEMPS, SLATE | max overlap 3/4
+7. **0.0472** | SCHEDULE, NEWS, PROGRAM, SLATE | max overlap 3/4
+8. **0.0407** | BILL, SCHEDULE, NEWS, SLATE | max overlap 3/4
+9. **0.0393** | SCHEDULE, AIRPLANE, SLATE, CRANE | max overlap 2/4
+10. **0.0383** | BILL, SCHEDULE, AIRPLANE, CRANE | max overlap 2/4
+11. **0.0379** | BILL, GAMES, SCHEDULE, SLATE | max overlap 3/4
+12. **0.0375** | BILL, SCHEDULE, SLATE, COOKING | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0169** | exact groups: 0/4
+   - 0.0282 | BILL, BELLE, SLATE, CRANE
+   - 0.0210 | SCHEDULE, NEWS, PROGRAM, PAIN
+   - 0.0163 | ADIEU, GAMES, AUDIO, TEMPS
+   - 0.0151 | AIRPLANE, FORTUNE TELLER, COOKING, FAN
+2. **0.0164** | exact groups: 0/4
+   - 0.0859 | BILL, AIRPLANE, SLATE, CRANE
+   - 0.0317 | SCHEDULE, NEWS, PROGRAM, TEMPS
+   - 0.0137 | ADIEU, GAMES, AUDIO, BELLE
+   - 0.0100 | FORTUNE TELLER, PAIN, COOKING, FAN
+3. **0.0162** | exact groups: 0/4
+   - 0.0591 | BILL, SCHEDULE, NEWS, PROGRAM
+   - 0.0215 | AIRPLANE, FORTUNE TELLER, SLATE, CRANE
+   - 0.0161 | TEMPS, PAIN, COOKING, FAN
+   - 0.0137 | ADIEU, GAMES, AUDIO, BELLE
+
+## Puzzle 42 (ID: 332)
+Words: RUBY, SPONGE, BUBBLE, SPLASH, DROP, CHERRY, BRICK, ROSE, PICK, TOP, SPOT, CREAM, BIRD, MUD, BEST, SPRINKLE
+
+### Top Raw Candidate Groups
+1. **0.1244** | CHERRY, ROSE, SPOT, BIRD | max overlap 2/4
+2. **0.1192** | RUBY, CHERRY, ROSE, BIRD | max overlap 3/4
+3. **0.1176** | DROP, ROSE, SPOT, BIRD | max overlap 2/4
+4. **0.1108** | SPONGE, CHERRY, SPOT, BIRD | max overlap 2/4
+5. **0.1101** | CHERRY, PICK, TOP, CREAM | max overlap 3/4
+6. **0.1097** | DROP, TOP, SPOT, CREAM | max overlap 2/4
+7. **0.1096** | DROP, CHERRY, ROSE, BIRD | max overlap 2/4
+8. **0.1090** | DROP, CHERRY, ROSE, SPOT | max overlap 2/4
+9. **0.1087** | DROP, CHERRY, PICK, CREAM | max overlap 2/4
+10. **0.1082** | DROP, CHERRY, SPOT, BIRD | max overlap 2/4
+11. **0.1078** | SPONGE, SPOT, CREAM, BIRD | max overlap 2/4
+12. **0.1076** | SPLASH, DROP, SPOT, MUD | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0869** | exact groups: 1/4
+   - 0.1192 | RUBY, CHERRY, ROSE, BIRD
+   - 0.0954 | PICK, TOP, CREAM, BEST
+   - 0.0909 | SPONGE, BRICK, SPOT, MUD
+   - 0.0807 | BUBBLE, SPLASH, DROP, SPRINKLE
+2. **0.0836** | exact groups: 1/4
+   - 0.0954 | PICK, TOP, CREAM, BEST
+   - 0.0871 | SPONGE, CHERRY, BRICK, MUD
+   - 0.0858 | RUBY, ROSE, SPOT, BIRD
+   - 0.0807 | BUBBLE, SPLASH, DROP, SPRINKLE
+3. **0.0758** | exact groups: 1/4
+   - 0.1192 | RUBY, CHERRY, ROSE, BIRD
+   - 0.0954 | PICK, TOP, CREAM, BEST
+   - 0.0738 | SPONGE, BUBBLE, DROP, BRICK
+   - 0.0670 | SPLASH, SPOT, MUD, SPRINKLE
+
+## Puzzle 43 (ID: 614)
+Words: SURPRISE, SHED, INDULGE, HISS, SLITHER, RATTLE, BABY, STRAIGHT, BAE, CREAK, HUMOR, SEE, GUESS WHO, GOTCHA, PAMPER, BOO
+
+### Top Raw Candidate Groups
+1. **0.0526** | SURPRISE, INDULGE, BABY, PAMPER | max overlap 3/4
+2. **0.0488** | INDULGE, RATTLE, BABY, PAMPER | max overlap 3/4
+3. **0.0454** | INDULGE, BABY, STRAIGHT, PAMPER | max overlap 3/4
+4. **0.0447** | SHED, INDULGE, BABY, PAMPER | max overlap 3/4
+5. **0.0415** | INDULGE, BABY, SEE, PAMPER | max overlap 3/4
+6. **0.0396** | HISS, SLITHER, RATTLE, CREAK | max overlap 3/4
+7. **0.0395** | INDULGE, BABY, HUMOR, PAMPER | EXACT
+8. **0.0388** | INDULGE, HISS, BABY, PAMPER | max overlap 3/4
+9. **0.0379** | BABY, STRAIGHT, BAE, BOO | max overlap 2/4
+10. **0.0377** | INDULGE, BABY, BAE, PAMPER | max overlap 3/4
+11. **0.0359** | SURPRISE, STRAIGHT, BAE, BOO | max overlap 2/4
+12. **0.0356** | HISS, RATTLE, BABY, CREAK | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0135** | exact groups: 0/4
+   - 0.0200 | STRAIGHT, BAE, GUESS WHO, BOO
+   - 0.0161 | SURPRISE, INDULGE, BABY, HUMOR
+   - 0.0152 | SHED, HISS, SLITHER, CREAK
+   - 0.0112 | RATTLE, SEE, GOTCHA, PAMPER
+2. **0.0113** | exact groups: 0/4
+   - 0.0200 | STRAIGHT, BAE, GUESS WHO, BOO
+   - 0.0151 | SURPRISE, SHED, INDULGE, BABY
+   - 0.0112 | RATTLE, SEE, GOTCHA, PAMPER
+   - 0.0094 | HISS, SLITHER, CREAK, HUMOR
+3. **0.0111** | exact groups: 0/4
+   - 0.0200 | STRAIGHT, BAE, GUESS WHO, BOO
+   - 0.0165 | SURPRISE, SHED, SEE, PAMPER
+   - 0.0094 | HISS, SLITHER, CREAK, HUMOR
+   - 0.0092 | INDULGE, RATTLE, BABY, GOTCHA
+
+## Puzzle 44 (ID: 1)
+Words: SLEET, SHIFT, HAIL, MOM, JAZZ, HEAT, SNOW, OPTION, NETS, TAB, RACECAR, RAIN, KAYAK, LEVEL, RETURN, BUCKS
+
+### Top Raw Candidate Groups
+1. **0.1192** | SLEET, HAIL, SNOW, RAIN | EXACT
+2. **0.0911** | SHIFT, OPTION, TAB, RETURN | EXACT
+3. **0.0877** | SHIFT, JAZZ, HEAT, TAB | max overlap 2/4
+4. **0.0873** | SLEET, SHIFT, TAB, RETURN | max overlap 3/4
+5. **0.0868** | SHIFT, HEAT, SNOW, TAB | max overlap 2/4
+6. **0.0858** | SHIFT, JAZZ, HEAT, SNOW | max overlap 2/4
+7. **0.0785** | SLEET, SHIFT, HEAT, SNOW | max overlap 2/4
+8. **0.0785** | SLEET, SHIFT, SNOW, TAB | max overlap 2/4
+9. **0.0758** | JAZZ, HEAT, SNOW, TAB | max overlap 2/4
+10. **0.0751** | SLEET, HEAT, SNOW, RAIN | max overlap 3/4
+11. **0.0734** | SHIFT, HEAT, TAB, RETURN | max overlap 3/4
+12. **0.0718** | SHIFT, JAZZ, SNOW, TAB | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0283** | exact groups: 0/4
+   - 0.0339 | SLEET, HEAT, TAB, LEVEL
+   - 0.0328 | HAIL, SNOW, RACECAR, RAIN
+   - 0.0325 | SHIFT, MOM, OPTION, RETURN
+   - 0.0240 | JAZZ, NETS, KAYAK, BUCKS
+2. **0.0277** | exact groups: 0/4
+   - 0.0380 | SLEET, OPTION, TAB, RETURN
+   - 0.0328 | HAIL, SNOW, RACECAR, RAIN
+   - 0.0304 | SHIFT, MOM, JAZZ, LEVEL
+   - 0.0238 | HEAT, NETS, KAYAK, BUCKS
+3. **0.0266** | exact groups: 0/4
+   - 0.0387 | MOM, JAZZ, SNOW, TAB
+   - 0.0344 | SLEET, HAIL, RAIN, LEVEL
+   - 0.0245 | SHIFT, OPTION, RACECAR, RETURN
+   - 0.0238 | HEAT, NETS, KAYAK, BUCKS
+
+## Puzzle 45 (ID: 544)
+Words: STUMP, REX, CORE, JINX, SLINKY, SPELL, VEX, POX, PERPLEX, MANIA, GATE, PILLED, HAMM, HEX, PUZZLE, BUZZ
+
+### Top Raw Candidate Groups
+1. **0.0826** | STUMP, VEX, PERPLEX, PUZZLE | EXACT
+2. **0.0611** | JINX, SPELL, GATE, HEX | max overlap 3/4
+3. **0.0567** | JINX, SPELL, VEX, HEX | max overlap 3/4
+4. **0.0562** | VEX, PERPLEX, HEX, PUZZLE | max overlap 3/4
+5. **0.0557** | STUMP, SPELL, PERPLEX, PUZZLE | max overlap 3/4
+6. **0.0540** | JINX, VEX, PERPLEX, HEX | max overlap 2/4
+7. **0.0528** | JINX, SPELL, PERPLEX, HEX | max overlap 3/4
+8. **0.0494** | SPELL, VEX, PERPLEX, PUZZLE | max overlap 3/4
+9. **0.0491** | CORE, JINX, SPELL, HEX | max overlap 3/4
+10. **0.0487** | SPELL, VEX, PERPLEX, HEX | max overlap 2/4
+11. **0.0479** | JINX, SPELL, HEX, BUZZ | max overlap 3/4
+12. **0.0476** | REX, VEX, PERPLEX, PUZZLE | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0173** | exact groups: 0/4
+   - 0.0331 | JINX, SPELL, HAMM, HEX
+   - 0.0269 | STUMP, PERPLEX, PILLED, PUZZLE
+   - 0.0225 | CORE, SLINKY, GATE, BUZZ
+   - 0.0100 | REX, VEX, POX, MANIA
+2. **0.0171** | exact groups: 0/4
+   - 0.0309 | JINX, SLINKY, SPELL, HEX
+   - 0.0269 | STUMP, PERPLEX, PILLED, PUZZLE
+   - 0.0214 | CORE, GATE, HAMM, BUZZ
+   - 0.0100 | REX, VEX, POX, MANIA
+3. **0.0169** | exact groups: 0/4
+   - 0.0385 | VEX, PERPLEX, PILLED, PUZZLE
+   - 0.0294 | STUMP, SLINKY, SPELL, GATE
+   - 0.0135 | REX, JINX, POX, MANIA
+   - 0.0124 | CORE, HAMM, HEX, BUZZ
+
+## Puzzle 46 (ID: 798)
+Words: HANDY, WELCOME, ASSEMBLY, EXIT, PUSH, OPEN, ENVELOPE, CLOSE, STAMP, PRESS, NEARBY, SPEECH, ACCESSIBLE, NAME, ADDRESS, PETITION
+
+### Top Raw Candidate Groups
+1. **0.1086** | OPEN, CLOSE, NAME, ADDRESS | max overlap 2/4
+2. **0.0932** | PUSH, OPEN, ENVELOPE, ADDRESS | max overlap 2/4
+3. **0.0899** | OPEN, ENVELOPE, NAME, ADDRESS | max overlap 3/4
+4. **0.0868** | PUSH, ENVELOPE, NAME, ADDRESS | max overlap 3/4
+5. **0.0827** | ASSEMBLY, PUSH, ENVELOPE, ADDRESS | max overlap 2/4
+6. **0.0825** | OPEN, ENVELOPE, CLOSE, ADDRESS | max overlap 2/4
+7. **0.0817** | PUSH, ENVELOPE, CLOSE, ADDRESS | max overlap 2/4
+8. **0.0807** | PUSH, OPEN, NAME, ADDRESS | max overlap 2/4
+9. **0.0807** | ASSEMBLY, OPEN, ENVELOPE, ADDRESS | max overlap 2/4
+10. **0.0794** | PUSH, ENVELOPE, CLOSE, NAME | max overlap 2/4
+11. **0.0791** | PUSH, OPEN, CLOSE, NAME | max overlap 2/4
+12. **0.0785** | PUSH, OPEN, CLOSE, ADDRESS | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0368** | exact groups: 0/4
+   - 0.0494 | WELCOME, SPEECH, NAME, ADDRESS
+   - 0.0459 | ASSEMBLY, ENVELOPE, STAMP, PRESS
+   - 0.0338 | HANDY, OPEN, NEARBY, ACCESSIBLE
+   - 0.0338 | EXIT, PUSH, CLOSE, PETITION
+2. **0.0360** | exact groups: 0/4
+   - 0.0494 | WELCOME, SPEECH, NAME, ADDRESS
+   - 0.0476 | EXIT, PUSH, ENVELOPE, CLOSE
+   - 0.0338 | HANDY, OPEN, NEARBY, ACCESSIBLE
+   - 0.0313 | ASSEMBLY, STAMP, PRESS, PETITION
+3. **0.0337** | exact groups: 0/4
+   - 0.0392 | WELCOME, PUSH, ENVELOPE, CLOSE
+   - 0.0385 | EXIT, SPEECH, NAME, ADDRESS
+   - 0.0338 | HANDY, OPEN, NEARBY, ACCESSIBLE
+   - 0.0313 | ASSEMBLY, STAMP, PRESS, PETITION
+
+## Puzzle 47 (ID: 1031)
+Words: BEAM, SNOWFLAKE, COLUMN, JUMPER CABLES, BRACE, SPARE TIRE, PATRON, SPONSOR, ANGEL, STRUT, SCREWDRIVER, BOMBAY, CHAMPION, CHELSEA, ICE SCRAPER, JACK
+
+### Top Raw Candidate Groups
+1. **0.0680** | BEAM, BRACE, PATRON, JACK | max overlap 2/4
+2. **0.0652** | PATRON, SPONSOR, ANGEL, CHAMPION | EXACT
+3. **0.0640** | PATRON, SPONSOR, ANGEL, JACK | max overlap 3/4
+4. **0.0619** | BEAM, COLUMN, BRACE, STRUT | EXACT
+5. **0.0575** | BEAM, COLUMN, BRACE, JACK | max overlap 3/4
+6. **0.0551** | BEAM, PATRON, SPONSOR, ANGEL | max overlap 3/4
+7. **0.0527** | BEAM, BRACE, STRUT, JACK | max overlap 3/4
+8. **0.0490** | BRACE, PATRON, CHAMPION, JACK | max overlap 2/4
+9. **0.0488** | BRACE, PATRON, SPONSOR, ANGEL | max overlap 3/4
+10. **0.0488** | PATRON, ANGEL, CHAMPION, JACK | max overlap 3/4
+11. **0.0471** | PATRON, SPONSOR, ANGEL, CHELSEA | max overlap 3/4
+12. **0.0466** | BEAM, PATRON, ANGEL, JACK | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0207** | exact groups: 0/4
+   - 0.0335 | PATRON, SPONSOR, ANGEL, BOMBAY
+   - 0.0245 | BEAM, JUMPER CABLES, BRACE, STRUT
+   - 0.0209 | COLUMN, CHAMPION, CHELSEA, JACK
+   - 0.0186 | SNOWFLAKE, SPARE TIRE, SCREWDRIVER, ICE SCRAPER
+2. **0.0200** | exact groups: 0/4
+   - 0.0527 | BEAM, BRACE, STRUT, JACK
+   - 0.0423 | SNOWFLAKE, PATRON, SPONSOR, ANGEL
+   - 0.0160 | JUMPER CABLES, SPARE TIRE, SCREWDRIVER, ICE SCRAPER
+   - 0.0108 | COLUMN, BOMBAY, CHAMPION, CHELSEA
+3. **0.0196** | exact groups: 0/4
+   - 0.0341 | BEAM, BRACE, STRUT, CHAMPION
+   - 0.0335 | PATRON, SPONSOR, ANGEL, BOMBAY
+   - 0.0160 | JUMPER CABLES, SPARE TIRE, SCREWDRIVER, ICE SCRAPER
+   - 0.0144 | SNOWFLAKE, COLUMN, CHELSEA, JACK
+
+## Puzzle 48 (ID: 166)
+Words: PAN, FIAT, SLAM, RAM, ROAST, ALONE, LILY, SURVIVOR, MAXI, MOUSE, KNOCK, BACHELOR, CHOPPED, JAGUAR, MINI, CATFISH
+
+### Top Raw Candidate Groups
+1. **0.0827** | PAN, SLAM, KNOCK, CHOPPED | max overlap 3/4
+2. **0.0820** | PAN, SLAM, RAM, KNOCK | max overlap 3/4
+3. **0.0798** | PAN, RAM, KNOCK, CHOPPED | max overlap 2/4
+4. **0.0790** | PAN, ROAST, KNOCK, CHOPPED | max overlap 3/4
+5. **0.0778** | PAN, SLAM, RAM, CHOPPED | max overlap 2/4
+6. **0.0767** | SLAM, RAM, KNOCK, CHOPPED | max overlap 2/4
+7. **0.0760** | PAN, SLAM, LILY, KNOCK | max overlap 3/4
+8. **0.0757** | PAN, KNOCK, CHOPPED, CATFISH | max overlap 2/4
+9. **0.0747** | PAN, SLAM, RAM, LILY | max overlap 2/4
+10. **0.0746** | PAN, LILY, CHOPPED, CATFISH | max overlap 2/4
+11. **0.0743** | PAN, LILY, KNOCK, CHOPPED | max overlap 2/4
+12. **0.0729** | PAN, SLAM, LILY, CHOPPED | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0289** | exact groups: 0/4
+   - 0.0410 | PAN, ROAST, ALONE, KNOCK
+   - 0.0350 | SLAM, LILY, MAXI, CHOPPED
+   - 0.0275 | FIAT, MOUSE, JAGUAR, MINI
+   - 0.0265 | RAM, SURVIVOR, BACHELOR, CATFISH
+2. **0.0286** | exact groups: 0/4
+   - 0.0348 | ROAST, ALONE, KNOCK, CHOPPED
+   - 0.0341 | PAN, SLAM, LILY, MAXI
+   - 0.0275 | FIAT, MOUSE, JAGUAR, MINI
+   - 0.0265 | RAM, SURVIVOR, BACHELOR, CATFISH
+3. **0.0274** | exact groups: 0/4
+   - 0.0410 | PAN, ROAST, ALONE, KNOCK
+   - 0.0306 | SLAM, RAM, LILY, MAXI
+   - 0.0275 | FIAT, MOUSE, JAGUAR, MINI
+   - 0.0258 | SURVIVOR, BACHELOR, CHOPPED, CATFISH
+
+## Puzzle 49 (ID: 942)
+Words: DEEP END, CARDINAL, LIMB, HEART EMOJI, DIRECTION, 3 BALL, 6 MAFIA, THIN ICE, 8 BALL, CHAINZ, LEST, OAST, NON BLONDES, FORTH, SOLO CUP, COUTH
+
+### Top Raw Candidate Groups
+1. **0.0189** | CARDINAL, LEST, FORTH, COUTH | max overlap 3/4
+2. **0.0164** | DEEP END, CARDINAL, DIRECTION, FORTH | max overlap 1/4
+3. **0.0161** | CARDINAL, DIRECTION, FORTH, COUTH | max overlap 2/4
+4. **0.0150** | CARDINAL, DIRECTION, LEST, FORTH | max overlap 2/4
+5. **0.0135** | DIRECTION, LEST, FORTH, COUTH | max overlap 3/4
+6. **0.0116** | DEEP END, CARDINAL, THIN ICE, SOLO CUP | max overlap 2/4
+7. **0.0095** | DEEP END, DIRECTION, FORTH, COUTH | max overlap 2/4
+8. **0.0092** | DEEP END, CARDINAL, DIRECTION, THIN ICE | max overlap 2/4
+9. **0.0088** | CARDINAL, DIRECTION, 8 BALL, FORTH | max overlap 1/4
+10. **0.0087** | DEEP END, LEST, FORTH, COUTH | max overlap 3/4
+11. **0.0085** | CARDINAL, DIRECTION, 3 BALL, FORTH | max overlap 2/4
+12. **0.0085** | DEEP END, DIRECTION, LEST, FORTH | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0032** | exact groups: 0/4
+   - 0.0070 | DEEP END, LIMB, DIRECTION, OAST
+   - 0.0058 | 6 MAFIA, LEST, FORTH, COUTH
+   - 0.0049 | CARDINAL, 3 BALL, THIN ICE, SOLO CUP
+   - 0.0011 | HEART EMOJI, 8 BALL, CHAINZ, NON BLONDES
+2. **0.0032** | exact groups: 0/4
+   - 0.0070 | DEEP END, LIMB, DIRECTION, OAST
+   - 0.0058 | 6 MAFIA, LEST, FORTH, COUTH
+   - 0.0047 | CARDINAL, THIN ICE, 8 BALL, SOLO CUP
+   - 0.0011 | HEART EMOJI, 3 BALL, CHAINZ, NON BLONDES
+3. **0.0029** | exact groups: 1/4
+   - 0.0080 | LEST, OAST, FORTH, COUTH
+   - 0.0049 | CARDINAL, 3 BALL, THIN ICE, SOLO CUP
+   - 0.0044 | DEEP END, LIMB, DIRECTION, 6 MAFIA
+   - 0.0011 | HEART EMOJI, 8 BALL, CHAINZ, NON BLONDES
+
+## Puzzle 50 (ID: 383)
+Words: CUE, PROMPT, SHORT, DRAWER, WORD, CLUTCH, LICENSE, BRIEF, FREEDOM, LATITUDE, SIGNAL, MESSENGER, SLACK, TOTE, SATCHEL, BOXER
+
+### Top Raw Candidate Groups
+1. **0.0789** | CUE, PROMPT, SIGNAL, MESSENGER | max overlap 3/4
+2. **0.0776** | CUE, PROMPT, SHORT, BRIEF | max overlap 2/4
+3. **0.0739** | PROMPT, WORD, SIGNAL, MESSENGER | max overlap 3/4
+4. **0.0678** | CUE, PROMPT, SHORT, SIGNAL | max overlap 3/4
+5. **0.0594** | CUE, PROMPT, CLUTCH, SIGNAL | max overlap 3/4
+6. **0.0540** | CUE, BRIEF, SIGNAL, MESSENGER | max overlap 2/4
+7. **0.0524** | WORD, SIGNAL, MESSENGER, SLACK | max overlap 2/4
+8. **0.0511** | CUE, WORD, SIGNAL, MESSENGER | max overlap 3/4
+9. **0.0493** | CUE, PROMPT, BRIEF, SIGNAL | max overlap 3/4
+10. **0.0488** | PROMPT, WORD, MESSENGER, SLACK | max overlap 2/4
+11. **0.0487** | PROMPT, WORD, SIGNAL, SLACK | max overlap 3/4
+12. **0.0474** | CUE, PROMPT, WORD, SIGNAL | EXACT
+
+### Top Raw Partitions
+1. **0.0242** | exact groups: 0/4
+   - 0.0412 | CUE, CLUTCH, SIGNAL, MESSENGER
+   - 0.0399 | PROMPT, SHORT, WORD, SLACK
+   - 0.0291 | LICENSE, BRIEF, FREEDOM, LATITUDE
+   - 0.0140 | DRAWER, TOTE, SATCHEL, BOXER
+2. **0.0241** | exact groups: 0/4
+   - 0.0776 | CUE, PROMPT, SHORT, BRIEF
+   - 0.0524 | WORD, SIGNAL, MESSENGER, SLACK
+   - 0.0160 | CLUTCH, LICENSE, FREEDOM, LATITUDE
+   - 0.0140 | DRAWER, TOTE, SATCHEL, BOXER
+3. **0.0230** | exact groups: 0/4
+   - 0.0488 | PROMPT, WORD, MESSENGER, SLACK
+   - 0.0349 | CUE, SHORT, CLUTCH, SIGNAL
+   - 0.0291 | LICENSE, BRIEF, FREEDOM, LATITUDE
+   - 0.0140 | DRAWER, TOTE, SATCHEL, BOXER
+
+## Puzzle 51 (ID: 982)
+Words: EGGS, STU, POLYESTER SUIT, SEER, JOHN TRAVOLTA, SHOVEL, BASKET, DISCO, PLATFORM SHOES, BOYLE, BELLOWS, TONGS, DYE, POKER, BRAYS, PEEPS
+
+### Top Raw Candidate Groups
+1. **0.0428** | BELLOWS, TONGS, BRAYS, PEEPS | max overlap 2/4
+2. **0.0368** | BASKET, BELLOWS, BRAYS, PEEPS | max overlap 2/4
+3. **0.0290** | BASKET, BELLOWS, TONGS, PEEPS | max overlap 2/4
+4. **0.0281** | BOYLE, BELLOWS, BRAYS, PEEPS | max overlap 2/4
+5. **0.0279** | BASKET, TONGS, BRAYS, PEEPS | max overlap 2/4
+6. **0.0258** | SHOVEL, BASKET, BELLOWS, PEEPS | max overlap 2/4
+7. **0.0256** | EGGS, BASKET, BELLOWS, PEEPS | max overlap 3/4
+8. **0.0254** | DISCO, BELLOWS, BRAYS, PEEPS | max overlap 1/4
+9. **0.0253** | SHOVEL, BASKET, TONGS, POKER | max overlap 3/4
+10. **0.0247** | SHOVEL, BELLOWS, BRAYS, PEEPS | max overlap 2/4
+11. **0.0243** | SHOVEL, BASKET, POKER, PEEPS | max overlap 2/4
+12. **0.0242** | EGGS, BELLOWS, BRAYS, PEEPS | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0084** | exact groups: 0/4
+   - 0.0145 | STU, BELLOWS, BRAYS, PEEPS
+   - 0.0124 | DISCO, BOYLE, TONGS, POKER
+   - 0.0122 | EGGS, SEER, SHOVEL, BASKET
+   - 0.0046 | POLYESTER SUIT, JOHN TRAVOLTA, PLATFORM SHOES, DYE
+2. **0.0084** | exact groups: 0/4
+   - 0.0203 | EGGS, SHOVEL, BASKET, TONGS
+   - 0.0192 | SEER, BELLOWS, BRAYS, PEEPS
+   - 0.0051 | STU, DISCO, BOYLE, POKER
+   - 0.0046 | POLYESTER SUIT, JOHN TRAVOLTA, PLATFORM SHOES, DYE
+3. **0.0084** | exact groups: 0/4
+   - 0.0221 | EGGS, SHOVEL, BASKET, POKER
+   - 0.0192 | SEER, BELLOWS, BRAYS, PEEPS
+   - 0.0051 | STU, DISCO, BOYLE, TONGS
+   - 0.0046 | POLYESTER SUIT, JOHN TRAVOLTA, PLATFORM SHOES, DYE
+
+## Puzzle 52 (ID: 204)
+Words: WHOA, PYRAMID, WHEEL, WHY, CAESAR, FEUD, PLANT, GREEK, WEDGE, GREEN, WATER, WEED, MILLIONAIRE, SEED, WEE, WAY
+
+### Top Raw Candidate Groups
+1. **0.1293** | PLANT, WATER, WEED, SEED | EXACT
+2. **0.1245** | PLANT, GREEK, GREEN, WATER | max overlap 2/4
+3. **0.1244** | PLANT, GREEK, GREEN, WEED | max overlap 2/4
+4. **0.1208** | PLANT, GREEN, WATER, WEED | max overlap 3/4
+5. **0.1158** | PLANT, GREEN, WEED, SEED | max overlap 3/4
+6. **0.1082** | PLANT, WATER, WEED, WAY | max overlap 3/4
+7. **0.1080** | PLANT, GREEN, WATER, WAY | max overlap 2/4
+8. **0.1064** | PLANT, GREEK, WATER, WEED | max overlap 3/4
+9. **0.1032** | PLANT, GREEK, GREEN, WAY | max overlap 2/4
+10. **0.1028** | WHEEL, PLANT, GREEN, WEED | max overlap 2/4
+11. **0.1024** | WHEEL, PLANT, GREEK, GREEN | max overlap 2/4
+12. **0.1012** | PLANT, GREEN, WEED, WAY | max overlap 2/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 53 (ID: 624)
+Words: SWALLOW, SHINE, GULP, CHINA, GIVE, ANCHOR, SCARF, BUCKLE, MERMAID, COMPASS, BOW, BUTTE, WOLF, GOBBLE, HEARTH, CAVE
+
+### Top Raw Candidate Groups
+1. **0.0847** | SWALLOW, GULP, WOLF, GOBBLE | max overlap 3/4
+2. **0.0724** | SHINE, SCARF, WOLF, CAVE | max overlap 2/4
+3. **0.0690** | SHINE, SCARF, GOBBLE, CAVE | max overlap 2/4
+4. **0.0685** | SHINE, SCARF, WOLF, GOBBLE | max overlap 3/4
+5. **0.0674** | CHINA, COMPASS, BOW, WOLF | max overlap 1/4
+6. **0.0648** | SCARF, WOLF, GOBBLE, CAVE | max overlap 3/4
+7. **0.0630** | ANCHOR, COMPASS, BOW, WOLF | max overlap 2/4
+8. **0.0589** | SHINE, WOLF, GOBBLE, CAVE | max overlap 2/4
+9. **0.0581** | SWALLOW, ANCHOR, COMPASS, BOW | max overlap 3/4
+10. **0.0575** | SHINE, GIVE, WOLF, GOBBLE | max overlap 2/4
+11. **0.0571** | SWALLOW, COMPASS, BOW, WOLF | max overlap 2/4
+12. **0.0567** | ANCHOR, BUCKLE, COMPASS, BOW | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0292** | exact groups: 0/4
+   - 0.0469 | SWALLOW, GIVE, BUCKLE, GOBBLE
+   - 0.0452 | GULP, COMPASS, BOW, WOLF
+   - 0.0299 | SHINE, CHINA, SCARF, BUTTE
+   - 0.0208 | ANCHOR, MERMAID, HEARTH, CAVE
+2. **0.0291** | exact groups: 0/4
+   - 0.0447 | SWALLOW, ANCHOR, BUCKLE, BOW
+   - 0.0445 | GULP, GIVE, WOLF, GOBBLE
+   - 0.0299 | SHINE, CHINA, SCARF, BUTTE
+   - 0.0210 | MERMAID, COMPASS, HEARTH, CAVE
+3. **0.0280** | exact groups: 0/4
+   - 0.0674 | CHINA, COMPASS, BOW, WOLF
+   - 0.0469 | SWALLOW, GIVE, BUCKLE, GOBBLE
+   - 0.0233 | SHINE, GULP, SCARF, BUTTE
+   - 0.0208 | ANCHOR, MERMAID, HEARTH, CAVE
+
+## Puzzle 54 (ID: 940)
+Words: CIDER, INTEREST, MIRROR, SHARE, RINGER, WINE, STAKE, CRESCENT, GARLIC, CROSS, TROUSERS, STAR, DOUBLE, CLONE, CONCERN, STRIPE
+
+### Top Raw Candidate Groups
+1. **0.0908** | INTEREST, SHARE, STAKE, CONCERN | EXACT
+2. **0.0841** | MIRROR, SHARE, DOUBLE, STRIPE | max overlap 2/4
+3. **0.0708** | INTEREST, SHARE, DOUBLE, CONCERN | max overlap 3/4
+4. **0.0682** | MIRROR, CRESCENT, CROSS, DOUBLE | max overlap 2/4
+5. **0.0664** | CROSS, STAR, DOUBLE, STRIPE | max overlap 3/4
+6. **0.0662** | CRESCENT, CROSS, STAR, DOUBLE | max overlap 3/4
+7. **0.0620** | MIRROR, CROSS, DOUBLE, STRIPE | max overlap 2/4
+8. **0.0609** | MIRROR, SHARE, CROSS, DOUBLE | max overlap 2/4
+9. **0.0605** | SHARE, CROSS, DOUBLE, STRIPE | max overlap 2/4
+10. **0.0590** | MIRROR, SHARE, CRESCENT, DOUBLE | max overlap 2/4
+11. **0.0574** | INTEREST, SHARE, STAKE, DOUBLE | max overlap 3/4
+12. **0.0570** | INTEREST, SHARE, STAKE, STAR | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0305** | exact groups: 0/4
+   - 0.0473 | STAKE, CRESCENT, CROSS, STAR
+   - 0.0330 | MIRROR, GARLIC, DOUBLE, STRIPE
+   - 0.0301 | INTEREST, SHARE, TROUSERS, CONCERN
+   - 0.0294 | CIDER, RINGER, WINE, CLONE
+2. **0.0296** | exact groups: 0/4
+   - 0.0330 | MIRROR, GARLIC, DOUBLE, STRIPE
+   - 0.0302 | CIDER, WINE, CRESCENT, CROSS
+   - 0.0301 | INTEREST, SHARE, TROUSERS, CONCERN
+   - 0.0291 | RINGER, STAKE, STAR, CLONE
+3. **0.0294** | exact groups: 1/4
+   - 0.0378 | CRESCENT, CROSS, STAR, STRIPE
+   - 0.0313 | MIRROR, SHARE, GARLIC, DOUBLE
+   - 0.0294 | CIDER, RINGER, WINE, CLONE
+   - 0.0284 | INTEREST, STAKE, TROUSERS, CONCERN
+
+## Puzzle 55 (ID: 655)
+Words: PAPER, SWAY, PHONE, CHANGE, DING, WAVE, GREEN, CORRECT, SCRATCH, RIGHT, SCOPE, CHIP, MOVE, BINGO, TOUCH, REACH
+
+### Top Raw Candidate Groups
+1. **0.1280** | CHANGE, MOVE, TOUCH, REACH | max overlap 3/4
+2. **0.1071** | PAPER, SCRATCH, CHIP, TOUCH | max overlap 2/4
+3. **0.1060** | DING, SCRATCH, CHIP, TOUCH | max overlap 1/4
+4. **0.1031** | PHONE, SCOPE, TOUCH, REACH | max overlap 2/4
+5. **0.1021** | PAPER, GREEN, SCRATCH, TOUCH | max overlap 3/4
+6. **0.0963** | SWAY, MOVE, TOUCH, REACH | EXACT
+7. **0.0937** | PAPER, GREEN, SCRATCH, CHIP | max overlap 3/4
+8. **0.0936** | PAPER, GREEN, SCRATCH, BINGO | max overlap 3/4
+9. **0.0924** | PAPER, GREEN, BINGO, TOUCH | max overlap 2/4
+10. **0.0898** | PAPER, SCRATCH, BINGO, TOUCH | max overlap 2/4
+11. **0.0889** | PAPER, SCRATCH, SCOPE, TOUCH | max overlap 2/4
+12. **0.0888** | PAPER, GREEN, SCOPE, TOUCH | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0588** | exact groups: 0/4
+   - 0.0840 | PAPER, GREEN, SCOPE, BINGO
+   - 0.0804 | CHANGE, CORRECT, RIGHT, MOVE
+   - 0.0581 | SWAY, DING, SCRATCH, CHIP
+   - 0.0483 | PHONE, WAVE, TOUCH, REACH
+2. **0.0585** | exact groups: 0/4
+   - 0.0840 | PAPER, GREEN, SCOPE, BINGO
+   - 0.0687 | CHANGE, CORRECT, RIGHT, TOUCH
+   - 0.0638 | SWAY, WAVE, MOVE, REACH
+   - 0.0508 | PHONE, DING, SCRATCH, CHIP
+3. **0.0585** | exact groups: 0/4
+   - 0.0804 | CHANGE, CORRECT, RIGHT, MOVE
+   - 0.0710 | PAPER, PHONE, SCOPE, TOUCH
+   - 0.0594 | DING, GREEN, SCRATCH, BINGO
+   - 0.0518 | SWAY, WAVE, CHIP, REACH
+
+## Puzzle 56 (ID: 862)
+Words: BIG BEAR, BE, BUGBEAR, CENTAUR, LYRE, UNI, POP, HANG-UP, A, CAPRI, K, DEMON, COMPLEX, AS, I, HUNTER
+
+### Top Raw Candidate Groups
+1. **0.0947** | BE, A, AS, I | max overlap 3/4
+2. **0.0947** | A, K, AS, I | max overlap 3/4
+3. **0.0865** | BE, A, K, I | max overlap 3/4
+4. **0.0745** | POP, A, K, I | max overlap 2/4
+5. **0.0704** | BE, K, AS, I | EXACT
+6. **0.0689** | POP, K, AS, I | max overlap 3/4
+7. **0.0673** | POP, A, K, AS | max overlap 2/4
+8. **0.0671** | BE, A, COMPLEX, I | max overlap 2/4
+9. **0.0655** | BE, A, K, AS | max overlap 3/4
+10. **0.0650** | POP, A, AS, I | max overlap 2/4
+11. **0.0599** | BE, POP, A, K | max overlap 2/4
+12. **0.0594** | BE, A, K, COMPLEX | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0171** | exact groups: 0/4
+   - 0.0254 | BIG BEAR, BE, UNI, I
+   - 0.0252 | BUGBEAR, CENTAUR, DEMON, HUNTER
+   - 0.0171 | HANG-UP, A, CAPRI, COMPLEX
+   - 0.0130 | LYRE, POP, K, AS
+2. **0.0165** | exact groups: 0/4
+   - 0.0252 | BUGBEAR, CENTAUR, DEMON, HUNTER
+   - 0.0210 | BE, LYRE, A, COMPLEX
+   - 0.0160 | POP, HANG-UP, K, AS
+   - 0.0144 | BIG BEAR, UNI, CAPRI, I
+3. **0.0164** | exact groups: 0/4
+   - 0.0252 | BUGBEAR, CENTAUR, DEMON, HUNTER
+   - 0.0212 | LYRE, POP, A, K
+   - 0.0158 | BE, HANG-UP, COMPLEX, AS
+   - 0.0144 | BIG BEAR, UNI, CAPRI, I
+
+## Puzzle 57 (ID: 306)
+Words: NEAT, ULTRA, TIDY, CLEAN, SNOWBALL, STICK, SUPER, UBER, SWELL, MUSHROOM, HYPER, TRIM, DOMINO, BALLOON, MARBLE, JACK
+
+### Top Raw Candidate Groups
+1. **0.1006** | NEAT, TIDY, CLEAN, TRIM | EXACT
+2. **0.0901** | SUPER, UBER, HYPER, BALLOON | max overlap 3/4
+3. **0.0836** | NEAT, TIDY, CLEAN, STICK | max overlap 3/4
+4. **0.0830** | STICK, SUPER, BALLOON, JACK | max overlap 2/4
+5. **0.0821** | STICK, SUPER, UBER, HYPER | max overlap 3/4
+6. **0.0807** | SUPER, UBER, HYPER, TRIM | max overlap 3/4
+7. **0.0806** | STICK, TRIM, BALLOON, JACK | max overlap 2/4
+8. **0.0803** | STICK, SUPER, TRIM, JACK | max overlap 2/4
+9. **0.0795** | SUPER, UBER, HYPER, JACK | max overlap 3/4
+10. **0.0790** | STICK, SUPER, TRIM, BALLOON | max overlap 1/4
+11. **0.0779** | SUPER, TRIM, BALLOON, JACK | max overlap 1/4
+12. **0.0773** | NEAT, TIDY, CLEAN, SWELL | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0445** | exact groups: 0/4
+   - 0.0763 | NEAT, ULTRA, TIDY, CLEAN
+   - 0.0663 | STICK, UBER, HYPER, TRIM
+   - 0.0523 | SNOWBALL, SUPER, SWELL, MUSHROOM
+   - 0.0296 | DOMINO, BALLOON, MARBLE, JACK
+2. **0.0431** | exact groups: 2/4
+   - 0.0549 | ULTRA, SUPER, UBER, HYPER
+   - 0.0527 | SNOWBALL, SWELL, MUSHROOM, BALLOON
+   - 0.0473 | NEAT, TIDY, CLEAN, DOMINO
+   - 0.0362 | STICK, TRIM, MARBLE, JACK
+3. **0.0431** | exact groups: 0/4
+   - 0.0807 | SUPER, UBER, HYPER, TRIM
+   - 0.0763 | NEAT, ULTRA, TIDY, CLEAN
+   - 0.0332 | STICK, DOMINO, BALLOON, JACK
+   - 0.0313 | SNOWBALL, SWELL, MUSHROOM, MARBLE
+
+## Puzzle 58 (ID: 641)
+Words: WILT, WHISTLE, SLANT, FLAG, RIVER, ART, SPIN, THOU, TURN, FLOP, HAIL, WAVE, BIAS, HOLE, ANGLE, ANON
+
+### Top Raw Candidate Groups
+1. **0.1065** | SPIN, TURN, FLOP, HOLE | max overlap 3/4
+2. **0.1065** | FLAG, TURN, FLOP, HOLE | max overlap 3/4
+3. **0.1050** | TURN, FLOP, HOLE, ANGLE | max overlap 3/4
+4. **0.1041** | FLAG, SPIN, FLOP, HOLE | max overlap 2/4
+5. **0.1000** | FLAG, SPIN, TURN, FLOP | max overlap 2/4
+6. **0.0994** | FLAG, SPIN, FLOP, BIAS | max overlap 2/4
+7. **0.0975** | FLAG, SPIN, WAVE, HOLE | max overlap 2/4
+8. **0.0968** | SLANT, SPIN, FLOP, BIAS | max overlap 3/4
+9. **0.0963** | FLAG, TURN, HOLE, ANGLE | max overlap 2/4
+10. **0.0949** | SLANT, SPIN, TURN, ANGLE | max overlap 3/4
+11. **0.0948** | FLAG, SPIN, TURN, HOLE | max overlap 2/4
+12. **0.0944** | SLANT, TURN, FLOP, ANGLE | max overlap 2/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 59 (ID: 892)
+Words: PLASTER, FIX, ENAMEL, ARTY, KISS, PASTE, CROWN, DECAY, SKIM, ESSAY, STICK, ROOT, PULP, BRUSH, ANY, STROKE
+
+### Top Raw Candidate Groups
+1. **0.1149** | PLASTER, CROWN, STICK, BRUSH | max overlap 2/4
+2. **0.1098** | PLASTER, PASTE, STICK, BRUSH | max overlap 3/4
+3. **0.0982** | PLASTER, PASTE, CROWN, STICK | max overlap 3/4
+4. **0.0972** | PASTE, CROWN, STICK, BRUSH | max overlap 2/4
+5. **0.0964** | PLASTER, STICK, BRUSH, STROKE | max overlap 2/4
+6. **0.0927** | CROWN, STICK, BRUSH, STROKE | max overlap 2/4
+7. **0.0917** | CROWN, STICK, ROOT, BRUSH | max overlap 2/4
+8. **0.0896** | PLASTER, PASTE, CROWN, BRUSH | max overlap 2/4
+9. **0.0889** | PLASTER, STICK, ROOT, BRUSH | max overlap 2/4
+10. **0.0888** | PLASTER, CROWN, BRUSH, STROKE | max overlap 2/4
+11. **0.0880** | PLASTER, CROWN, STICK, ROOT | max overlap 2/4
+12. **0.0873** | PLASTER, PASTE, STICK, ROOT | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0405** | exact groups: 0/4
+   - 0.0473 | ENAMEL, CROWN, BRUSH, ANY
+   - 0.0470 | PLASTER, KISS, SKIM, STROKE
+   - 0.0434 | FIX, PASTE, DECAY, ESSAY
+   - 0.0357 | ARTY, STICK, ROOT, PULP
+2. **0.0389** | exact groups: 0/4
+   - 0.0552 | PLASTER, ENAMEL, CROWN, STROKE
+   - 0.0434 | FIX, PASTE, DECAY, ESSAY
+   - 0.0408 | KISS, SKIM, BRUSH, ANY
+   - 0.0357 | ARTY, STICK, ROOT, PULP
+3. **0.0387** | exact groups: 0/4
+   - 0.0434 | FIX, PASTE, DECAY, ESSAY
+   - 0.0421 | PLASTER, ENAMEL, CROWN, SKIM
+   - 0.0414 | KISS, BRUSH, ANY, STROKE
+   - 0.0357 | ARTY, STICK, ROOT, PULP
+
+## Puzzle 60 (ID: 109)
+Words: HUNT, CRUNK, GRIME, DRILL, FORAGE, FISH, GLITTER, BEER, RAIL, GLEAM, FLASH, YEAR, BULB, TRAP, SPARKLE, BOUNCE
+
+### Top Raw Candidate Groups
+1. **0.1676** | GLITTER, GLEAM, FLASH, SPARKLE | EXACT
+2. **0.1100** | GLITTER, GLEAM, FLASH, BULB | max overlap 3/4
+3. **0.0850** | DRILL, FISH, TRAP, BOUNCE | max overlap 2/4
+4. **0.0826** | DRILL, FISH, FLASH, TRAP | max overlap 2/4
+5. **0.0826** | DRILL, FLASH, TRAP, BOUNCE | max overlap 2/4
+6. **0.0816** | FISH, FLASH, TRAP, BOUNCE | max overlap 2/4
+7. **0.0814** | GLEAM, FLASH, BULB, SPARKLE | max overlap 3/4
+8. **0.0799** | DRILL, FISH, FLASH, BOUNCE | max overlap 2/4
+9. **0.0797** | DRILL, GLITTER, GLEAM, FLASH | max overlap 3/4
+10. **0.0792** | CRUNK, DRILL, FISH, TRAP | max overlap 2/4
+11. **0.0790** | CRUNK, DRILL, FISH, FLASH | max overlap 2/4
+12. **0.0775** | HUNT, FISH, FLASH, TRAP | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0355** | exact groups: 1/4
+   - 0.0408 | CRUNK, GRIME, DRILL, BOUNCE
+   - 0.0400 | GLITTER, GLEAM, YEAR, SPARKLE
+   - 0.0363 | HUNT, FORAGE, FLASH, TRAP
+   - 0.0328 | FISH, BEER, RAIL, BULB
+2. **0.0330** | exact groups: 0/4
+   - 0.0429 | FORAGE, GLITTER, GLEAM, SPARKLE
+   - 0.0426 | HUNT, GRIME, FLASH, TRAP
+   - 0.0400 | CRUNK, DRILL, RAIL, BOUNCE
+   - 0.0246 | FISH, BEER, YEAR, BULB
+3. **0.0323** | exact groups: 0/4
+   - 0.0400 | GLITTER, GLEAM, YEAR, SPARKLE
+   - 0.0366 | CRUNK, RAIL, FLASH, BOUNCE
+   - 0.0363 | HUNT, FISH, BEER, BULB
+   - 0.0282 | GRIME, DRILL, FORAGE, TRAP
+
+## Puzzle 61 (ID: 935)
+Words: STANDARD, EEK, LOG, ALE, EXAMPLE, METRIC, RECORD, QUASH, ROUTINE, BIT, BAR, NOTE, GAG, JOT, NUMBER, HIVE
+
+### Top Raw Candidate Groups
+1. **0.1048** | METRIC, BIT, BAR, NUMBER | max overlap 2/4
+2. **0.1033** | RECORD, ROUTINE, BIT, NUMBER | max overlap 3/4
+3. **0.0922** | RECORD, BIT, BAR, NUMBER | max overlap 2/4
+4. **0.0870** | METRIC, ROUTINE, BIT, NUMBER | max overlap 3/4
+5. **0.0841** | ROUTINE, BIT, BAR, NUMBER | max overlap 3/4
+6. **0.0825** | METRIC, RECORD, BIT, NUMBER | max overlap 2/4
+7. **0.0823** | LOG, BIT, BAR, NUMBER | max overlap 2/4
+8. **0.0783** | LOG, RECORD, BIT, NUMBER | max overlap 2/4
+9. **0.0734** | RECORD, ROUTINE, BIT, HIVE | max overlap 2/4
+10. **0.0734** | LOG, RECORD, BIT, BAR | max overlap 2/4
+11. **0.0708** | METRIC, RECORD, BAR, NOTE | max overlap 2/4
+12. **0.0684** | RECORD, BAR, NOTE, NUMBER | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0275** | exact groups: 0/4
+   - 0.0313 | BIT, NOTE, JOT, HIVE
+   - 0.0303 | LOG, ALE, METRIC, BAR
+   - 0.0294 | STANDARD, EXAMPLE, ROUTINE, NUMBER
+   - 0.0251 | EEK, RECORD, QUASH, GAG
+2. **0.0269** | exact groups: 0/4
+   - 0.0295 | LOG, BIT, JOT, HIVE
+   - 0.0294 | STANDARD, EXAMPLE, ROUTINE, NUMBER
+   - 0.0280 | ALE, METRIC, BAR, NOTE
+   - 0.0251 | EEK, RECORD, QUASH, GAG
+3. **0.0267** | exact groups: 0/4
+   - 0.0418 | LOG, BAR, NOTE, JOT
+   - 0.0323 | ALE, METRIC, BIT, NUMBER
+   - 0.0251 | EEK, RECORD, QUASH, GAG
+   - 0.0246 | STANDARD, EXAMPLE, ROUTINE, HIVE
+
+## Puzzle 62 (ID: 520)
+Words: SPEED, FLORET, SCALES, CLOVE, GRUMBLE, RESOLUTION, CARP, RAM, STORAGE, STALK, CRAB, BLINDFOLD, SPEAR, ROBE, SWORD, BELLYACHE
+
+### Top Raw Candidate Groups
+1. **0.0601** | CARP, RAM, STALK, CRAB | max overlap 2/4
+2. **0.0593** | SPEED, RAM, STALK, CRAB | max overlap 2/4
+3. **0.0408** | SPEED, RAM, CRAB, SPEAR | max overlap 2/4
+4. **0.0405** | SPEED, RAM, STORAGE, CRAB | max overlap 3/4
+5. **0.0395** | SPEED, STALK, CRAB, SPEAR | max overlap 2/4
+6. **0.0389** | SPEED, CARP, RAM, CRAB | max overlap 2/4
+7. **0.0379** | SPEED, RAM, CRAB, BELLYACHE | max overlap 2/4
+8. **0.0374** | SPEED, RAM, CRAB, ROBE | max overlap 2/4
+9. **0.0354** | GRUMBLE, CRAB, ROBE, BELLYACHE | max overlap 3/4
+10. **0.0346** | CLOVE, CARP, STALK, CRAB | max overlap 2/4
+11. **0.0342** | SPEED, CLOVE, STALK, CRAB | max overlap 2/4
+12. **0.0340** | SPEED, CARP, STALK, CRAB | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0197** | exact groups: 0/4
+   - 0.0242 | GRUMBLE, CRAB, BLINDFOLD, BELLYACHE
+   - 0.0216 | FLORET, CLOVE, CARP, STALK
+   - 0.0204 | SCALES, RESOLUTION, RAM, STORAGE
+   - 0.0184 | SPEED, SPEAR, ROBE, SWORD
+2. **0.0195** | exact groups: 1/4
+   - 0.0306 | SPEED, RESOLUTION, RAM, STORAGE
+   - 0.0242 | GRUMBLE, CRAB, BLINDFOLD, BELLYACHE
+   - 0.0187 | CLOVE, CARP, ROBE, SWORD
+   - 0.0176 | FLORET, SCALES, STALK, SPEAR
+3. **0.0195** | exact groups: 0/4
+   - 0.0242 | GRUMBLE, CRAB, BLINDFOLD, BELLYACHE
+   - 0.0231 | RESOLUTION, CARP, RAM, STORAGE
+   - 0.0184 | SPEED, SPEAR, ROBE, SWORD
+   - 0.0183 | FLORET, SCALES, CLOVE, STALK
+
+## Puzzle 63 (ID: 183)
+Words: SILK, LACE, LAND, SOLE, SETTLE, BLOW, BABY, EYELET, PACKAGE, SPEECH, PERCH, ROOST, CHIFFON, TONGUE, SATIN, VELVET
+
+### Top Raw Candidate Groups
+1. **0.1242** | SILK, LACE, SATIN, VELVET | max overlap 3/4
+2. **0.1066** | SILK, LACE, CHIFFON, VELVET | max overlap 3/4
+3. **0.0991** | SILK, LACE, CHIFFON, SATIN | max overlap 3/4
+4. **0.0979** | SILK, CHIFFON, SATIN, VELVET | EXACT
+5. **0.0890** | LACE, CHIFFON, SATIN, VELVET | max overlap 3/4
+6. **0.0873** | SOLE, SETTLE, BLOW, PERCH | max overlap 2/4
+7. **0.0861** | LACE, BLOW, TONGUE, VELVET | max overlap 2/4
+8. **0.0838** | SILK, LACE, TONGUE, VELVET | max overlap 2/4
+9. **0.0829** | LAND, SOLE, BLOW, TONGUE | max overlap 2/4
+10. **0.0734** | LACE, SOLE, BLOW, TONGUE | max overlap 3/4
+11. **0.0733** | SILK, LACE, BLOW, VELVET | max overlap 2/4
+12. **0.0720** | LACE, LAND, SOLE, TONGUE | max overlap 3/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 64 (ID: 781)
+Words: LAUGH, RAIL, AID, STRAW, EYE, ROCK, RESORT, PARTY, COMING, LADY, NATURE, FIDDLE, NATIONS, SUPPER, RESPONDER, GUESS
+
+### Top Raw Candidate Groups
+1. **0.0821** | ROCK, PARTY, LADY, SUPPER | max overlap 2/4
+2. **0.0810** | STRAW, PARTY, LADY, SUPPER | max overlap 2/4
+3. **0.0809** | STRAW, ROCK, PARTY, SUPPER | max overlap 2/4
+4. **0.0797** | STRAW, ROCK, PARTY, LADY | max overlap 2/4
+5. **0.0754** | STRAW, ROCK, LADY, SUPPER | max overlap 2/4
+6. **0.0736** | LAUGH, EYE, ROCK, LADY | max overlap 2/4
+7. **0.0644** | LAUGH, ROCK, PARTY, LADY | max overlap 2/4
+8. **0.0604** | STRAW, EYE, ROCK, LADY | max overlap 2/4
+9. **0.0588** | AID, ROCK, PARTY, SUPPER | max overlap 2/4
+10. **0.0583** | LAUGH, STRAW, ROCK, LADY | max overlap 2/4
+11. **0.0568** | AID, STRAW, ROCK, PARTY | max overlap 2/4
+12. **0.0543** | LAUGH, EYE, ROCK, PARTY | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0224** | exact groups: 0/4
+   - 0.0269 | AID, RESORT, PARTY, RESPONDER
+   - 0.0256 | STRAW, COMING, LADY, SUPPER
+   - 0.0250 | LAUGH, RAIL, EYE, FIDDLE
+   - 0.0196 | ROCK, NATURE, NATIONS, GUESS
+2. **0.0220** | exact groups: 0/4
+   - 0.0293 | LAUGH, ROCK, NATURE, GUESS
+   - 0.0244 | RAIL, PARTY, COMING, FIDDLE
+   - 0.0227 | AID, EYE, RESORT, RESPONDER
+   - 0.0205 | STRAW, LADY, NATIONS, SUPPER
+3. **0.0218** | exact groups: 0/4
+   - 0.0349 | AID, RESORT, PARTY, COMING
+   - 0.0250 | LAUGH, RAIL, EYE, FIDDLE
+   - 0.0231 | STRAW, LADY, SUPPER, RESPONDER
+   - 0.0196 | ROCK, NATURE, NATIONS, GUESS
+
+## Puzzle 65 (ID: 513)
+Words: TURTLE, DONKEY, CARPET, PRINCESS, FLEECE, MUSHROOM, MARKER, EGG, CLAM, NUT, OGRE, KINGDOM, DRAGON, PEACH, PIPE CLEANER, CATERPILLAR
+
+### Top Raw Candidate Groups
+1. **0.0968** | TURTLE, EGG, CLAM, NUT | EXACT
+2. **0.0909** | CARPET, EGG, CLAM, NUT | max overlap 3/4
+3. **0.0854** | TURTLE, EGG, NUT, DRAGON | max overlap 3/4
+4. **0.0848** | MARKER, EGG, CLAM, NUT | max overlap 3/4
+5. **0.0846** | CARPET, MARKER, EGG, DRAGON | max overlap 2/4
+6. **0.0829** | EGG, CLAM, NUT, DRAGON | max overlap 3/4
+7. **0.0817** | TURTLE, CLAM, NUT, PEACH | max overlap 3/4
+8. **0.0808** | TURTLE, MARKER, EGG, CLAM | max overlap 3/4
+9. **0.0806** | TURTLE, MARKER, EGG, DRAGON | max overlap 2/4
+10. **0.0798** | CARPET, MARKER, NUT, DRAGON | max overlap 2/4
+11. **0.0793** | TURTLE, PRINCESS, CLAM, PEACH | max overlap 2/4
+12. **0.0788** | TURTLE, CLAM, NUT, DRAGON | max overlap 3/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 66 (ID: 999)
+Words: WEARABLE, WHEREFORE, FISHBOWL, WAREHOUSE, FOZZIE, HOT SEAT, MICROSCOPE, VIDEO GAME, GONZO, SPOTLIGHT, ANIMAL, COMPANY, BEAKER, E STREET BAND, MAFIA, WEREWOLF
+
+### Top Raw Candidate Groups
+1. **0.0311** | HOT SEAT, ANIMAL, BEAKER, WEREWOLF | max overlap 2/4
+2. **0.0287** | FISHBOWL, HOT SEAT, ANIMAL, BEAKER | max overlap 2/4
+3. **0.0269** | HOT SEAT, ANIMAL, COMPANY, BEAKER | max overlap 2/4
+4. **0.0226** | WEARABLE, HOT SEAT, ANIMAL, BEAKER | max overlap 2/4
+5. **0.0224** | HOT SEAT, MICROSCOPE, ANIMAL, BEAKER | max overlap 2/4
+6. **0.0215** | FOZZIE, HOT SEAT, ANIMAL, BEAKER | max overlap 3/4
+7. **0.0202** | ANIMAL, COMPANY, BEAKER, WEREWOLF | max overlap 2/4
+8. **0.0187** | FISHBOWL, ANIMAL, BEAKER, WEREWOLF | max overlap 2/4
+9. **0.0187** | WAREHOUSE, HOT SEAT, ANIMAL, BEAKER | max overlap 2/4
+10. **0.0184** | WEARABLE, HOT SEAT, ANIMAL, WEREWOLF | max overlap 2/4
+11. **0.0179** | FOZZIE, ANIMAL, BEAKER, WEREWOLF | max overlap 3/4
+12. **0.0179** | WAREHOUSE, COMPANY, E STREET BAND, MAFIA | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0121** | exact groups: 0/4
+   - 0.0215 | FOZZIE, HOT SEAT, ANIMAL, BEAKER
+   - 0.0147 | WEARABLE, FISHBOWL, VIDEO GAME, WEREWOLF
+   - 0.0138 | WHEREFORE, WAREHOUSE, MICROSCOPE, SPOTLIGHT
+   - 0.0099 | GONZO, COMPANY, E STREET BAND, MAFIA
+2. **0.0109** | exact groups: 0/4
+   - 0.0137 | WHEREFORE, MICROSCOPE, VIDEO GAME, SPOTLIGHT
+   - 0.0131 | WEARABLE, FISHBOWL, HOT SEAT, WEREWOLF
+   - 0.0128 | FOZZIE, ANIMAL, COMPANY, BEAKER
+   - 0.0089 | WAREHOUSE, GONZO, E STREET BAND, MAFIA
+3. **0.0108** | exact groups: 0/4
+   - 0.0137 | WHEREFORE, WAREHOUSE, VIDEO GAME, SPOTLIGHT
+   - 0.0129 | FOZZIE, HOT SEAT, ANIMAL, WEREWOLF
+   - 0.0105 | WEARABLE, FISHBOWL, MICROSCOPE, BEAKER
+   - 0.0099 | GONZO, COMPANY, E STREET BAND, MAFIA
+
+## Puzzle 67 (ID: 737)
+Words: TIMEOUT, HOTEL, FLIGHT, MARIONETTE, FREEZE, ELEPHANT, RESOLVE, SPIRIT, FIGHT, GRIT, QUIT, FAWN, MOUSE, TOUR, GLITCH, CAR
+
+### Top Raw Candidate Groups
+1. **0.0713** | RESOLVE, QUIT, MOUSE, CAR | max overlap 1/4
+2. **0.0669** | TIMEOUT, FLIGHT, TOUR, CAR | max overlap 3/4
+3. **0.0646** | TIMEOUT, FIGHT, TOUR, CAR | max overlap 2/4
+4. **0.0614** | FLIGHT, FIGHT, TOUR, CAR | max overlap 3/4
+5. **0.0570** | TIMEOUT, FLIGHT, FIGHT, TOUR | max overlap 2/4
+6. **0.0538** | TIMEOUT, FLIGHT, FIGHT, CAR | max overlap 2/4
+7. **0.0499** | RESOLVE, FIGHT, QUIT, CAR | max overlap 2/4
+8. **0.0470** | FIGHT, QUIT, MOUSE, CAR | max overlap 1/4
+9. **0.0442** | FIGHT, QUIT, TOUR, CAR | max overlap 2/4
+10. **0.0435** | RESOLVE, FIGHT, MOUSE, CAR | max overlap 2/4
+11. **0.0420** | TIMEOUT, FIGHT, QUIT, CAR | max overlap 2/4
+12. **0.0398** | FLIGHT, QUIT, TOUR, CAR | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0205** | exact groups: 0/4
+   - 0.0225 | RESOLVE, SPIRIT, GRIT, QUIT
+   - 0.0223 | HOTEL, MARIONETTE, ELEPHANT, MOUSE
+   - 0.0210 | TIMEOUT, FLIGHT, FREEZE, GLITCH
+   - 0.0194 | FIGHT, FAWN, TOUR, CAR
+2. **0.0193** | exact groups: 0/4
+   - 0.0275 | TIMEOUT, FREEZE, TOUR, CAR
+   - 0.0223 | HOTEL, MARIONETTE, ELEPHANT, MOUSE
+   - 0.0192 | FLIGHT, RESOLVE, SPIRIT, GLITCH
+   - 0.0179 | FIGHT, GRIT, QUIT, FAWN
+3. **0.0185** | exact groups: 0/4
+   - 0.0234 | TIMEOUT, FIGHT, GRIT, TOUR
+   - 0.0223 | HOTEL, MARIONETTE, ELEPHANT, MOUSE
+   - 0.0212 | RESOLVE, QUIT, FAWN, CAR
+   - 0.0152 | FLIGHT, FREEZE, SPIRIT, GLITCH
+
+## Puzzle 68 (ID: 897)
+Words: TWO-BIT, LOTTERY TICKET, CALAMINE LOTION, HAPPY MEAL, BUG BITE, FLAMINGO, TRIVIAL, SUNNY-SIDE UP, VINYL RECORD, YOUR HEAD, CHERRY BLOSSOM, BARBIE DREAMHOUSE, MERRY-GO-ROUND, MICKEY MOUSE, GLAD-HAND, RINKY-DINK
+
+### Top Raw Candidate Groups
+1. **0.0239** | HAPPY MEAL, SUNNY-SIDE UP, MERRY-GO-ROUND, GLAD-HAND | EXACT
+2. **0.0225** | SUNNY-SIDE UP, MERRY-GO-ROUND, GLAD-HAND, RINKY-DINK | max overlap 3/4
+3. **0.0223** | HAPPY MEAL, SUNNY-SIDE UP, CHERRY BLOSSOM, GLAD-HAND | max overlap 3/4
+4. **0.0216** | LOTTERY TICKET, HAPPY MEAL, YOUR HEAD, GLAD-HAND | max overlap 2/4
+5. **0.0211** | HAPPY MEAL, FLAMINGO, SUNNY-SIDE UP, GLAD-HAND | max overlap 3/4
+6. **0.0206** | FLAMINGO, SUNNY-SIDE UP, MERRY-GO-ROUND, GLAD-HAND | max overlap 3/4
+7. **0.0205** | HAPPY MEAL, FLAMINGO, SUNNY-SIDE UP, MERRY-GO-ROUND | max overlap 3/4
+8. **0.0197** | LOTTERY TICKET, HAPPY MEAL, CHERRY BLOSSOM, GLAD-HAND | max overlap 2/4
+9. **0.0197** | HAPPY MEAL, FLAMINGO, MERRY-GO-ROUND, MICKEY MOUSE | max overlap 2/4
+10. **0.0197** | HAPPY MEAL, FLAMINGO, SUNNY-SIDE UP, CHERRY BLOSSOM | max overlap 2/4
+11. **0.0196** | HAPPY MEAL, SUNNY-SIDE UP, CHERRY BLOSSOM, MERRY-GO-ROUND | max overlap 3/4
+12. **0.0195** | SUNNY-SIDE UP, CHERRY BLOSSOM, MERRY-GO-ROUND, GLAD-HAND | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0074** | exact groups: 0/4
+   - 0.0093 | LOTTERY TICKET, SUNNY-SIDE UP, VINYL RECORD, CHERRY BLOSSOM
+   - 0.0091 | TWO-BIT, BARBIE DREAMHOUSE, MICKEY MOUSE, RINKY-DINK
+   - 0.0078 | CALAMINE LOTION, BUG BITE, FLAMINGO, MERRY-GO-ROUND
+   - 0.0064 | HAPPY MEAL, TRIVIAL, YOUR HEAD, GLAD-HAND
+2. **0.0068** | exact groups: 0/4
+   - 0.0091 | TWO-BIT, BARBIE DREAMHOUSE, MICKEY MOUSE, RINKY-DINK
+   - 0.0074 | LOTTERY TICKET, CALAMINE LOTION, BUG BITE, FLAMINGO
+   - 0.0070 | SUNNY-SIDE UP, VINYL RECORD, CHERRY BLOSSOM, MERRY-GO-ROUND
+   - 0.0064 | HAPPY MEAL, TRIVIAL, YOUR HEAD, GLAD-HAND
+3. **0.0067** | exact groups: 0/4
+   - 0.0091 | TWO-BIT, BARBIE DREAMHOUSE, MICKEY MOUSE, RINKY-DINK
+   - 0.0074 | CALAMINE LOTION, BUG BITE, FLAMINGO, CHERRY BLOSSOM
+   - 0.0064 | HAPPY MEAL, TRIVIAL, YOUR HEAD, GLAD-HAND
+   - 0.0064 | LOTTERY TICKET, SUNNY-SIDE UP, VINYL RECORD, MERRY-GO-ROUND
+
+## Puzzle 69 (ID: 740)
+Words: MUSEUM, BUTTON, TAPE, RECORD, SHOOT, SNAKE, HITMAN, UNDERTAKER, ROCK, SEAL, SCISSORS, THREAD, FILM, POETIC, PAPER, NEEDLE
+
+### Top Raw Candidate Groups
+1. **0.1584** | TAPE, RECORD, FILM, PAPER | max overlap 3/4
+2. **0.1242** | RECORD, SHOOT, FILM, PAPER | max overlap 3/4
+3. **0.1194** | TAPE, RECORD, SHOOT, FILM | EXACT
+4. **0.1140** | RECORD, ROCK, FILM, PAPER | max overlap 2/4
+5. **0.1095** | TAPE, SHOOT, FILM, PAPER | max overlap 3/4
+6. **0.1080** | SHOOT, ROCK, FILM, PAPER | max overlap 2/4
+7. **0.1045** | SHOOT, SNAKE, FILM, PAPER | max overlap 2/4
+8. **0.1020** | BUTTON, ROCK, SCISSORS, PAPER | max overlap 2/4
+9. **0.0993** | TAPE, RECORD, ROCK, PAPER | max overlap 2/4
+10. **0.0990** | RECORD, SHOOT, THREAD, FILM | max overlap 3/4
+11. **0.0939** | SHOOT, ROCK, SCISSORS, PAPER | max overlap 1/4
+12. **0.0930** | TAPE, ROCK, FILM, PAPER | max overlap 2/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 70 (ID: 4)
+Words: SWEEP, CAROUSEL, BAT, MOP, SPIDER, REEBOK, ADIDAS, DUST, IRON, PUMA, SUPER, CATS, VACUUM, NIKE, CABARET, CHICAGO
+
+### Top Raw Candidate Groups
+1. **0.0890** | BAT, MOP, SPIDER, DUST | max overlap 2/4
+2. **0.0869** | DUST, IRON, SUPER, VACUUM | max overlap 2/4
+3. **0.0848** | BAT, SPIDER, DUST, SUPER | max overlap 3/4
+4. **0.0847** | BAT, MOP, DUST, SUPER | max overlap 2/4
+5. **0.0833** | BAT, MOP, SPIDER, SUPER | max overlap 3/4
+6. **0.0807** | SPIDER, DUST, PUMA, SUPER | max overlap 2/4
+7. **0.0802** | MOP, SPIDER, DUST, SUPER | max overlap 2/4
+8. **0.0799** | BAT, DUST, IRON, SUPER | max overlap 3/4
+9. **0.0768** | BAT, SPIDER, PUMA, SUPER | max overlap 3/4
+10. **0.0767** | BAT, SPIDER, DUST, PUMA | max overlap 2/4
+11. **0.0765** | DUST, IRON, PUMA, SUPER | max overlap 2/4
+12. **0.0761** | BAT, SPIDER, DUST, IRON | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0240** | exact groups: 0/4
+   - 0.0373 | SWEEP, BAT, MOP, CATS
+   - 0.0316 | CAROUSEL, SPIDER, PUMA, SUPER
+   - 0.0283 | DUST, IRON, VACUUM, CABARET
+   - 0.0180 | REEBOK, ADIDAS, NIKE, CHICAGO
+2. **0.0224** | exact groups: 0/4
+   - 0.0283 | DUST, IRON, VACUUM, CABARET
+   - 0.0273 | MOP, PUMA, SUPER, CATS
+   - 0.0262 | SWEEP, CAROUSEL, BAT, SPIDER
+   - 0.0180 | REEBOK, ADIDAS, NIKE, CHICAGO
+3. **0.0219** | exact groups: 0/4
+   - 0.0342 | SWEEP, DUST, CATS, VACUUM
+   - 0.0317 | CAROUSEL, BAT, MOP, SPIDER
+   - 0.0200 | IRON, PUMA, SUPER, CABARET
+   - 0.0180 | REEBOK, ADIDAS, NIKE, CHICAGO
+
+## Puzzle 71 (ID: 465)
+Words: DISH, DOPE, SNOOP, PORCH, SCOOP, SIZZLE, DEMO, DROOP, BLOOPER, LAD, STOOP, GOOF, HIGHLIGHT, DECK, YARD, INFO
+
+### Top Raw Candidate Groups
+1. **0.1041** | SNOOP, SCOOP, DROOP, STOOP | max overlap 2/4
+2. **0.0851** | PORCH, STOOP, DECK, YARD | EXACT
+3. **0.0807** | DISH, DOPE, GOOF, YARD | max overlap 2/4
+4. **0.0783** | DISH, SCOOP, BLOOPER, GOOF | max overlap 2/4
+5. **0.0776** | DISH, DOPE, SCOOP, YARD | max overlap 3/4
+6. **0.0760** | SCOOP, BLOOPER, STOOP, GOOF | max overlap 1/4
+7. **0.0746** | DISH, DOPE, SCOOP, GOOF | max overlap 3/4
+8. **0.0739** | DOPE, SCOOP, STOOP, YARD | max overlap 2/4
+9. **0.0735** | DISH, DOPE, BLOOPER, GOOF | max overlap 2/4
+10. **0.0725** | DOPE, STOOP, GOOF, YARD | max overlap 2/4
+11. **0.0713** | DISH, SCOOP, BLOOPER, YARD | max overlap 2/4
+12. **0.0711** | DISH, SCOOP, GOOF, YARD | max overlap 2/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 72 (ID: 1057)
+Words: THE PENTAGON, FILM NERD, MAKING OUT, LEFT FIELD, THE BLUE, NECKING, FIRST BASE, HOME PLATE, MEMENTO, NOWHERE, THIN AIR, TONSIL HOCKEY, BURGER KING WHOPPER, PITCHER'S MOUND, SCHOOL CROSSING SIGN, JEANS BACK POCKET
+
+### Top Raw Candidate Groups
+1. **0.0548** | LEFT FIELD, FIRST BASE, HOME PLATE, PITCHER'S MOUND | max overlap 1/4
+2. **0.0431** | LEFT FIELD, THE BLUE, FIRST BASE, HOME PLATE | max overlap 2/4
+3. **0.0430** | THE PENTAGON, LEFT FIELD, FIRST BASE, HOME PLATE | max overlap 2/4
+4. **0.0378** | MAKING OUT, LEFT FIELD, FIRST BASE, HOME PLATE | max overlap 2/4
+5. **0.0369** | FILM NERD, LEFT FIELD, FIRST BASE, HOME PLATE | max overlap 1/4
+6. **0.0336** | LEFT FIELD, FIRST BASE, HOME PLATE, NOWHERE | max overlap 2/4
+7. **0.0308** | LEFT FIELD, FIRST BASE, HOME PLATE, TONSIL HOCKEY | max overlap 2/4
+8. **0.0280** | LEFT FIELD, NECKING, FIRST BASE, HOME PLATE | max overlap 2/4
+9. **0.0280** | LEFT FIELD, FIRST BASE, HOME PLATE, MEMENTO | max overlap 1/4
+10. **0.0280** | LEFT FIELD, FIRST BASE, HOME PLATE, THIN AIR | max overlap 2/4
+11. **0.0280** | LEFT FIELD, FIRST BASE, HOME PLATE, BURGER KING WHOPPER | max overlap 1/4
+12. **0.0280** | LEFT FIELD, FIRST BASE, HOME PLATE, SCHOOL CROSSING SIGN | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0036** | exact groups: 0/4
+   - 0.0164 | THE PENTAGON, LEFT FIELD, THE BLUE, FIRST BASE
+   - 0.0050 | NECKING, MEMENTO, TONSIL HOCKEY, PITCHER'S MOUND
+   - 0.0038 | NOWHERE, THIN AIR, BURGER KING WHOPPER, JEANS BACK POCKET
+   - 0.0028 | FILM NERD, MAKING OUT, HOME PLATE, SCHOOL CROSSING SIGN
+2. **0.0036** | exact groups: 0/4
+   - 0.0142 | THE PENTAGON, LEFT FIELD, THE BLUE, HOME PLATE
+   - 0.0050 | NECKING, MEMENTO, TONSIL HOCKEY, PITCHER'S MOUND
+   - 0.0038 | NOWHERE, THIN AIR, BURGER KING WHOPPER, JEANS BACK POCKET
+   - 0.0028 | FILM NERD, MAKING OUT, FIRST BASE, SCHOOL CROSSING SIGN
+3. **0.0036** | exact groups: 0/4
+   - 0.0174 | THE PENTAGON, THE BLUE, FIRST BASE, HOME PLATE
+   - 0.0050 | NECKING, MEMENTO, TONSIL HOCKEY, PITCHER'S MOUND
+   - 0.0038 | NOWHERE, THIN AIR, BURGER KING WHOPPER, JEANS BACK POCKET
+   - 0.0028 | FILM NERD, MAKING OUT, LEFT FIELD, SCHOOL CROSSING SIGN
+
+## Puzzle 73 (ID: 446)
+Words: ROW, DIAMOND, DIVE, GLITTER, BOX, TEMPLE, FENCE, CUBE, GOLD, SEQUIN, LIGHTHOUSE, MACHINE, PYRAMID, GARDENS, CREAM, STORM
+
+### Top Raw Candidate Groups
+1. **0.0966** | DIAMOND, BOX, CUBE, PYRAMID | max overlap 1/4
+2. **0.0878** | BOX, FENCE, CUBE, MACHINE | max overlap 2/4
+3. **0.0732** | DIAMOND, DIVE, BOX, CREAM | max overlap 2/4
+4. **0.0728** | BOX, FENCE, CUBE, PYRAMID | max overlap 2/4
+5. **0.0704** | DIVE, BOX, FENCE, MACHINE | max overlap 3/4
+6. **0.0702** | BOX, CUBE, MACHINE, PYRAMID | max overlap 2/4
+7. **0.0671** | BOX, FENCE, CUBE, GOLD | max overlap 2/4
+8. **0.0648** | BOX, FENCE, MACHINE, CREAM | max overlap 2/4
+9. **0.0639** | BOX, CUBE, MACHINE, CREAM | max overlap 3/4
+10. **0.0620** | DIAMOND, BOX, CUBE, MACHINE | max overlap 2/4
+11. **0.0617** | DIAMOND, BOX, CUBE, CREAM | max overlap 2/4
+12. **0.0615** | DIVE, BOX, MACHINE, CREAM | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0270** | exact groups: 1/4
+   - 0.0442 | DIVE, BOX, GOLD, CREAM
+   - 0.0401 | ROW, FENCE, CUBE, MACHINE
+   - 0.0268 | TEMPLE, LIGHTHOUSE, PYRAMID, GARDENS
+   - 0.0205 | DIAMOND, GLITTER, SEQUIN, STORM
+2. **0.0267** | exact groups: 1/4
+   - 0.0510 | ROW, BOX, CUBE, MACHINE
+   - 0.0389 | DIVE, FENCE, GOLD, CREAM
+   - 0.0268 | TEMPLE, LIGHTHOUSE, PYRAMID, GARDENS
+   - 0.0205 | DIAMOND, GLITTER, SEQUIN, STORM
+3. **0.0265** | exact groups: 1/4
+   - 0.0291 | ROW, DIVE, MACHINE, CREAM
+   - 0.0271 | GLITTER, FENCE, GOLD, STORM
+   - 0.0268 | TEMPLE, LIGHTHOUSE, PYRAMID, GARDENS
+   - 0.0260 | DIAMOND, BOX, CUBE, SEQUIN
+
+## Puzzle 74 (ID: 301)
+Words: PEANUTS, PIGPEN, SOLID, DUMP, SOUND, PRIZE, DARK, MESS, FIRM, STY, CRAZY, CARAMEL, STABLE, GIFT, POPCORN, CHARLEY
+
+### Top Raw Candidate Groups
+1. **0.1040** | SOLID, SOUND, FIRM, CRAZY | max overlap 3/4
+2. **0.0983** | SOLID, DUMP, SOUND, FIRM | max overlap 3/4
+3. **0.0819** | SOLID, SOUND, FIRM, STABLE | EXACT
+4. **0.0807** | DUMP, SOUND, FIRM, CRAZY | max overlap 2/4
+5. **0.0758** | SOLID, DUMP, FIRM, CRAZY | max overlap 2/4
+6. **0.0751** | SOLID, DUMP, SOUND, CRAZY | max overlap 2/4
+7. **0.0702** | SOLID, SOUND, FIRM, GIFT | max overlap 3/4
+8. **0.0656** | SOLID, SOUND, MESS, FIRM | max overlap 3/4
+9. **0.0647** | SOLID, DUMP, MESS, FIRM | max overlap 2/4
+10. **0.0622** | SOLID, SOUND, DARK, FIRM | max overlap 3/4
+11. **0.0615** | SOLID, DUMP, SOUND, STABLE | max overlap 3/4
+12. **0.0608** | DUMP, SOUND, FIRM, STABLE | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0272** | exact groups: 0/4
+   - 0.0372 | SOLID, PRIZE, DARK, MESS
+   - 0.0360 | DUMP, FIRM, CRAZY, GIFT
+   - 0.0281 | PIGPEN, SOUND, STY, STABLE
+   - 0.0223 | PEANUTS, CARAMEL, POPCORN, CHARLEY
+2. **0.0271** | exact groups: 0/4
+   - 0.0360 | DUMP, DARK, FIRM, CRAZY
+   - 0.0357 | SOLID, PRIZE, MESS, GIFT
+   - 0.0281 | PIGPEN, SOUND, STY, STABLE
+   - 0.0223 | PEANUTS, CARAMEL, POPCORN, CHARLEY
+3. **0.0257** | exact groups: 0/4
+   - 0.0349 | SOLID, PRIZE, CRAZY, GIFT
+   - 0.0302 | DUMP, DARK, MESS, FIRM
+   - 0.0281 | PIGPEN, SOUND, STY, STABLE
+   - 0.0223 | PEANUTS, CARAMEL, POPCORN, CHARLEY
+
+## Puzzle 75 (ID: 1028)
+Words: MONKEY, FELLOW, CONTACT, UNEVEN, ASSOCIATE, COLLEAGUE, SPECTACLE, GOGGLE, LOOK, STYLE, PEER, DESIGN, PULL-UP, SCHEME, PARALLEL, SHADE
+
+### Top Raw Candidate Groups
+1. **0.0843** | UNEVEN, ASSOCIATE, SCHEME, PARALLEL | max overlap 2/4
+2. **0.0833** | FELLOW, ASSOCIATE, COLLEAGUE, PEER | EXACT
+3. **0.0674** | ASSOCIATE, PEER, SCHEME, PARALLEL | max overlap 2/4
+4. **0.0592** | MONKEY, FELLOW, ASSOCIATE, COLLEAGUE | max overlap 3/4
+5. **0.0561** | LOOK, STYLE, PARALLEL, SHADE | max overlap 2/4
+6. **0.0547** | FELLOW, ASSOCIATE, PEER, SCHEME | max overlap 3/4
+7. **0.0540** | MONKEY, FELLOW, ASSOCIATE, PEER | max overlap 3/4
+8. **0.0534** | FELLOW, ASSOCIATE, COLLEAGUE, SCHEME | max overlap 3/4
+9. **0.0531** | UNEVEN, ASSOCIATE, PEER, SCHEME | max overlap 2/4
+10. **0.0521** | LOOK, STYLE, DESIGN, PARALLEL | max overlap 3/4
+11. **0.0513** | UNEVEN, ASSOCIATE, PEER, PARALLEL | max overlap 2/4
+12. **0.0509** | ASSOCIATE, COLLEAGUE, PEER, SCHEME | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0262** | exact groups: 0/4
+   - 0.0460 | UNEVEN, DESIGN, SCHEME, PARALLEL
+   - 0.0408 | MONKEY, GOGGLE, LOOK, PEER
+   - 0.0285 | FELLOW, ASSOCIATE, COLLEAGUE, PULL-UP
+   - 0.0177 | CONTACT, SPECTACLE, STYLE, SHADE
+2. **0.0261** | exact groups: 0/4
+   - 0.0336 | CONTACT, GOGGLE, LOOK, PEER
+   - 0.0324 | MONKEY, UNEVEN, SCHEME, PARALLEL
+   - 0.0285 | FELLOW, ASSOCIATE, COLLEAGUE, PULL-UP
+   - 0.0218 | SPECTACLE, STYLE, DESIGN, SHADE
+3. **0.0261** | exact groups: 0/4
+   - 0.0592 | MONKEY, FELLOW, ASSOCIATE, COLLEAGUE
+   - 0.0460 | UNEVEN, DESIGN, SCHEME, PARALLEL
+   - 0.0231 | GOGGLE, LOOK, PEER, PULL-UP
+   - 0.0177 | CONTACT, SPECTACLE, STYLE, SHADE
+
+## Puzzle 76 (ID: 349)
+Words: SIGN, ENDORSE, BILLBOARD, BANNER, INITIAL, PREMIER, POSTER, USE, HERE, CHAMPION, WEE, SUPPORT, FIRST, MAIDEN, BACK, THEME
+
+### Top Raw Candidate Groups
+1. **0.0925** | SIGN, BILLBOARD, BANNER, POSTER | EXACT
+2. **0.0901** | SIGN, ENDORSE, SUPPORT, BACK | max overlap 3/4
+3. **0.0862** | ENDORSE, CHAMPION, SUPPORT, BACK | EXACT
+4. **0.0774** | ENDORSE, PREMIER, SUPPORT, BACK | max overlap 3/4
+5. **0.0766** | SIGN, ENDORSE, INITIAL, SUPPORT | max overlap 2/4
+6. **0.0758** | ENDORSE, USE, SUPPORT, BACK | max overlap 3/4
+7. **0.0738** | BILLBOARD, BANNER, PREMIER, POSTER | max overlap 3/4
+8. **0.0733** | HERE, CHAMPION, FIRST, BACK | max overlap 2/4
+9. **0.0715** | PREMIER, HERE, CHAMPION, BACK | max overlap 2/4
+10. **0.0710** | SIGN, BILLBOARD, PREMIER, POSTER | max overlap 3/4
+11. **0.0701** | PREMIER, POSTER, HERE, BACK | max overlap 1/4
+12. **0.0699** | SIGN, BILLBOARD, POSTER, BACK | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0425** | exact groups: 0/4
+   - 0.0766 | SIGN, ENDORSE, INITIAL, SUPPORT
+   - 0.0715 | PREMIER, HERE, CHAMPION, BACK
+   - 0.0402 | BILLBOARD, BANNER, POSTER, THEME
+   - 0.0292 | USE, WEE, FIRST, MAIDEN
+2. **0.0423** | exact groups: 0/4
+   - 0.0622 | SIGN, BILLBOARD, INITIAL, POSTER
+   - 0.0603 | ENDORSE, HERE, CHAMPION, BACK
+   - 0.0506 | BANNER, PREMIER, SUPPORT, THEME
+   - 0.0292 | USE, WEE, FIRST, MAIDEN
+3. **0.0422** | exact groups: 1/4
+   - 0.0602 | SIGN, ENDORSE, USE, SUPPORT
+   - 0.0585 | INITIAL, PREMIER, FIRST, MAIDEN
+   - 0.0402 | BILLBOARD, BANNER, POSTER, THEME
+   - 0.0351 | HERE, CHAMPION, WEE, BACK
+
+## Puzzle 77 (ID: 657)
+Words: CARGO, CRYSTAL, LINEN, MAN, COMMANDO, SILVER, CANAL, CHINA, BOXER, PLAN, WITNESS, CLUE, BIKE, BERMUDA, BRAZIL, PANAMA
+
+### Top Raw Candidate Groups
+1. **0.0658** | CRYSTAL, MAN, CLUE, BIKE | max overlap 1/4
+2. **0.0457** | MAN, PLAN, CLUE, BIKE | max overlap 2/4
+3. **0.0422** | MAN, CANAL, CHINA, BOXER | max overlap 2/4
+4. **0.0418** | CRYSTAL, SILVER, CLUE, BIKE | max overlap 2/4
+5. **0.0417** | MAN, COMMANDO, BOXER, WITNESS | max overlap 2/4
+6. **0.0407** | MAN, COMMANDO, BOXER, PLAN | max overlap 2/4
+7. **0.0385** | MAN, CANAL, CHINA, PANAMA | max overlap 3/4
+8. **0.0383** | MAN, COMMANDO, BOXER, BIKE | max overlap 2/4
+9. **0.0382** | MAN, COMMANDO, PLAN, CLUE | max overlap 2/4
+10. **0.0381** | CRYSTAL, MAN, PLAN, CLUE | max overlap 2/4
+11. **0.0370** | MAN, COMMANDO, CHINA, BOXER | max overlap 1/4
+12. **0.0365** | MAN, CHINA, BOXER, BIKE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0257** | exact groups: 0/4
+   - 0.0418 | CRYSTAL, SILVER, CLUE, BIKE
+   - 0.0338 | CHINA, BERMUDA, BRAZIL, PANAMA
+   - 0.0308 | MAN, COMMANDO, PLAN, WITNESS
+   - 0.0191 | CARGO, LINEN, CANAL, BOXER
+2. **0.0211** | exact groups: 0/4
+   - 0.0338 | CHINA, BERMUDA, BRAZIL, PANAMA
+   - 0.0243 | COMMANDO, PLAN, CLUE, BIKE
+   - 0.0219 | CRYSTAL, MAN, SILVER, WITNESS
+   - 0.0191 | CARGO, LINEN, CANAL, BOXER
+3. **0.0210** | exact groups: 0/4
+   - 0.0325 | CANAL, CHINA, BRAZIL, PANAMA
+   - 0.0258 | SILVER, PLAN, CLUE, BIKE
+   - 0.0195 | CRYSTAL, MAN, WITNESS, BERMUDA
+   - 0.0193 | CARGO, LINEN, COMMANDO, BOXER
+
+## Puzzle 78 (ID: 788)
+Words: BORE, GRAF, PUNCH, POKE, DEVIL, DRAG, VULCAN, SCROLL, BATMAN, ELF, HOVER, PIERCE, CLICK, BORG, KING, SINNER
+
+### Top Raw Candidate Groups
+1. **0.0969** | DRAG, SCROLL, HOVER, CLICK | EXACT
+2. **0.0965** | POKE, DRAG, HOVER, CLICK | max overlap 3/4
+3. **0.0921** | POKE, DRAG, SCROLL, HOVER | max overlap 3/4
+4. **0.0894** | POKE, DRAG, SCROLL, CLICK | max overlap 3/4
+5. **0.0894** | POKE, SCROLL, HOVER, CLICK | max overlap 3/4
+6. **0.0883** | GRAF, POKE, BORG, KING | max overlap 3/4
+7. **0.0868** | POKE, DRAG, CLICK, KING | max overlap 2/4
+8. **0.0862** | GRAF, POKE, DRAG, KING | max overlap 2/4
+9. **0.0859** | POKE, DRAG, ELF, HOVER | max overlap 2/4
+10. **0.0853** | POKE, DRAG, BORG, KING | max overlap 2/4
+11. **0.0849** | GRAF, POKE, DRAG, BORG | max overlap 2/4
+12. **0.0846** | DRAG, ELF, HOVER, CLICK | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0560** | exact groups: 1/4
+   - 0.0783 | SCROLL, ELF, HOVER, CLICK
+   - 0.0738 | GRAF, DRAG, VULCAN, BORG
+   - 0.0514 | DEVIL, BATMAN, KING, SINNER
+   - 0.0494 | BORE, PUNCH, POKE, PIERCE
+2. **0.0545** | exact groups: 0/4
+   - 0.0783 | SCROLL, ELF, HOVER, CLICK
+   - 0.0706 | PUNCH, POKE, PIERCE, KING
+   - 0.0596 | BORE, GRAF, DRAG, BORG
+   - 0.0439 | DEVIL, VULCAN, BATMAN, SINNER
+3. **0.0539** | exact groups: 1/4
+   - 0.0831 | GRAF, DRAG, BORG, KING
+   - 0.0783 | SCROLL, ELF, HOVER, CLICK
+   - 0.0494 | BORE, PUNCH, POKE, PIERCE
+   - 0.0439 | DEVIL, VULCAN, BATMAN, SINNER
+
+## Puzzle 79 (ID: 274)
+Words: MEOW, PAMPER, EYE, SLIPPERS, MOTHER, CRADLE, ROBE, TOWEL, PAJAMAS, WASHCLOTH, SPOIL, BABY, CAN, BUM, REAR, BOOTY
+
+### Top Raw Candidate Groups
+1. **0.0856** | PAMPER, CRADLE, SPOIL, BABY | max overlap 3/4
+2. **0.0834** | MEOW, MOTHER, BUM, BOOTY | max overlap 2/4
+3. **0.0824** | CRADLE, CAN, BUM, REAR | max overlap 3/4
+4. **0.0788** | CAN, BUM, REAR, BOOTY | EXACT
+5. **0.0784** | MEOW, CAN, BUM, REAR | max overlap 3/4
+6. **0.0741** | ROBE, CAN, BUM, REAR | max overlap 3/4
+7. **0.0741** | MEOW, EYE, CAN, BUM | max overlap 2/4
+8. **0.0739** | EYE, CAN, BUM, REAR | max overlap 3/4
+9. **0.0739** | MOTHER, CRADLE, CAN, BOOTY | max overlap 2/4
+10. **0.0738** | MEOW, MOTHER, CAN, BUM | max overlap 2/4
+11. **0.0737** | MOTHER, CAN, BUM, REAR | max overlap 3/4
+12. **0.0732** | MEOW, EYE, TOWEL, BUM | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0489** | exact groups: 1/4
+   - 0.0732 | MEOW, EYE, TOWEL, BUM
+   - 0.0714 | PAMPER, MOTHER, SPOIL, BABY
+   - 0.0623 | CRADLE, CAN, REAR, BOOTY
+   - 0.0310 | SLIPPERS, ROBE, PAJAMAS, WASHCLOTH
+2. **0.0455** | exact groups: 1/4
+   - 0.0856 | PAMPER, CRADLE, SPOIL, BABY
+   - 0.0788 | CAN, BUM, REAR, BOOTY
+   - 0.0411 | MEOW, EYE, MOTHER, TOWEL
+   - 0.0310 | SLIPPERS, ROBE, PAJAMAS, WASHCLOTH
+3. **0.0453** | exact groups: 0/4
+   - 0.0856 | PAMPER, CRADLE, SPOIL, BABY
+   - 0.0710 | MEOW, MOTHER, CAN, BOOTY
+   - 0.0481 | EYE, TOWEL, BUM, REAR
+   - 0.0310 | SLIPPERS, ROBE, PAJAMAS, WASHCLOTH
+
+## Puzzle 80 (ID: 769)
+Words: PASS, SPIKE, SNAP, WELL, TACK, DON, LEO, MIC, RAP, PUNT, BRAD, SPRING, PIN, NAIL, TAP, RAIN
+
+### Top Raw Candidate Groups
+1. **0.1392** | TACK, BRAD, PIN, NAIL | EXACT
+2. **0.1318** | PASS, SNAP, PIN, NAIL | max overlap 2/4
+3. **0.1278** | SNAP, RAP, PIN, TAP | max overlap 1/4
+4. **0.1275** | SNAP, BRAD, PIN, NAIL | max overlap 3/4
+5. **0.1249** | SNAP, PIN, NAIL, TAP | max overlap 2/4
+6. **0.1217** | PASS, TACK, PIN, NAIL | max overlap 3/4
+7. **0.1195** | PASS, SNAP, NAIL, TAP | max overlap 2/4
+8. **0.1162** | PASS, SNAP, PIN, TAP | max overlap 2/4
+9. **0.1126** | SPIKE, TACK, PIN, NAIL | max overlap 3/4
+10. **0.1100** | TACK, PIN, NAIL, TAP | max overlap 3/4
+11. **0.1090** | SPIKE, BRAD, PIN, NAIL | max overlap 3/4
+12. **0.1088** | PASS, SNAP, WELL, SPRING | max overlap 2/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 81 (ID: 550)
+Words: FUDGE, GEEZ, TEE (SHIRT), BANK, NUTS, DELTA, COMB, SAW, TEE (GOLF), BED, TEA, GEAR, RATS, TI (MUSICAL NOTE), ZIPPER, MOUTH
+
+### Top Raw Candidate Groups
+1. **0.0915** | NUTS, GEAR, ZIPPER, MOUTH | max overlap 2/4
+2. **0.0878** | BANK, NUTS, GEAR, MOUTH | max overlap 2/4
+3. **0.0864** | NUTS, SAW, GEAR, MOUTH | max overlap 2/4
+4. **0.0855** | BANK, NUTS, SAW, BED | max overlap 2/4
+5. **0.0838** | NUTS, SAW, BED, MOUTH | max overlap 2/4
+6. **0.0835** | NUTS, BED, GEAR, MOUTH | max overlap 2/4
+7. **0.0833** | NUTS, SAW, BED, ZIPPER | max overlap 2/4
+8. **0.0833** | NUTS, BED, ZIPPER, MOUTH | max overlap 2/4
+9. **0.0833** | NUTS, BED, GEAR, ZIPPER | max overlap 2/4
+10. **0.0827** | NUTS, SAW, GEAR, ZIPPER | max overlap 3/4
+11. **0.0827** | BANK, NUTS, BED, GEAR | max overlap 2/4
+12. **0.0826** | BANK, NUTS, BED, MOUTH | max overlap 3/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 82 (ID: 907)
+Words: STATUS, MASTERMIND, SITUATION, SORRY, DELICATE, SMALL, OPERATION, TOUGH, MOUSE TRAP, PILLOW, STORY, SWEET, DEAL, STICKY, COMPLEX, BABY
+
+### Top Raw Candidate Groups
+1. **0.0537** | SITUATION, OPERATION, STICKY, COMPLEX | max overlap 2/4
+2. **0.0534** | STATUS, SITUATION, OPERATION, COMPLEX | max overlap 2/4
+3. **0.0532** | STATUS, SITUATION, OPERATION, STICKY | max overlap 2/4
+4. **0.0498** | STATUS, OPERATION, STICKY, COMPLEX | max overlap 2/4
+5. **0.0484** | SITUATION, STORY, STICKY, COMPLEX | max overlap 2/4
+6. **0.0456** | SITUATION, OPERATION, STORY, STICKY | max overlap 2/4
+7. **0.0456** | SITUATION, OPERATION, STORY, COMPLEX | max overlap 2/4
+8. **0.0445** | OPERATION, STORY, STICKY, COMPLEX | max overlap 2/4
+9. **0.0388** | TOUGH, STORY, STICKY, COMPLEX | max overlap 3/4
+10. **0.0387** | DELICATE, TOUGH, STICKY, COMPLEX | EXACT
+11. **0.0386** | DELICATE, OPERATION, STICKY, COMPLEX | max overlap 3/4
+12. **0.0352** | DELICATE, SMALL, TOUGH, STICKY | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0227** | exact groups: 0/4
+   - 0.0277 | STATUS, MASTERMIND, OPERATION, COMPLEX
+   - 0.0259 | SORRY, TOUGH, SWEET, DEAL
+   - 0.0249 | DELICATE, SMALL, PILLOW, BABY
+   - 0.0200 | SITUATION, MOUSE TRAP, STORY, STICKY
+2. **0.0208** | exact groups: 1/4
+   - 0.0277 | STATUS, MASTERMIND, OPERATION, COMPLEX
+   - 0.0263 | SMALL, PILLOW, SWEET, BABY
+   - 0.0200 | SITUATION, MOUSE TRAP, STORY, STICKY
+   - 0.0185 | SORRY, DELICATE, TOUGH, DEAL
+3. **0.0207** | exact groups: 0/4
+   - 0.0277 | STATUS, MASTERMIND, OPERATION, COMPLEX
+   - 0.0256 | SORRY, DELICATE, TOUGH, SWEET
+   - 0.0200 | SITUATION, MOUSE TRAP, STORY, STICKY
+   - 0.0186 | SMALL, PILLOW, DEAL, BABY
+
+## Puzzle 83 (ID: 699)
+Words: COMIC, ENERGY, ABSENT, MINUS, LANDING, WANTING, SANS, SUNSET, LOVE, CHEERS, BEANS, BEST, PEP, BACON, SINCERELY, ZIP
+
+### Top Raw Candidate Groups
+1. **0.0810** | COMIC, LOVE, CHEERS, ZIP | max overlap 2/4
+2. **0.0556** | LOVE, CHEERS, SINCERELY, ZIP | max overlap 3/4
+3. **0.0517** | LOVE, CHEERS, BEST, SINCERELY | EXACT
+4. **0.0509** | COMIC, ABSENT, LOVE, CHEERS | max overlap 2/4
+5. **0.0503** | COMIC, LOVE, BACON, ZIP | max overlap 2/4
+6. **0.0497** | COMIC, LOVE, CHEERS, BEST | max overlap 3/4
+7. **0.0492** | COMIC, BEANS, BACON, ZIP | max overlap 2/4
+8. **0.0474** | COMIC, LOVE, SINCERELY, ZIP | max overlap 2/4
+9. **0.0464** | COMIC, CHEERS, SINCERELY, ZIP | max overlap 2/4
+10. **0.0462** | LOVE, BEST, SINCERELY, ZIP | max overlap 3/4
+11. **0.0455** | COMIC, LOVE, BEST, ZIP | max overlap 2/4
+12. **0.0449** | COMIC, ABSENT, LOVE, ZIP | max overlap 1/4
+
+### Top Raw Partitions
+1. **0.0287** | exact groups: 1/4
+   - 0.0517 | LOVE, CHEERS, BEST, SINCERELY
+   - 0.0341 | ENERGY, PEP, BACON, ZIP
+   - 0.0297 | ABSENT, LANDING, WANTING, SUNSET
+   - 0.0254 | COMIC, MINUS, SANS, BEANS
+2. **0.0279** | exact groups: 0/4
+   - 0.0347 | ABSENT, SUNSET, LOVE, CHEERS
+   - 0.0341 | ENERGY, PEP, BACON, ZIP
+   - 0.0268 | LANDING, WANTING, BEST, SINCERELY
+   - 0.0254 | COMIC, MINUS, SANS, BEANS
+3. **0.0273** | exact groups: 0/4
+   - 0.0415 | COMIC, LOVE, BEST, SINCERELY
+   - 0.0311 | ENERGY, CHEERS, PEP, ZIP
+   - 0.0297 | ABSENT, LANDING, WANTING, SUNSET
+   - 0.0241 | MINUS, SANS, BEANS, BACON
+
+## Puzzle 84 (ID: 118)
+Words: HANNAH, SAVANNA, CLIFF, SHARON, AARON, DREW, ROSE, EVE, WILL, DARREN, OTTO, NATAN, MAY, KAREN, DALE, BROOK
+
+### Top Raw Candidate Groups
+1. **0.0396** | SHARON, AARON, ROSE, DALE | max overlap 2/4
+2. **0.0374** | SHARON, DREW, ROSE, DALE | max overlap 2/4
+3. **0.0372** | SHARON, AARON, DARREN, KAREN | EXACT
+4. **0.0358** | SHARON, AARON, KAREN, DALE | max overlap 3/4
+5. **0.0357** | HANNAH, SHARON, AARON, DALE | max overlap 2/4
+6. **0.0350** | SHARON, AARON, DARREN, DALE | max overlap 3/4
+7. **0.0337** | HANNAH, AARON, DARREN, KAREN | max overlap 3/4
+8. **0.0330** | HANNAH, SHARON, AARON, KAREN | max overlap 3/4
+9. **0.0329** | SHARON, AARON, DALE, BROOK | max overlap 2/4
+10. **0.0328** | SHARON, AARON, ROSE, KAREN | max overlap 3/4
+11. **0.0327** | CLIFF, SHARON, AARON, DALE | max overlap 2/4
+12. **0.0324** | SHARON, AARON, DREW, ROSE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0206** | exact groups: 1/4
+   - 0.0239 | AARON, OTTO, KAREN, DALE
+   - 0.0220 | HANNAH, SAVANNA, SHARON, EVE
+   - 0.0203 | DREW, ROSE, WILL, MAY
+   - 0.0200 | CLIFF, DARREN, NATAN, BROOK
+2. **0.0206** | exact groups: 1/4
+   - 0.0224 | HANNAH, SAVANNA, CLIFF, DARREN
+   - 0.0212 | SHARON, AARON, EVE, NATAN
+   - 0.0204 | OTTO, KAREN, DALE, BROOK
+   - 0.0203 | DREW, ROSE, WILL, MAY
+3. **0.0205** | exact groups: 1/4
+   - 0.0220 | HANNAH, SAVANNA, SHARON, EVE
+   - 0.0210 | CLIFF, AARON, DARREN, NATAN
+   - 0.0204 | OTTO, KAREN, DALE, BROOK
+   - 0.0203 | DREW, ROSE, WILL, MAY
+
+## Puzzle 85 (ID: 739)
+Words: BALL, FOILS, BLOCKS, DESTINATION, GLOVES, MASKS, PAPERS, FINAL, ATTENDANCE, JACKS, HOMEWORK, STOPS, ROUTE, JACKETS, TRAIN, STARTING POINT
+
+### Top Raw Candidate Groups
+1. **0.0794** | FOILS, MASKS, PAPERS, JACKETS | max overlap 3/4
+2. **0.0676** | FOILS, BLOCKS, MASKS, STOPS | max overlap 2/4
+3. **0.0672** | FOILS, BLOCKS, MASKS, PAPERS | max overlap 2/4
+4. **0.0623** | FOILS, MASKS, JACKS, JACKETS | max overlap 3/4
+5. **0.0617** | FOILS, BLOCKS, MASKS, JACKETS | max overlap 3/4
+6. **0.0602** | BALL, JACKS, ROUTE, TRAIN | max overlap 3/4
+7. **0.0593** | FOILS, BLOCKS, MASKS, JACKS | max overlap 2/4
+8. **0.0581** | FOILS, BLOCKS, JACKS, STOPS | max overlap 2/4
+9. **0.0572** | BALL, DESTINATION, ROUTE, TRAIN | max overlap 2/4
+10. **0.0567** | FOILS, BLOCKS, PAPERS, JACKETS | max overlap 2/4
+11. **0.0562** | FOILS, BLOCKS, JACKS, JACKETS | max overlap 2/4
+12. **0.0559** | BLOCKS, MASKS, PAPERS, JACKETS | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0254** | exact groups: 0/4
+   - 0.0378 | DESTINATION, ROUTE, TRAIN, STARTING POINT
+   - 0.0364 | FOILS, MASKS, FINAL, STOPS
+   - 0.0299 | BALL, GLOVES, JACKS, JACKETS
+   - 0.0176 | BLOCKS, PAPERS, ATTENDANCE, HOMEWORK
+2. **0.0189** | exact groups: 0/4
+   - 0.0299 | BALL, GLOVES, JACKS, JACKETS
+   - 0.0205 | DESTINATION, STOPS, TRAIN, STARTING POINT
+   - 0.0200 | FOILS, MASKS, FINAL, ROUTE
+   - 0.0176 | BLOCKS, PAPERS, ATTENDANCE, HOMEWORK
+
+## Puzzle 86 (ID: 978)
+Words: INFERIORITY, ENCYCLOPEDIA, VESTIGE, ATLAS, CALLIOPE, OEDIPUS, RINGMASTER, REMINDER, SUPERIORITY, DIALECT, ELECTRA, THESAURUS, TRACE, DICTIONARY, BUZZARD, ECHO
+
+### Top Raw Candidate Groups
+1. **0.0747** | ATLAS, CALLIOPE, OEDIPUS, ELECTRA | max overlap 2/4
+2. **0.0698** | CALLIOPE, OEDIPUS, ELECTRA, ECHO | max overlap 2/4
+3. **0.0694** | ATLAS, CALLIOPE, OEDIPUS, ECHO | max overlap 1/4
+4. **0.0691** | ATLAS, CALLIOPE, ELECTRA, ECHO | max overlap 1/4
+5. **0.0664** | ATLAS, OEDIPUS, ELECTRA, ECHO | max overlap 2/4
+6. **0.0450** | ATLAS, OEDIPUS, DIALECT, ECHO | max overlap 1/4
+7. **0.0449** | ATLAS, DIALECT, ELECTRA, ECHO | max overlap 1/4
+8. **0.0447** | ATLAS, DIALECT, DICTIONARY, ECHO | max overlap 2/4
+9. **0.0440** | ENCYCLOPEDIA, DIALECT, THESAURUS, DICTIONARY | max overlap 3/4
+10. **0.0434** | ENCYCLOPEDIA, ATLAS, THESAURUS, DICTIONARY | EXACT
+11. **0.0401** | ENCYCLOPEDIA, ATLAS, DIALECT, DICTIONARY | max overlap 3/4
+12. **0.0388** | ATLAS, CALLIOPE, DIALECT, ECHO | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0168** | exact groups: 0/4
+   - 0.0242 | DIALECT, ELECTRA, BUZZARD, ECHO
+   - 0.0225 | ATLAS, CALLIOPE, OEDIPUS, REMINDER
+   - 0.0222 | ENCYCLOPEDIA, RINGMASTER, THESAURUS, DICTIONARY
+   - 0.0113 | INFERIORITY, VESTIGE, SUPERIORITY, TRACE
+2. **0.0162** | exact groups: 0/4
+   - 0.0280 | ATLAS, DIALECT, BUZZARD, ECHO
+   - 0.0222 | ENCYCLOPEDIA, RINGMASTER, THESAURUS, DICTIONARY
+   - 0.0201 | CALLIOPE, OEDIPUS, REMINDER, ELECTRA
+   - 0.0113 | INFERIORITY, VESTIGE, SUPERIORITY, TRACE
+3. **0.0159** | exact groups: 0/4
+   - 0.0222 | ENCYCLOPEDIA, RINGMASTER, THESAURUS, DICTIONARY
+   - 0.0214 | ATLAS, OEDIPUS, DIALECT, BUZZARD
+   - 0.0197 | CALLIOPE, REMINDER, ELECTRA, ECHO
+   - 0.0113 | INFERIORITY, VESTIGE, SUPERIORITY, TRACE
+
+## Puzzle 87 (ID: 12)
+Words: PACK, PRIDE, SIN, TORTOISE, COT, SCHOOL, SLOTH, FLOCK, LUST, POD, GREED, SEC, LORIS, SNAIL, ENVY, TAN
+
+### Top Raw Candidate Groups
+1. **0.1135** | PRIDE, SIN, LUST, ENVY | max overlap 3/4
+2. **0.0988** | PRIDE, SIN, LUST, GREED | max overlap 3/4
+3. **0.0971** | PRIDE, SIN, SLOTH, LUST | max overlap 2/4
+4. **0.0964** | SIN, SLOTH, LUST, ENVY | max overlap 2/4
+5. **0.0960** | PACK, PRIDE, SCHOOL, POD | max overlap 3/4
+6. **0.0959** | PRIDE, LUST, GREED, ENVY | EXACT
+7. **0.0959** | SIN, LUST, GREED, ENVY | max overlap 3/4
+8. **0.0919** | PRIDE, SIN, GREED, ENVY | max overlap 3/4
+9. **0.0898** | PRIDE, SCHOOL, FLOCK, POD | max overlap 3/4
+10. **0.0888** | PRIDE, SIN, SLOTH, ENVY | max overlap 2/4
+11. **0.0819** | PACK, PRIDE, SCHOOL, FLOCK | max overlap 3/4
+12. **0.0807** | PACK, SCHOOL, FLOCK, POD | EXACT
+
+### Top Raw Partitions
+1. **0.0395** | exact groups: 2/4
+   - 0.0959 | PRIDE, LUST, GREED, ENVY
+   - 0.0807 | PACK, SCHOOL, FLOCK, POD
+   - 0.0284 | TORTOISE, COT, SLOTH, SNAIL
+   - 0.0245 | SIN, SEC, LORIS, TAN
+2. **0.0386** | exact groups: 0/4
+   - 0.0819 | PACK, PRIDE, SCHOOL, FLOCK
+   - 0.0766 | SLOTH, LUST, GREED, ENVY
+   - 0.0289 | TORTOISE, COT, POD, SNAIL
+   - 0.0245 | SIN, SEC, LORIS, TAN
+3. **0.0360** | exact groups: 0/4
+   - 0.0432 | PACK, COT, SCHOOL, FLOCK
+   - 0.0398 | SIN, SLOTH, LUST, SEC
+   - 0.0362 | PRIDE, GREED, LORIS, ENVY
+   - 0.0339 | TORTOISE, POD, SNAIL, TAN
+
+## Puzzle 88 (ID: 1019)
+Words: GRAFFITI, QUESTION, BEAUTY, HUSTLE, PSYCHO, POSTER, ROBOT, RECEIPT, CORPS, COUP, TWIST, CHECK, STRETCH, STENCIL, MASHED POTATO, MURAL
+
+### Top Raw Candidate Groups
+1. **0.0681** | PSYCHO, POSTER, TWIST, STRETCH | max overlap 1/4
+2. **0.0401** | HUSTLE, PSYCHO, TWIST, STRETCH | max overlap 2/4
+3. **0.0371** | HUSTLE, POSTER, TWIST, STRETCH | max overlap 2/4
+4. **0.0339** | COUP, TWIST, CHECK, STRETCH | max overlap 2/4
+5. **0.0339** | RECEIPT, TWIST, CHECK, STRETCH | max overlap 2/4
+6. **0.0334** | HUSTLE, TWIST, CHECK, STRETCH | max overlap 2/4
+7. **0.0333** | HUSTLE, PSYCHO, POSTER, STRETCH | max overlap 1/4
+8. **0.0333** | HUSTLE, PSYCHO, POSTER, TWIST | max overlap 2/4
+9. **0.0332** | PSYCHO, POSTER, COUP, TWIST | max overlap 2/4
+10. **0.0308** | PSYCHO, TWIST, CHECK, STRETCH | max overlap 2/4
+11. **0.0302** | GRAFFITI, POSTER, STENCIL, MURAL | EXACT
+12. **0.0297** | PSYCHO, COUP, TWIST, STRETCH | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0127** | exact groups: 0/4
+   - 0.0191 | QUESTION, RECEIPT, COUP, CHECK
+   - 0.0174 | GRAFFITI, CORPS, STENCIL, MURAL
+   - 0.0127 | HUSTLE, TWIST, STRETCH, MASHED POTATO
+   - 0.0103 | BEAUTY, PSYCHO, POSTER, ROBOT
+2. **0.0116** | exact groups: 0/4
+   - 0.0174 | GRAFFITI, CORPS, STENCIL, MURAL
+   - 0.0139 | BEAUTY, HUSTLE, PSYCHO, STRETCH
+   - 0.0131 | QUESTION, POSTER, ROBOT, RECEIPT
+   - 0.0096 | COUP, TWIST, CHECK, MASHED POTATO
+3. **0.0110** | exact groups: 0/4
+   - 0.0174 | GRAFFITI, CORPS, STENCIL, MURAL
+   - 0.0160 | BEAUTY, HUSTLE, POSTER, STRETCH
+   - 0.0116 | QUESTION, ROBOT, RECEIPT, CHECK
+   - 0.0083 | PSYCHO, COUP, TWIST, MASHED POTATO
+
+## Puzzle 89 (ID: 984)
+Words: LATE, MINION, GREAT, INFINITIVE, AUDITS, DODGERS, SOLID, ABSENT, BACKGROUND, PHEW, EXCUSED, PERFECT, HISTORY, LIFE, PRESENT, PAST
+
+### Top Raw Candidate Groups
+1. **0.1198** | HISTORY, LIFE, PRESENT, PAST | max overlap 3/4
+2. **0.1188** | PERFECT, HISTORY, PRESENT, PAST | max overlap 2/4
+3. **0.1013** | ABSENT, PERFECT, PRESENT, PAST | max overlap 2/4
+4. **0.0974** | BACKGROUND, HISTORY, PRESENT, PAST | max overlap 3/4
+5. **0.0974** | BACKGROUND, HISTORY, LIFE, PAST | EXACT
+6. **0.0945** | ABSENT, HISTORY, PRESENT, PAST | max overlap 2/4
+7. **0.0885** | PERFECT, LIFE, PRESENT, PAST | max overlap 2/4
+8. **0.0850** | LATE, HISTORY, PRESENT, PAST | max overlap 2/4
+9. **0.0791** | PERFECT, HISTORY, LIFE, PAST | max overlap 3/4
+10. **0.0789** | GREAT, PERFECT, PRESENT, PAST | max overlap 2/4
+11. **0.0764** | GREAT, HISTORY, PRESENT, PAST | max overlap 2/4
+12. **0.0753** | LATE, PERFECT, PRESENT, PAST | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0167** | exact groups: 0/4
+   - 0.0381 | INFINITIVE, PERFECT, LIFE, PAST
+   - 0.0232 | DODGERS, BACKGROUND, HISTORY, PRESENT
+   - 0.0151 | MINION, AUDITS, SOLID, ABSENT
+   - 0.0142 | LATE, GREAT, PHEW, EXCUSED
+2. **0.0159** | exact groups: 0/4
+   - 0.0240 | INFINITIVE, BACKGROUND, HISTORY, PRESENT
+   - 0.0199 | DODGERS, PERFECT, LIFE, PAST
+   - 0.0151 | MINION, AUDITS, SOLID, ABSENT
+   - 0.0142 | LATE, GREAT, PHEW, EXCUSED
+3. **0.0155** | exact groups: 0/4
+   - 0.0745 | INFINITIVE, PERFECT, PRESENT, PAST
+   - 0.0184 | DODGERS, BACKGROUND, HISTORY, LIFE
+   - 0.0151 | MINION, AUDITS, SOLID, ABSENT
+   - 0.0142 | LATE, GREAT, PHEW, EXCUSED
+
+## Puzzle 90 (ID: 567)
+Words: STRAND, MAROON, RUBY, BEACH, BRICK, PAIR, HEAD, LOCATION, FUR, YOU, LOCK, WISP, CHERRY, TIME, DURATION, DATE
+
+### Top Raw Candidate Groups
+1. **0.0860** | MAROON, BRICK, PAIR, CHERRY | max overlap 3/4
+2. **0.0823** | MAROON, BRICK, HEAD, CHERRY | max overlap 3/4
+3. **0.0807** | MAROON, BRICK, PAIR, HEAD | max overlap 2/4
+4. **0.0791** | MAROON, PAIR, HEAD, TIME | max overlap 1/4
+5. **0.0778** | MAROON, PAIR, HEAD, CHERRY | max overlap 2/4
+6. **0.0776** | PAIR, HEAD, CHERRY, TIME | max overlap 1/4
+7. **0.0770** | MAROON, BRICK, CHERRY, TIME | max overlap 3/4
+8. **0.0770** | MAROON, BRICK, FUR, CHERRY | max overlap 3/4
+9. **0.0766** | BRICK, PAIR, HEAD, CHERRY | max overlap 2/4
+10. **0.0755** | MAROON, PAIR, HEAD, FUR | max overlap 2/4
+11. **0.0754** | MAROON, PAIR, CHERRY, TIME | max overlap 2/4
+12. **0.0746** | MAROON, HEAD, CHERRY, TIME | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0451** | exact groups: 0/4
+   - 0.0705 | MAROON, PAIR, FUR, CHERRY
+   - 0.0664 | STRAND, RUBY, BEACH, WISP
+   - 0.0405 | BRICK, HEAD, LOCATION, LOCK
+   - 0.0366 | YOU, TIME, DURATION, DATE
+2. **0.0450** | exact groups: 0/4
+   - 0.0770 | MAROON, BRICK, FUR, CHERRY
+   - 0.0664 | STRAND, RUBY, BEACH, WISP
+   - 0.0403 | PAIR, HEAD, LOCATION, LOCK
+   - 0.0366 | YOU, TIME, DURATION, DATE
+3. **0.0436** | exact groups: 0/4
+   - 0.0770 | MAROON, BRICK, FUR, CHERRY
+   - 0.0664 | STRAND, RUBY, BEACH, WISP
+   - 0.0404 | PAIR, HEAD, LOCK, DATE
+   - 0.0339 | LOCATION, YOU, TIME, DURATION
+
+## Puzzle 91 (ID: 258)
+Words: WINE, RIND, HEAVY, WINK, WIND, MILL, SEED, FEATHER, FACTORY, STEM, LIGHT, SHOP, WING, CORE, MIDDLE, PLANT
+
+### Top Raw Candidate Groups
+1. **0.1322** | WINE, WINK, WIND, WING | EXACT
+2. **0.1244** | WIND, FEATHER, LIGHT, WING | max overlap 2/4
+3. **0.1165** | WINE, WIND, LIGHT, WING | max overlap 3/4
+4. **0.1097** | WIND, FEATHER, WING, PLANT | max overlap 2/4
+5. **0.1083** | WINE, WIND, FEATHER, WING | max overlap 3/4
+6. **0.1080** | WINE, WIND, STEM, WING | max overlap 3/4
+7. **0.1072** | MILL, FACTORY, SHOP, PLANT | EXACT
+8. **0.1065** | WINE, HEAVY, WIND, WING | max overlap 3/4
+9. **0.1057** | SEED, STEM, WING, PLANT | max overlap 2/4
+10. **0.1030** | MILL, SEED, STEM, PLANT | max overlap 2/4
+11. **0.1011** | FEATHER, LIGHT, WING, PLANT | max overlap 2/4
+12. **0.1003** | HEAVY, STEM, LIGHT, PLANT | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0590** | exact groups: 1/4
+   - 0.1072 | MILL, FACTORY, SHOP, PLANT
+   - 0.0876 | HEAVY, FEATHER, LIGHT, WING
+   - 0.0546 | WINE, RIND, WINK, WIND
+   - 0.0469 | SEED, STEM, CORE, MIDDLE
+2. **0.0561** | exact groups: 0/4
+   - 0.0824 | HEAVY, MILL, STEM, SHOP
+   - 0.0606 | SEED, WING, CORE, MIDDLE
+   - 0.0546 | WINE, RIND, WINK, WIND
+   - 0.0545 | FEATHER, FACTORY, LIGHT, PLANT
+3. **0.0553** | exact groups: 0/4
+   - 0.0731 | HEAVY, FEATHER, LIGHT, PLANT
+   - 0.0606 | SEED, WING, CORE, MIDDLE
+   - 0.0546 | WINE, RIND, WINK, WIND
+   - 0.0530 | MILL, FACTORY, STEM, SHOP
+
+## Puzzle 92 (ID: 1062)
+Words: HOAGIE, FILTERS, DONUT, ARGUMENT, BELLY, CROP, CAUSE, GROUNDS, BEAN, GRINDER, HERO, MARKUP, ADJUST, BASIS, ROLL, SUB
+
+### Top Raw Candidate Groups
+1. **0.1780** | HOAGIE, GRINDER, HERO, SUB | EXACT
+2. **0.1054** | GRINDER, HERO, ROLL, SUB | max overlap 3/4
+3. **0.1023** | HOAGIE, GRINDER, ROLL, SUB | max overlap 3/4
+4. **0.0962** | HOAGIE, HERO, ROLL, SUB | max overlap 3/4
+5. **0.0955** | HOAGIE, GRINDER, HERO, ROLL | max overlap 3/4
+6. **0.0818** | HOAGIE, BEAN, GRINDER, SUB | max overlap 3/4
+7. **0.0768** | BEAN, GRINDER, HERO, SUB | max overlap 3/4
+8. **0.0752** | CAUSE, BEAN, GRINDER, ROLL | max overlap 2/4
+9. **0.0751** | CAUSE, GRINDER, HERO, SUB | max overlap 3/4
+10. **0.0716** | CAUSE, BEAN, ROLL, SUB | max overlap 2/4
+11. **0.0715** | HOAGIE, CAUSE, GRINDER, SUB | max overlap 3/4
+12. **0.0651** | BEAN, GRINDER, ROLL, SUB | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0216** | exact groups: 1/4
+   - 0.0461 | GRINDER, HERO, MARKUP, SUB
+   - 0.0311 | ARGUMENT, CAUSE, GROUNDS, BASIS
+   - 0.0195 | HOAGIE, DONUT, BELLY, BEAN
+   - 0.0179 | FILTERS, CROP, ADJUST, ROLL
+2. **0.0215** | exact groups: 1/4
+   - 0.0501 | HOAGIE, GRINDER, MARKUP, SUB
+   - 0.0311 | ARGUMENT, CAUSE, GROUNDS, BASIS
+   - 0.0194 | DONUT, BELLY, BEAN, HERO
+   - 0.0179 | FILTERS, CROP, ADJUST, ROLL
+3. **0.0209** | exact groups: 1/4
+   - 0.0454 | HOAGIE, HERO, MARKUP, SUB
+   - 0.0311 | ARGUMENT, CAUSE, GROUNDS, BASIS
+   - 0.0216 | DONUT, BELLY, CROP, BEAN
+   - 0.0156 | FILTERS, GRINDER, ADJUST, ROLL
+
+## Puzzle 93 (ID: 480)
+Words: PUNCH, SMITE, STICK, PRUNE, POT, MILK, JUICE, SOCK, SODA, WATER, BOOKEND, FERTILIZE, SKI, PANT, EARBUD, BLOUSE
+
+### Top Raw Candidate Groups
+1. **0.1361** | POT, MILK, JUICE, WATER | max overlap 2/4
+2. **0.1316** | MILK, JUICE, SODA, WATER | max overlap 3/4
+3. **0.1170** | STICK, MILK, JUICE, WATER | max overlap 2/4
+4. **0.1069** | PUNCH, MILK, JUICE, WATER | max overlap 3/4
+5. **0.1068** | PUNCH, STICK, POT, MILK | max overlap 2/4
+6. **0.0993** | PUNCH, STICK, MILK, SOCK | max overlap 2/4
+7. **0.0975** | PUNCH, POT, MILK, SOCK | max overlap 2/4
+8. **0.0946** | STICK, POT, MILK, SOCK | max overlap 1/4
+9. **0.0943** | PUNCH, STICK, POT, SOCK | max overlap 1/4
+10. **0.0935** | STICK, POT, WATER, SKI | max overlap 2/4
+11. **0.0904** | STICK, POT, MILK, WATER | max overlap 2/4
+12. **0.0903** | STICK, POT, MILK, JUICE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0281** | exact groups: 0/4
+   - 0.0423 | MILK, SODA, WATER, FERTILIZE
+   - 0.0315 | PUNCH, SMITE, PRUNE, JUICE
+   - 0.0294 | STICK, POT, BOOKEND, SKI
+   - 0.0257 | SOCK, PANT, EARBUD, BLOUSE
+2. **0.0273** | exact groups: 0/4
+   - 0.0326 | MILK, SODA, WATER, BOOKEND
+   - 0.0321 | PUNCH, SMITE, POT, SKI
+   - 0.0258 | STICK, PRUNE, JUICE, FERTILIZE
+   - 0.0257 | SOCK, PANT, EARBUD, BLOUSE
+3. **0.0265** | exact groups: 0/4
+   - 0.0326 | MILK, SODA, WATER, BOOKEND
+   - 0.0321 | PUNCH, SMITE, POT, SKI
+   - 0.0271 | STICK, PANT, EARBUD, BLOUSE
+   - 0.0233 | PRUNE, JUICE, SOCK, FERTILIZE
+
+## Puzzle 94 (ID: 976)
+Words: LESSON, COLORS, KENT, RESEED, SHEER, STARK, FLAG, STANDARD, CAMEL, BANNER, PURE, SYNC, UTTER, WAYNE, SALEM, PARLIAMENT
+
+### Top Raw Candidate Groups
+1. **0.0850** | COLORS, FLAG, STANDARD, BANNER | EXACT
+2. **0.0614** | SHEER, STARK, PURE, UTTER | EXACT
+3. **0.0528** | STARK, STANDARD, PURE, UTTER | max overlap 3/4
+4. **0.0506** | COLORS, SHEER, FLAG, STANDARD | max overlap 3/4
+5. **0.0506** | SHEER, STARK, STANDARD, PURE | max overlap 3/4
+6. **0.0498** | SHEER, FLAG, STANDARD, PURE | max overlap 2/4
+7. **0.0497** | COLORS, SHEER, FLAG, BANNER | max overlap 3/4
+8. **0.0496** | SHEER, FLAG, STANDARD, BANNER | max overlap 3/4
+9. **0.0494** | STARK, FLAG, STANDARD, BANNER | max overlap 3/4
+10. **0.0484** | FLAG, STANDARD, BANNER, PURE | max overlap 3/4
+11. **0.0481** | COLORS, RESEED, FLAG, BANNER | max overlap 3/4
+12. **0.0471** | COLORS, STARK, STANDARD, PURE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0184** | exact groups: 0/4
+   - 0.0303 | LESSON, RESEED, FLAG, SYNC
+   - 0.0252 | SHEER, STARK, CAMEL, UTTER
+   - 0.0236 | COLORS, STANDARD, BANNER, PURE
+   - 0.0125 | KENT, WAYNE, SALEM, PARLIAMENT
+2. **0.0181** | exact groups: 0/4
+   - 0.0329 | COLORS, STARK, STANDARD, BANNER
+   - 0.0303 | LESSON, RESEED, FLAG, SYNC
+   - 0.0173 | SHEER, CAMEL, PURE, UTTER
+   - 0.0125 | KENT, WAYNE, SALEM, PARLIAMENT
+3. **0.0172** | exact groups: 0/4
+   - 0.0329 | COLORS, STARK, STANDARD, BANNER
+   - 0.0303 | LESSON, RESEED, FLAG, SYNC
+   - 0.0173 | SHEER, CAMEL, WAYNE, SALEM
+   - 0.0105 | KENT, PURE, UTTER, PARLIAMENT
+
+## Puzzle 95 (ID: 391)
+Words: CELL, JUG, BOTTLE, MOBILE, FREEZE, CRIB, ATOM, RATTLE, SAW, PHONE, DOG, PROTEIN, SPOONS, WASHBOARD, MOLECULE, PRICE
+
+### Top Raw Candidate Groups
+1. **0.0955** | CELL, MOBILE, CRIB, PHONE | max overlap 2/4
+2. **0.0915** | JUG, BOTTLE, CRIB, SPOONS | max overlap 2/4
+3. **0.0899** | JUG, BOTTLE, DOG, SPOONS | max overlap 2/4
+4. **0.0896** | JUG, BOTTLE, SAW, SPOONS | max overlap 3/4
+5. **0.0856** | JUG, SAW, DOG, SPOONS | max overlap 3/4
+6. **0.0795** | JUG, CRIB, SAW, SPOONS | max overlap 3/4
+7. **0.0795** | JUG, CRIB, SAW, DOG | max overlap 2/4
+8. **0.0784** | BOTTLE, SAW, DOG, SPOONS | max overlap 2/4
+9. **0.0776** | BOTTLE, MOBILE, CRIB, SPOONS | max overlap 3/4
+10. **0.0760** | BOTTLE, CRIB, SAW, SPOONS | max overlap 2/4
+11. **0.0743** | BOTTLE, CRIB, PHONE, SPOONS | max overlap 2/4
+12. **0.0743** | BOTTLE, CRIB, SAW, DOG | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0397** | exact groups: 0/4
+   - 0.0544 | JUG, CRIB, DOG, WASHBOARD
+   - 0.0500 | CELL, PHONE, PROTEIN, MOLECULE
+   - 0.0471 | BOTTLE, MOBILE, RATTLE, SPOONS
+   - 0.0309 | FREEZE, ATOM, SAW, PRICE
+2. **0.0378** | exact groups: 0/4
+   - 0.0511 | JUG, BOTTLE, RATTLE, SPOONS
+   - 0.0500 | CELL, PHONE, PROTEIN, MOLECULE
+   - 0.0394 | MOBILE, CRIB, DOG, WASHBOARD
+   - 0.0309 | FREEZE, ATOM, SAW, PRICE
+3. **0.0377** | exact groups: 0/4
+   - 0.0500 | CELL, PHONE, PROTEIN, MOLECULE
+   - 0.0453 | JUG, CRIB, SPOONS, WASHBOARD
+   - 0.0436 | BOTTLE, MOBILE, RATTLE, DOG
+   - 0.0309 | FREEZE, ATOM, SAW, PRICE
+
+## Puzzle 96 (ID: 395)
+Words: SASS, BASS, ATTITUDE, PROSPECT, LIP, BRIDGE, LENS, RIM, FORECAST, TEMPLE, FLUKE, PERCH, OUTLOOK, CHANCE, CHEEK, PIKE
+
+### Top Raw Candidate Groups
+1. **0.0871** | BASS, BRIDGE, PERCH, PIKE | max overlap 3/4
+2. **0.0790** | BASS, RIM, PERCH, PIKE | max overlap 3/4
+3. **0.0789** | BRIDGE, LENS, TEMPLE, CHEEK | max overlap 3/4
+4. **0.0711** | SASS, BASS, PERCH, PIKE | max overlap 3/4
+5. **0.0672** | LIP, BRIDGE, RIM, PIKE | max overlap 2/4
+6. **0.0636** | BASS, LIP, PERCH, PIKE | max overlap 3/4
+7. **0.0615** | BRIDGE, RIM, PERCH, PIKE | max overlap 2/4
+8. **0.0587** | BASS, PERCH, CHEEK, PIKE | max overlap 3/4
+9. **0.0577** | BASS, FLUKE, PERCH, PIKE | EXACT
+10. **0.0565** | PROSPECT, LIP, BRIDGE, PIKE | max overlap 1/4
+11. **0.0561** | BASS, TEMPLE, PERCH, PIKE | max overlap 3/4
+12. **0.0555** | LIP, RIM, PERCH, PIKE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0318** | exact groups: 0/4
+   - 0.0711 | SASS, BASS, PERCH, PIKE
+   - 0.0387 | BRIDGE, RIM, FLUKE, CHANCE
+   - 0.0344 | LIP, LENS, TEMPLE, CHEEK
+   - 0.0270 | ATTITUDE, PROSPECT, FORECAST, OUTLOOK
+2. **0.0307** | exact groups: 0/4
+   - 0.0479 | BASS, PERCH, CHANCE, PIKE
+   - 0.0403 | BRIDGE, RIM, TEMPLE, FLUKE
+   - 0.0283 | SASS, LIP, LENS, CHEEK
+   - 0.0270 | ATTITUDE, PROSPECT, FORECAST, OUTLOOK
+3. **0.0306** | exact groups: 0/4
+   - 0.0411 | SASS, BASS, LIP, PERCH
+   - 0.0387 | BRIDGE, RIM, FLUKE, CHANCE
+   - 0.0295 | LENS, TEMPLE, CHEEK, PIKE
+   - 0.0270 | ATTITUDE, PROSPECT, FORECAST, OUTLOOK
+
+## Puzzle 97 (ID: 1026)
+Words: HOLES, HOEDOWN, MALLET, WICKET, HOP, MOLE, CONCERN, OLIVES, CAROUSER, RAVE, EVITE, TIMER, SHARE, CLAIM, STAKE, BALL
+
+### Top Raw Candidate Groups
+1. **0.0525** | WICKET, HOP, MOLE, BALL | max overlap 2/4
+2. **0.0478** | WICKET, HOP, RAVE, BALL | max overlap 3/4
+3. **0.0444** | MALLET, WICKET, HOP, BALL | max overlap 2/4
+4. **0.0437** | HOP, MOLE, RAVE, BALL | max overlap 3/4
+5. **0.0413** | WICKET, HOP, STAKE, BALL | max overlap 2/4
+6. **0.0393** | CONCERN, SHARE, CLAIM, STAKE | EXACT
+7. **0.0379** | WICKET, HOP, SHARE, STAKE | max overlap 2/4
+8. **0.0376** | WICKET, HOP, SHARE, BALL | max overlap 2/4
+9. **0.0366** | HOLES, WICKET, SHARE, STAKE | max overlap 2/4
+10. **0.0359** | MALLET, HOP, RAVE, BALL | max overlap 3/4
+11. **0.0342** | WICKET, CONCERN, SHARE, STAKE | max overlap 3/4
+12. **0.0332** | MALLET, HOP, MOLE, BALL | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0153** | exact groups: 0/4
+   - 0.0195 | HOLES, WICKET, MOLE, OLIVES
+   - 0.0190 | MALLET, CAROUSER, RAVE, BALL
+   - 0.0179 | HOEDOWN, HOP, CONCERN, STAKE
+   - 0.0122 | EVITE, TIMER, SHARE, CLAIM
+2. **0.0148** | exact groups: 0/4
+   - 0.0202 | TIMER, SHARE, CLAIM, STAKE
+   - 0.0195 | HOLES, WICKET, MOLE, OLIVES
+   - 0.0189 | HOP, CONCERN, RAVE, BALL
+   - 0.0104 | HOEDOWN, MALLET, CAROUSER, EVITE
+3. **0.0147** | exact groups: 0/4
+   - 0.0190 | HOEDOWN, MALLET, CAROUSER, RAVE
+   - 0.0177 | HOLES, WICKET, CONCERN, STAKE
+   - 0.0167 | HOP, MOLE, OLIVES, BALL
+   - 0.0122 | EVITE, TIMER, SHARE, CLAIM
+
+## Puzzle 98 (ID: 611)
+Words: JACK, KNEE, BOLSTER, TUG, NIGHT, BUB, HUB, YANK, MAN, JERK, BLOCK, BUD, MAD, WRENCH, MAT, STRAP
+
+### Top Raw Candidate Groups
+1. **0.1340** | JACK, TUG, YANK, JERK | max overlap 3/4
+2. **0.1297** | TUG, YANK, JERK, BLOCK | max overlap 3/4
+3. **0.1274** | TUG, YANK, JERK, BUD | max overlap 3/4
+4. **0.1231** | TUG, YANK, JERK, STRAP | max overlap 3/4
+5. **0.1215** | TUG, YANK, JERK, MAD | max overlap 3/4
+6. **0.1199** | TUG, YANK, MAN, JERK | max overlap 3/4
+7. **0.1188** | TUG, BUB, YANK, JERK | max overlap 3/4
+8. **0.1180** | TUG, YANK, JERK, MAT | max overlap 3/4
+9. **0.1165** | TUG, YANK, JERK, WRENCH | EXACT
+10. **0.0986** | JACK, TUG, YANK, MAN | max overlap 2/4
+11. **0.0982** | JACK, TUG, MAN, JERK | max overlap 2/4
+12. **0.0952** | JACK, JERK, BLOCK, MAD | max overlap 1/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 99 (ID: 433)
+Words: TONGUE, PRAIRIE, SPEECH, COTTAGE, TAPE, BANDAGE, RANCH, FRENCH, KISS, DRESSING, CRAFTSMAN, DIALECT, LANGUAGE, NECK, SCISSORS, MAKE OUT
+
+### Top Raw Candidate Groups
+1. **0.1309** | SPEECH, FRENCH, DIALECT, LANGUAGE | max overlap 3/4
+2. **0.1300** | TONGUE, SPEECH, DIALECT, LANGUAGE | EXACT
+3. **0.1188** | TONGUE, SPEECH, FRENCH, LANGUAGE | max overlap 3/4
+4. **0.1158** | TONGUE, FRENCH, KISS, NECK | max overlap 3/4
+5. **0.1043** | TONGUE, FRENCH, DIALECT, LANGUAGE | max overlap 3/4
+6. **0.0950** | TONGUE, KISS, NECK, MAKE OUT | max overlap 3/4
+7. **0.0874** | TONGUE, SPEECH, FRENCH, DIALECT | max overlap 3/4
+8. **0.0843** | TONGUE, FRENCH, KISS, LANGUAGE | max overlap 2/4
+9. **0.0792** | TONGUE, COTTAGE, DIALECT, LANGUAGE | max overlap 3/4
+10. **0.0777** | SPEECH, FRENCH, KISS, LANGUAGE | max overlap 2/4
+11. **0.0739** | SPEECH, FRENCH, DRESSING, LANGUAGE | max overlap 2/4
+12. **0.0666** | TONGUE, SPEECH, FRENCH, KISS | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0308** | exact groups: 0/4
+   - 0.0401 | SPEECH, FRENCH, CRAFTSMAN, LANGUAGE
+   - 0.0368 | TONGUE, COTTAGE, BANDAGE, DIALECT
+   - 0.0350 | TAPE, KISS, NECK, MAKE OUT
+   - 0.0257 | PRAIRIE, RANCH, DRESSING, SCISSORS
+2. **0.0298** | exact groups: 1/4
+   - 0.0950 | TONGUE, KISS, NECK, MAKE OUT
+   - 0.0401 | SPEECH, FRENCH, CRAFTSMAN, LANGUAGE
+   - 0.0310 | PRAIRIE, COTTAGE, RANCH, DIALECT
+   - 0.0240 | TAPE, BANDAGE, DRESSING, SCISSORS
+3. **0.0297** | exact groups: 0/4
+   - 0.0472 | PRAIRIE, RANCH, FRENCH, DRESSING
+   - 0.0389 | SPEECH, CRAFTSMAN, DIALECT, LANGUAGE
+   - 0.0320 | TONGUE, COTTAGE, KISS, MAKE OUT
+   - 0.0240 | TAPE, BANDAGE, NECK, SCISSORS
+
+## Puzzle 100 (ID: 1073)
+Words: HERB, STRIKE, SHED, MARCH, ITSY, RALLY, STABLE, HISS, DRUM, PEN, MYA, MASK, PICKET, COOP, STAFF, RATTLE
+
+### Top Raw Candidate Groups
+1. **0.0934** | STRIKE, SHED, DRUM, MASK | max overlap 2/4
+2. **0.0905** | STRIKE, SHED, DRUM, PEN | max overlap 2/4
+3. **0.0846** | STRIKE, DRUM, PEN, MASK | max overlap 2/4
+4. **0.0813** | SHED, DRUM, PEN, MASK | max overlap 2/4
+5. **0.0810** | STRIKE, SHED, PEN, MASK | max overlap 2/4
+6. **0.0790** | STRIKE, DRUM, PEN, COOP | max overlap 2/4
+7. **0.0746** | HERB, STRIKE, DRUM, PEN | max overlap 1/4
+8. **0.0745** | DRUM, PEN, MASK, COOP | max overlap 2/4
+9. **0.0742** | STRIKE, DRUM, MASK, COOP | max overlap 2/4
+10. **0.0731** | MARCH, PICKET, COOP, RATTLE | max overlap 2/4
+11. **0.0724** | DRUM, MASK, COOP, RATTLE | max overlap 3/4
+12. **0.0722** | DRUM, PEN, MASK, RATTLE | max overlap 3/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 101 (ID: 812)
+Words: FLAME, DRUM, BASH, FIDDLE, PIECES, COORDINATE, FISH, AXES, ROAST, CHOP, CARDS, BOARD, DOES, BASS, DICE, BLAST
+
+### Top Raw Candidate Groups
+1. **0.1389** | DRUM, FIDDLE, FISH, BASS | max overlap 3/4
+2. **0.0936** | FIDDLE, FISH, CHOP, BOARD | max overlap 3/4
+3. **0.0847** | DRUM, FISH, CHOP, BASS | max overlap 3/4
+4. **0.0836** | FIDDLE, FISH, CHOP, BASS | max overlap 3/4
+5. **0.0829** | DRUM, BASH, FISH, BASS | max overlap 2/4
+6. **0.0810** | DRUM, FISH, BOARD, BASS | max overlap 2/4
+7. **0.0778** | DRUM, FIDDLE, FISH, BOARD | max overlap 3/4
+8. **0.0773** | DRUM, FIDDLE, FISH, CHOP | EXACT
+9. **0.0770** | FIDDLE, FISH, BOARD, BASS | max overlap 2/4
+10. **0.0732** | DRUM, FIDDLE, CHOP, BASS | max overlap 3/4
+11. **0.0724** | FISH, CHOP, BOARD, DICE | max overlap 2/4
+12. **0.0717** | DRUM, FIDDLE, BOARD, BASS | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0367** | exact groups: 0/4
+   - 0.0690 | BASH, FIDDLE, FISH, BASS
+   - 0.0416 | FLAME, DRUM, ROAST, BLAST
+   - 0.0369 | PIECES, AXES, CHOP, DOES
+   - 0.0341 | COORDINATE, CARDS, BOARD, DICE
+2. **0.0360** | exact groups: 0/4
+   - 0.0512 | DRUM, COORDINATE, FISH, BASS
+   - 0.0472 | AXES, CARDS, BOARD, DICE
+   - 0.0431 | FLAME, BASH, FIDDLE, CHOP
+   - 0.0269 | PIECES, ROAST, DOES, BLAST
+3. **0.0354** | exact groups: 0/4
+   - 0.0472 | AXES, CARDS, BOARD, DICE
+   - 0.0416 | FLAME, DRUM, ROAST, BLAST
+   - 0.0400 | FIDDLE, COORDINATE, FISH, BASS
+   - 0.0300 | BASH, PIECES, CHOP, DOES
+
+## Puzzle 102 (ID: 1049)
+Words: STRING, ROOM, PHASE, SHADOW, SOCK, ROLL, ORDERS, ROUND, BOOM, HAND, CLAP, RUMBLE, STAGE, LEVEL, JOKE, OVATION
+
+### Top Raw Candidate Groups
+1. **0.1352** | ROLL, BOOM, CLAP, RUMBLE | EXACT
+2. **0.1276** | SOCK, ROLL, BOOM, CLAP | max overlap 3/4
+3. **0.1178** | SOCK, BOOM, CLAP, RUMBLE | max overlap 3/4
+4. **0.1164** | ROLL, ROUND, BOOM, HAND | max overlap 2/4
+5. **0.1132** | ROOM, ROLL, BOOM, HAND | max overlap 2/4
+6. **0.1130** | SOCK, ROLL, BOOM, HAND | max overlap 2/4
+7. **0.1112** | SOCK, ROLL, BOOM, RUMBLE | max overlap 3/4
+8. **0.1100** | ROLL, BOOM, HAND, CLAP | max overlap 3/4
+9. **0.1098** | SOCK, ROLL, HAND, CLAP | max overlap 2/4
+10. **0.1094** | ROOM, ROLL, ROUND, BOOM | max overlap 2/4
+11. **0.1092** | ROOM, ROLL, ROUND, HAND | max overlap 1/4
+12. **0.1091** | SOCK, ROLL, CLAP, RUMBLE | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0531** | exact groups: 0/4
+   - 0.0626 | STRING, ROOM, SHADOW, SOCK
+   - 0.0592 | ROLL, ROUND, HAND, OVATION
+   - 0.0571 | PHASE, ORDERS, STAGE, LEVEL
+   - 0.0481 | BOOM, CLAP, RUMBLE, JOKE
+2. **0.0518** | exact groups: 0/4
+   - 0.0574 | STRING, ROOM, SHADOW, ROUND
+   - 0.0571 | PHASE, ORDERS, STAGE, LEVEL
+   - 0.0518 | SOCK, HAND, CLAP, OVATION
+   - 0.0491 | ROLL, BOOM, RUMBLE, JOKE
+3. **0.0516** | exact groups: 0/4
+   - 0.0574 | STRING, ROOM, SHADOW, ROUND
+   - 0.0571 | PHASE, ORDERS, STAGE, LEVEL
+   - 0.0533 | SOCK, ROLL, HAND, OVATION
+   - 0.0481 | BOOM, CLAP, RUMBLE, JOKE
+
+## Puzzle 103 (ID: 643)
+Words: TONIGHT, SUE, PEG, MOVE, STRING, BARB, NEEDLE, SERVE, BRIDGE, BRISTLE, SPINE, MIGHT, NECK, CHARGE, WISH, MAY
+
+### Top Raw Candidate Groups
+1. **0.1026** | PEG, STRING, BARB, BRISTLE | max overlap 2/4
+2. **0.0911** | PEG, STRING, BRIDGE, BRISTLE | max overlap 3/4
+3. **0.0793** | STRING, BARB, BRIDGE, BRISTLE | max overlap 2/4
+4. **0.0780** | PEG, STRING, BRIDGE, NECK | EXACT
+5. **0.0778** | STRING, BARB, BRISTLE, NECK | max overlap 2/4
+6. **0.0764** | PEG, STRING, BARB, BRIDGE | max overlap 3/4
+7. **0.0737** | PEG, STRING, BARB, NECK | max overlap 3/4
+8. **0.0724** | STRING, BARB, BRIDGE, NECK | max overlap 3/4
+9. **0.0722** | STRING, BRIDGE, BRISTLE, NECK | max overlap 3/4
+10. **0.0632** | PEG, STRING, BRISTLE, NECK | max overlap 3/4
+11. **0.0623** | STRING, BARB, BRISTLE, CHARGE | max overlap 2/4
+12. **0.0579** | PEG, BARB, BRIDGE, BRISTLE | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0250** | exact groups: 0/4
+   - 0.0389 | SUE, MOVE, SERVE, BRIDGE
+   - 0.0310 | STRING, BARB, BRISTLE, MIGHT
+   - 0.0297 | PEG, NEEDLE, SPINE, NECK
+   - 0.0196 | TONIGHT, CHARGE, WISH, MAY
+2. **0.0239** | exact groups: 0/4
+   - 0.0389 | SUE, MOVE, SERVE, BRIDGE
+   - 0.0310 | STRING, BARB, BRISTLE, MAY
+   - 0.0297 | PEG, NEEDLE, SPINE, NECK
+   - 0.0175 | TONIGHT, MIGHT, CHARGE, WISH
+3. **0.0236** | exact groups: 0/4
+   - 0.0310 | STRING, BARB, BRISTLE, MIGHT
+   - 0.0297 | PEG, NEEDLE, SPINE, NECK
+   - 0.0225 | SUE, SERVE, BRIDGE, MAY
+   - 0.0211 | TONIGHT, MOVE, CHARGE, WISH
+
+## Puzzle 104 (ID: 157)
+Words: HAI, WE, O, W, DA, ICK, US, JA, WEE, SI, OK, OUI, EW, PU, UGH, WII
+
+### Top Raw Candidate Groups
+1. **0.0675** | O, W, DA, US | max overlap 3/4
+2. **0.0647** | O, W, US, SI | max overlap 3/4
+3. **0.0608** | O, US, SI, PU | max overlap 2/4
+4. **0.0606** | O, W, US, PU | max overlap 3/4
+5. **0.0589** | O, DA, US, SI | max overlap 2/4
+6. **0.0558** | WE, O, W, US | max overlap 3/4
+7. **0.0536** | O, W, US, OK | EXACT
+8. **0.0530** | W, DA, US, SI | max overlap 2/4
+9. **0.0514** | WE, W, US, WEE | max overlap 2/4
+10. **0.0494** | O, US, SI, OK | max overlap 3/4
+11. **0.0477** | O, W, US, OUI | max overlap 3/4
+12. **0.0475** | O, W, US, EW | max overlap 3/4
+
+### Top Raw Partitions
+1. **0.0280** | exact groups: 1/4
+   - 0.0372 | WE, W, WEE, WII
+   - 0.0341 | O, US, OK, PU
+   - 0.0313 | ICK, OUI, EW, UGH
+   - 0.0234 | HAI, DA, JA, SI
+2. **0.0266** | exact groups: 1/4
+   - 0.0341 | O, US, OK, PU
+   - 0.0301 | ICK, WEE, OUI, UGH
+   - 0.0293 | WE, W, EW, WII
+   - 0.0234 | HAI, DA, JA, SI
+3. **0.0248** | exact groups: 0/4
+   - 0.0307 | US, JA, SI, PU
+   - 0.0282 | WE, ICK, EW, UGH
+   - 0.0254 | HAI, DA, WEE, OUI
+   - 0.0228 | O, W, OK, WII
+
+## Puzzle 105 (ID: 113)
+Words: SALUTE, DOWN, MAPS, FINGER, FUR, STAND, KNEEL, MAIL, NOTES, HINT, CLOCK, SHELL, ARROW, DOG, SCALES, BOW
+
+### Top Raw Candidate Groups
+1. **0.1053** | DOWN, FINGER, ARROW, BOW | max overlap 2/4
+2. **0.1010** | DOWN, CLOCK, SHELL, DOG | max overlap 2/4
+3. **0.0998** | DOWN, FINGER, DOG, BOW | max overlap 2/4
+4. **0.0991** | FINGER, SHELL, DOG, BOW | max overlap 2/4
+5. **0.0981** | DOWN, STAND, DOG, BOW | max overlap 2/4
+6. **0.0960** | DOWN, FINGER, SHELL, DOG | max overlap 2/4
+7. **0.0951** | FINGER, STAND, DOG, BOW | max overlap 2/4
+8. **0.0947** | DOWN, FUR, DOG, BOW | max overlap 2/4
+9. **0.0943** | DOWN, FINGER, SHELL, BOW | max overlap 2/4
+10. **0.0942** | FINGER, STAND, SHELL, DOG | max overlap 2/4
+11. **0.0937** | DOWN, STAND, SHELL, DOG | max overlap 2/4
+12. **0.0933** | FINGER, SHELL, ARROW, BOW | max overlap 2/4
+
+### Top Raw Partitions
+_No complete partitions found from the bounded search._
+
+## Puzzle 106 (ID: 882)
+Words: SINE, SUB, CONQUERED, AB, DRUM, TRIANGLE, CLEAR, SETTLE, SQUARE, CAME, PRO, RATTLE, PAY, I, SAW, BELL
+
+### Top Raw Candidate Groups
+1. **0.0934** | DRUM, TRIANGLE, SQUARE, BELL | max overlap 3/4
+2. **0.0925** | CLEAR, SETTLE, SQUARE, PAY | EXACT
+3. **0.0923** | DRUM, TRIANGLE, SAW, BELL | max overlap 3/4
+4. **0.0889** | AB, DRUM, TRIANGLE, BELL | max overlap 3/4
+5. **0.0836** | TRIANGLE, I, SAW, BELL | max overlap 2/4
+6. **0.0828** | SUB, DRUM, TRIANGLE, BELL | max overlap 3/4
+7. **0.0828** | SUB, SQUARE, I, SAW | max overlap 2/4
+8. **0.0815** | TRIANGLE, SQUARE, I, SAW | max overlap 2/4
+9. **0.0792** | SUB, TRIANGLE, I, SAW | max overlap 2/4
+10. **0.0785** | SUB, SETTLE, SQUARE, PAY | max overlap 3/4
+11. **0.0782** | TRIANGLE, SQUARE, SAW, BELL | max overlap 2/4
+12. **0.0782** | DRUM, TRIANGLE, SQUARE, SAW | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0392** | exact groups: 0/4
+   - 0.0562 | CONQUERED, SETTLE, SQUARE, PAY
+   - 0.0457 | CAME, PRO, I, SAW
+   - 0.0387 | SINE, DRUM, TRIANGLE, RATTLE
+   - 0.0362 | SUB, AB, CLEAR, BELL
+2. **0.0387** | exact groups: 0/4
+   - 0.0458 | SINE, AB, SQUARE, I
+   - 0.0418 | CONQUERED, DRUM, TRIANGLE, BELL
+   - 0.0379 | CLEAR, SETTLE, RATTLE, PAY
+   - 0.0376 | SUB, CAME, PRO, SAW
+3. **0.0377** | exact groups: 0/4
+   - 0.0562 | CONQUERED, SETTLE, SQUARE, PAY
+   - 0.0481 | SINE, AB, TRIANGLE, I
+   - 0.0376 | SUB, CAME, PRO, SAW
+   - 0.0326 | DRUM, CLEAR, RATTLE, BELL
+
+## Puzzle 107 (ID: 49)
+Words: DAFFY, WACKY, NEPHEW, ALARM, GRANDFATHER, SCROOGE, BIOLOGICAL, DEWEY, AUNT, DONALD, DAISY, CUCKOO, COUSIN, QUIRKY, KOOKY, MOTHER
+
+### Top Raw Candidate Groups
+1. **0.0617** | NEPHEW, AUNT, COUSIN, MOTHER | EXACT
+2. **0.0526** | GRANDFATHER, AUNT, COUSIN, MOTHER | max overlap 3/4
+3. **0.0481** | NEPHEW, GRANDFATHER, AUNT, COUSIN | max overlap 3/4
+4. **0.0471** | NEPHEW, GRANDFATHER, COUSIN, MOTHER | max overlap 3/4
+5. **0.0399** | AUNT, DAISY, COUSIN, MOTHER | max overlap 3/4
+6. **0.0396** | AUNT, DONALD, COUSIN, MOTHER | max overlap 3/4
+7. **0.0387** | NEPHEW, GRANDFATHER, AUNT, MOTHER | max overlap 3/4
+8. **0.0382** | WACKY, CUCKOO, QUIRKY, KOOKY | max overlap 3/4
+9. **0.0380** | WACKY, BIOLOGICAL, KOOKY, MOTHER | max overlap 2/4
+10. **0.0373** | NEPHEW, DONALD, COUSIN, MOTHER | max overlap 3/4
+11. **0.0364** | AUNT, COUSIN, KOOKY, MOTHER | max overlap 3/4
+12. **0.0364** | CUCKOO, QUIRKY, KOOKY, MOTHER | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0232** | exact groups: 0/4
+   - 0.0382 | WACKY, CUCKOO, QUIRKY, KOOKY
+   - 0.0343 | NEPHEW, AUNT, DONALD, COUSIN
+   - 0.0209 | DAFFY, ALARM, DEWEY, DAISY
+   - 0.0187 | GRANDFATHER, SCROOGE, BIOLOGICAL, MOTHER
+2. **0.0226** | exact groups: 0/4
+   - 0.0354 | ALARM, AUNT, COUSIN, MOTHER
+   - 0.0284 | WACKY, BIOLOGICAL, QUIRKY, KOOKY
+   - 0.0224 | DAFFY, DEWEY, DAISY, CUCKOO
+   - 0.0199 | NEPHEW, GRANDFATHER, SCROOGE, DONALD
+3. **0.0226** | exact groups: 0/4
+   - 0.0382 | WACKY, CUCKOO, QUIRKY, KOOKY
+   - 0.0296 | BIOLOGICAL, AUNT, COUSIN, MOTHER
+   - 0.0209 | DAFFY, ALARM, DEWEY, DAISY
+   - 0.0199 | NEPHEW, GRANDFATHER, SCROOGE, DONALD
+
+## Puzzle 108 (ID: 774)
+Words: LUTE, POLE, KNICK, RABE, JET, BACKBOARD, DIP, BOUNCE, TITANIC, MAMMOTH, RIM, SPLIT, STEEL, GREAT, GIANT, NET
+
+### Top Raw Candidate Groups
+1. **0.0855** | POLE, JET, BOUNCE, RIM | max overlap 2/4
+2. **0.0847** | JET, DIP, BOUNCE, SPLIT | EXACT
+3. **0.0845** | POLE, BOUNCE, RIM, NET | max overlap 3/4
+4. **0.0834** | POLE, BOUNCE, RIM, STEEL | max overlap 2/4
+5. **0.0813** | POLE, JET, BOUNCE, STEEL | max overlap 2/4
+6. **0.0812** | JET, BOUNCE, RIM, STEEL | max overlap 2/4
+7. **0.0812** | POLE, JET, RIM, STEEL | max overlap 2/4
+8. **0.0809** | JET, BOUNCE, RIM, SPLIT | max overlap 3/4
+9. **0.0808** | POLE, RIM, SPLIT, STEEL | max overlap 2/4
+10. **0.0807** | POLE, JET, BOUNCE, SPLIT | max overlap 3/4
+11. **0.0806** | POLE, BOUNCE, SPLIT, NET | max overlap 2/4
+12. **0.0805** | POLE, BOUNCE, SPLIT, STEEL | max overlap 2/4
+
+### Top Raw Partitions
+1. **0.0253** | exact groups: 1/4
+   - 0.0392 | TITANIC, MAMMOTH, GREAT, GIANT
+   - 0.0265 | POLE, RABE, BOUNCE, NET
+   - 0.0262 | KNICK, JET, DIP, SPLIT
+   - 0.0243 | LUTE, BACKBOARD, RIM, STEEL

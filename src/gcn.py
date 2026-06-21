@@ -2,6 +2,7 @@ import itertools
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 from typing import List, Tuple, Any, Optional
 from src.candidate_scoring import score_group_pair_values
 from src.graph import ConnectionsGraph
@@ -50,33 +51,45 @@ class RelationalGCNLayer(nn.Module):
             h: Node features tensor of shape (batch_size, 16, in_features) or (16, in_features)
             adj: Relational adjacency tensor of shape (batch_size, num_relations, 16, 16) or (num_relations, 16, 16)
         """
+        W_rel_flat = self.W_rel.permute(1, 0, 2).reshape(self.in_features, -1)
+
         if len(h.shape) == 3:
             # Batched case
+            batch_size = h.shape[0]
             out = self.W_self(h)  # (batch_size, 16, out_features)
-            h_proj = torch.einsum('bni,rio->brno', h, self.W_rel)  # (batch_size, num_relations, 16, out_features)
-            out_rel = torch.einsum('bruv,brvo->buo', adj, h_proj)  # (batch_size, 16, out_features)
+
+            # Project h: (batch_size * 16, num_relations * out_features)
+            res = torch.matmul(h.view(-1, self.in_features), W_rel_flat)
+            h_proj = res.view(batch_size, 16, self.num_relations, self.out_features).permute(0, 2, 1, 3)
+
+            # Multiply by adjacencies:
+            out_rel = torch.matmul(adj, h_proj).sum(dim=1)  # (batch_size, 16, out_features)
+
             return out + out_rel + self.bias
         else:
-            # Self contribution
+            # Unbatched case
             out = self.W_self(h) # (16, out_features)
-            
-            # Relational contributions
-            # Project h using all relational matrices: (num_relations, 16, out_features)
-            h_proj = torch.einsum('ni,rio->rno', h, self.W_rel)
-            
-            # Multiply by adjacencies: (16, out_features)
-            out_rel = torch.einsum('ruv,rvo->uo', adj, h_proj)
-            
+
+            # Project h: (16, num_relations * out_features)
+            res = torch.matmul(h, W_rel_flat)
+            h_proj = res.view(16, self.num_relations, self.out_features).permute(1, 0, 2)
+
+            # Multiply by adjacencies:
+            out_rel = torch.matmul(adj, h_proj).sum(dim=0)  # (16, out_features)
+
             return out + out_rel + self.bias
+
 
 class ConnectionsScoringMixin:
     def _init_scoring_heads(
         self,
         hidden_features: int = 32,
         out_features: int = 16,
+        num_relations: int = EDGE_FEATURE_DIM,
     ):
-        # Concatenate node embeddings (out_features * 2) and raw edge features (EDGE_FEATURE_DIM)
-        input_dim = out_features * 2 + EDGE_FEATURE_DIM
+        self.num_relations_for_scoring = num_relations
+        # Concatenate node embeddings (out_features * 2) and raw edge features (num_relations)
+        input_dim = out_features * 2 + num_relations
         self.edge_score_net = nn.Sequential(
             nn.Linear(input_dim, hidden_features),
             nn.ReLU(),
@@ -87,7 +100,7 @@ class ConnectionsScoringMixin:
             nn.ReLU(),
             nn.Linear(hidden_features, NUM_RELATION_ARCHETYPES)
         )
-        group_input_dim = out_features * 2 + EDGE_FEATURE_DIM * 2
+        group_input_dim = out_features * 2 + num_relations * 2
         self.group_relation_score_net = nn.Sequential(
             nn.Linear(group_input_dim, hidden_features),
             nn.ReLU(),
@@ -109,7 +122,7 @@ class ConnectionsScoringMixin:
             if edge_features is not None:
                 edge_input = torch.cat([h_exp1, h_exp2, edge_features], dim=-1)
             else:
-                dummy_edge = torch.zeros(batch_size, 16, 16, EDGE_FEATURE_DIM, device=node_embeddings.device)
+                dummy_edge = torch.zeros(batch_size, 16, 16, self.num_relations_for_scoring, device=node_embeddings.device)
                 edge_input = torch.cat([h_exp1, h_exp2, dummy_edge], dim=-1)
         else:
             # Expand and concatenate to compute pairwise representations
@@ -119,7 +132,7 @@ class ConnectionsScoringMixin:
             if edge_features is not None:
                 edge_input = torch.cat([h_exp1, h_exp2, edge_features], dim=-1)
             else:
-                dummy_edge = torch.zeros(16, 16, EDGE_FEATURE_DIM, device=node_embeddings.device)
+                dummy_edge = torch.zeros(16, 16, self.num_relations_for_scoring, device=node_embeddings.device)
                 edge_input = torch.cat([h_exp1, h_exp2, dummy_edge], dim=-1)
         
         # Predict pairwise logits
@@ -173,14 +186,14 @@ class ConnectionsScoringMixin:
                 edge_summary = torch.zeros(
                     node_embeddings.shape[0],
                     c.shape[0],
-                    EDGE_FEATURE_DIM * 2,
+                    self.num_relations_for_scoring * 2,
                     dtype=node_embeddings.dtype,
                     device=node_embeddings.device,
                 )
             else:
                 edge_summary = torch.zeros(
                     c.shape[0],
-                    EDGE_FEATURE_DIM * 2,
+                    self.num_relations_for_scoring * 2,
                     dtype=node_embeddings.dtype,
                     device=node_embeddings.device,
                 )
@@ -281,7 +294,7 @@ class ConnectionsGCN(ConnectionsScoringMixin, nn.Module):
         self.dropout1 = nn.Dropout(p=0.1)
         self.gcn2 = RelationalGCNLayer(hidden_features, out_features, num_relations)
         self.ln2 = nn.LayerNorm(out_features)
-        self._init_scoring_heads(hidden_features=hidden_features, out_features=out_features)
+        self._init_scoring_heads(hidden_features=hidden_features, out_features=out_features, num_relations=num_relations)
 
     def forward(
         self,
@@ -318,6 +331,37 @@ class ConnectionsGCN(ConnectionsScoringMixin, nn.Module):
         return h2, edge_probs, relation_logits
 
 
+class SliceRelationsGCN(nn.Module):
+    def __init__(self, original_model, num_relations, in_features, hidden_features):
+        super().__init__()
+        self.original_model = original_model
+        self.num_relations = num_relations
+        self.in_features = in_features
+        self.out_features = 16
+        self.hidden_features = hidden_features
+        
+    def get_candidate_subgraphs(self, edge_probs, group_relation_logits=None):
+        return self.original_model.get_candidate_subgraphs(edge_probs, group_relation_logits)
+        
+    def forward(self, node_features, adjacency, edge_features, return_group_logits=False):
+        # Slice adjacency to [num_relations, 16, 16]
+        sliced_adjacency = adjacency[:self.num_relations]
+        # Slice edge_features to [num_edges, num_relations]
+        sliced_edge_features = edge_features[..., :self.num_relations]
+        return self.original_model(
+            node_features,
+            sliced_adjacency,
+            sliced_edge_features,
+            return_group_logits=return_group_logits
+        )
+        
+    def __getattr__(self, name):
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return getattr(self.original_model, name)
+
+
 def build_gcn_model(
     in_features: int = DEFAULT_NODE_FEATURE_DIM,
     hidden_features: int = 128,
@@ -330,6 +374,72 @@ def build_gcn_model(
         out_features=out_features,
         num_relations=num_relations,
     )
+
+def _ensure_precomputed_puzzle_fields(puzzle: Any, comb_tensor: torch.Tensor):
+    """Precompute static targets and multi-relational adjacency matrix on CPU to optimize training."""
+    if isinstance(puzzle, dict):
+        if "relation_targets" in puzzle and "true_group_mask" in puzzle and "static_group_targets" in puzzle and "adj_multi" in puzzle:
+            return
+        words = puzzle["words"]
+        word_to_cat = puzzle["word_to_cat"]
+        node_features = puzzle["node_features"]
+        edge_features = puzzle["edge_features"]
+    else:
+        if hasattr(puzzle, "relation_targets") and hasattr(puzzle, "true_group_mask") and hasattr(puzzle, "static_group_targets") and hasattr(puzzle, "adj_multi"):
+            return
+        words = puzzle.words
+        word_to_cat = puzzle.word_to_cat
+        node_features = puzzle.node_features
+        edge_features = puzzle.edge_features
+
+    # Ensure node/edge features are torch CPU tensors
+    if isinstance(node_features, np.ndarray):
+        node_features = torch.tensor(node_features, dtype=torch.float32)
+    else:
+        node_features = torch.as_tensor(node_features, dtype=torch.float32).cpu()
+        
+    if isinstance(edge_features, np.ndarray):
+        edge_features = torch.tensor(edge_features, dtype=torch.float32)
+    else:
+        edge_features = torch.as_tensor(edge_features, dtype=torch.float32).cpu()
+
+    # Precompute static targets on CPU
+    relation_targets = build_relation_targets(words, word_to_cat, device="cpu")
+    true_groups = build_true_group_tensor(words, word_to_cat, device="cpu")
+    true_mask = (comb_tensor.unsqueeze(1) == true_groups.unsqueeze(0)).all(dim=2).any(dim=1)
+    
+    targets = torch.full((comb_tensor.shape[0],), -100, dtype=torch.long)
+    for true_group in true_groups:
+        group_idx = int((comb_tensor == true_group).all(dim=1).nonzero(as_tuple=False)[0].item())
+        first_word = words[int(true_group[0].item())]
+        rtype = normalize_relation_archetype(
+            _word_category(word_to_cat, first_word).get("relation_type", "SYNONYM_OR_NEAR")
+        )
+        targets[group_idx] = RELATION_ARCHETYPE_TO_IDX[rtype]
+        
+    graph_cpu = ConnectionsGraph(
+        words,
+        device="cpu",
+        node_features=node_features,
+        edge_features=edge_features
+    )
+    adj_multi = graph_cpu.get_multi_relational_adjacency()
+    
+    if isinstance(puzzle, dict):
+        puzzle["node_features"] = node_features
+        puzzle["edge_features"] = edge_features
+        puzzle["relation_targets"] = relation_targets
+        puzzle["true_group_mask"] = true_mask
+        puzzle["static_group_targets"] = targets
+        puzzle["adj_multi"] = adj_multi
+    else:
+        puzzle.node_features = node_features
+        puzzle.edge_features = edge_features
+        puzzle.relation_targets = relation_targets
+        puzzle.true_group_mask = true_mask
+        puzzle.static_group_targets = targets
+        puzzle.adj_multi = adj_multi
+
 
 def train_gcn_epoch(
     model: ConnectionsGCN,
@@ -349,100 +459,108 @@ def train_gcn_epoch(
     batch_size = 32
     optimizer.zero_grad()
 
+    # Ensure puzzles have precomputed fields
+    comb_tensor = model.comb_tensor
+    for p in puzzles:
+        _ensure_precomputed_puzzle_fields(p, comb_tensor)
+
     for start_idx in range(0, len(puzzles), batch_size):
         batch_puzzles = puzzles[start_idx : start_idx + batch_size]
         actual_batch_size = len(batch_puzzles)
         
-        node_features_list = []
-        edge_features_list = []
-        adj_multi_list = []
-        adj_true_list = []
+        # Stack CPU tensors
+        node_features_cpu = torch.stack([p["node_features"] for p in batch_puzzles])
+        edge_features_cpu = torch.stack([p["edge_features"] for p in batch_puzzles])
+        adj_multi_cpu = torch.stack([p["adj_multi"] for p in batch_puzzles])
         
-        batch_words = []
-        batch_word_to_cat = []
+        adj_true_cpu = torch.stack([
+            torch.tensor(p["adj"], dtype=torch.float32) if isinstance(p, dict) else torch.tensor(p.adj, dtype=torch.float32)
+            for p in batch_puzzles
+        ])
         
-        for puzzle in batch_puzzles:
-            if isinstance(puzzle, dict):
-                graph = ConnectionsGraph(
-                    puzzle["words"],
-                    device=device,
-                    node_features=puzzle["node_features"],
-                    edge_features=puzzle["edge_features"]
-                )
-                adj_true = torch.tensor(puzzle["adj"], dtype=torch.float32, device=device)
-                words = puzzle["words"]
-                word_to_cat = puzzle["word_to_cat"]
-            else:
-                graph = ConnectionsGraph(puzzle.words, extractor, device=device)
-                adj_true = torch.tensor(puzzle.adj, dtype=torch.float32, device=device)
-                words = puzzle.words
-                word_to_cat = puzzle.word_to_cat
-                
-            adj_multi = graph.get_multi_relational_adjacency()
-            adj_multi = drop_edges(adj_multi, p=0.2, training=True)
-            
-            node_features_list.append(graph.node_features)
-            edge_features_list.append(graph.edge_features)
-            adj_multi_list.append(adj_multi)
-            adj_true_list.append(adj_true)
-            
-            batch_words.append(words)
-            batch_word_to_cat.append(word_to_cat)
-            
-        batched_node_features = torch.stack(node_features_list)
-        batched_edge_features = torch.stack(edge_features_list)
-        batched_adj_multi = torch.stack(adj_multi_list)
-
+        relation_targets_cpu = torch.stack([p["relation_targets"] for p in batch_puzzles])
+        static_group_targets_cpu = torch.stack([p["static_group_targets"] for p in batch_puzzles])
+        true_group_mask_cpu = torch.stack([p["true_group_mask"] for p in batch_puzzles])
+        
+        # Single device transfer for stacked tensors
+        node_features = node_features_cpu.to(device)
+        edge_features = edge_features_cpu.to(device)
+        adj_multi = adj_multi_cpu.to(device)
+        adj_true = adj_true_cpu.to(device)
+        
+        relation_targets = relation_targets_cpu.to(device)
+        static_group_targets = static_group_targets_cpu.to(device)
+        true_group_mask = true_group_mask_cpu.to(device)
+        
+        adj_multi = drop_edges(adj_multi, p=0.2, training=True)
+        
         node_embeddings, edge_logits, relation_logits, group_relation_logits = model(
-            batched_node_features,
-            batched_adj_multi,
-            batched_edge_features,
+            node_features,
+            adj_multi,
+            edge_features,
             return_logits=True,
             return_group_logits=True,
         )
 
         batch_losses = []
         for i in range(actual_batch_size):
-            words = batch_words[i]
-            word_to_cat = batch_word_to_cat[i]
-            adj_true = adj_true_list[i]
-
-            # Weighted BCE Loss with logits
+            # BCE Loss
             weight_mask = diag_mask.clone()
-            weight_mask[adj_true == 1] *= 4.0
-            bce_loss_i = F.binary_cross_entropy_with_logits(edge_logits[i], adj_true, weight=weight_mask)
+            weight_mask[adj_true[i] == 1] *= 4.0
+            bce_loss_i = F.binary_cross_entropy_with_logits(edge_logits[i], adj_true[i], weight=weight_mask)
 
-            relation_true_i = build_relation_targets(words, word_to_cat, device)
-
+            # Relation Class Loss
             class_loss_i = focal_loss(
                 relation_logits[i].view(-1, NUM_RELATION_ARCHETYPES),
-                relation_true_i.view(-1),
+                relation_targets[i].view(-1),
                 gamma=2.0,
                 alpha=relation_class_weights,
                 ignore_index=-100,
             )
-            group_relation_true_i = build_group_relation_targets(
-                model,
-                edge_logits[i],
-                words,
-                word_to_cat,
-                device,
-                hard_negative_count=GROUP_RELATION_HARD_NEGATIVES,
-            )
+            
+            # Group Relation Loss
+            targets_i = static_group_targets[i].clone()
+            edge_probs_i = torch.sigmoid(edge_logits[i])
+            _, scores_i = model.get_candidate_scores_tensor(edge_probs_i)
+            true_mask_i = true_group_mask[i]
+            negative_indices = torch.nonzero(~true_mask_i, as_tuple=False).flatten()
+            if negative_indices.numel() > 0:
+                negative_scores = scores_i[negative_indices]
+                top_k = min(GROUP_RELATION_HARD_NEGATIVES, negative_indices.numel())
+                hard_negative_indices = negative_indices[torch.topk(negative_scores, k=top_k).indices]
+                targets_i[hard_negative_indices] = NO_RELATION_IDX
+                
             group_class_loss_i = _focal_loss_with_optional_targets(
                 group_relation_logits[i],
-                group_relation_true_i,
+                targets_i,
                 gamma=2.0,
                 alpha=group_class_weights,
             )
-            group_loss_i = groupwise_ranking_loss(
-                model,
-                edge_logits[i],
-                words,
-                word_to_cat,
-                margin=GROUPWISE_LOSS_MARGIN,
-                hard_negative_count=GROUPWISE_HARD_NEGATIVES,
+            
+            # Groupwise Ranking Loss
+            combinations = model.comb_tensor.to(device)
+            pair_scores = torch.stack(
+                [
+                    edge_probs_i[combinations[:, 0], combinations[:, 1]],
+                    edge_probs_i[combinations[:, 0], combinations[:, 2]],
+                    edge_probs_i[combinations[:, 0], combinations[:, 3]],
+                    edge_probs_i[combinations[:, 1], combinations[:, 2]],
+                    edge_probs_i[combinations[:, 1], combinations[:, 3]],
+                    edge_probs_i[combinations[:, 2], combinations[:, 3]],
+                ],
+                dim=-1,
             )
+            beta = 10.0
+            scores = - (1.0 / beta) * torch.log(torch.sum(torch.exp(-beta * pair_scores), dim=-1))
+            true_scores = scores[true_mask_i]
+            negative_scores = scores[~true_mask_i]
+            
+            if true_scores.numel() > 0 and negative_scores.numel() > 0:
+                hard_count = min(GROUPWISE_HARD_NEGATIVES, negative_scores.numel())
+                hard_negative_scores = torch.topk(negative_scores, k=hard_count).values
+                group_loss_i = (torch.clamp(GROUPWISE_LOSS_MARGIN - true_scores.unsqueeze(1) + hard_negative_scores.unsqueeze(0), min=0.0) ** 2).mean()
+            else:
+                group_loss_i = edge_logits.new_tensor(0.0)
 
             loss_i = (
                 bce_loss_i
@@ -463,6 +581,7 @@ def train_gcn_epoch(
 
     return total_loss / len(puzzles)
 
+
 def validate_gcn(
     model: ConnectionsGCN,
     puzzles: list,
@@ -471,6 +590,7 @@ def validate_gcn(
     visualize: bool = False,
     filepath: Optional[str] = None,
     visualize_idx: int = 0,
+    epoch: Optional[int] = None,
 ) -> Tuple[float, float]:
     """
     Validates GCN. Computes mean BCE loss and Mean Reciprocal Rank (MRR) of correct 4-node categories.
@@ -479,117 +599,168 @@ def validate_gcn(
     model.eval()
     total_loss = 0.0
     mrr_sum = 0.0
+    total_cos_sim = 0.0
     diag_mask = 1.0 - torch.eye(16, device=device)
+    
     relation_class_weights = build_relation_class_weights(puzzles, device)
     group_class_weights = build_group_class_weights(puzzles, device, GROUP_RELATION_HARD_NEGATIVES)
+    
+    batch_size = 32
+    
+    comb_tensor = model.comb_tensor
+    for p in puzzles:
+        _ensure_precomputed_puzzle_fields(p, comb_tensor)
 
     with torch.no_grad():
-        for idx, puzzle in enumerate(puzzles):
-            if isinstance(puzzle, dict):
-                graph = ConnectionsGraph(
-                    puzzle["words"],
-                    device=device,
-                    node_features=puzzle["node_features"],
-                    edge_features=puzzle["edge_features"]
-                )
-                adj_true = torch.tensor(puzzle["adj"], dtype=torch.float32, device=device)
-                words = puzzle["words"]
-                word_to_cat = puzzle["word_to_cat"]
-                puzzle_id = puzzle["id"]
-            else:
-                graph = ConnectionsGraph(puzzle.words, extractor, device=device)
-                adj_true = torch.tensor(puzzle.adj, dtype=torch.float32, device=device)
-                words = puzzle.words
-                word_to_cat = puzzle.word_to_cat
-                puzzle_id = puzzle.id
-
+        for start_idx in range(0, len(puzzles), batch_size):
+            batch_puzzles = puzzles[start_idx : start_idx + batch_size]
+            actual_batch_size = len(batch_puzzles)
+            
+            node_features_cpu = torch.stack([p["node_features"] for p in batch_puzzles])
+            edge_features_cpu = torch.stack([p["edge_features"] for p in batch_puzzles])
+            adj_multi_cpu = torch.stack([p["adj_multi"] for p in batch_puzzles])
+            adj_true_cpu = torch.stack([
+                torch.tensor(p["adj"], dtype=torch.float32) if isinstance(p, dict) else torch.tensor(p.adj, dtype=torch.float32)
+                for p in batch_puzzles
+            ])
+            
+            relation_targets_cpu = torch.stack([p["relation_targets"] for p in batch_puzzles])
+            static_group_targets_cpu = torch.stack([p["static_group_targets"] for p in batch_puzzles])
+            true_group_mask_cpu = torch.stack([p["true_group_mask"] for p in batch_puzzles])
+            
+            # Single device transfer
+            node_features = node_features_cpu.to(device)
+            edge_features = edge_features_cpu.to(device)
+            adj_multi = adj_multi_cpu.to(device)
+            adj_true = adj_true_cpu.to(device)
+            
+            relation_targets = relation_targets_cpu.to(device)
+            static_group_targets = static_group_targets_cpu.to(device)
+            true_group_mask = true_group_mask_cpu.to(device)
+            
             node_embeddings, edge_logits, relation_logits, group_relation_logits = model(
-                graph.node_features,
-                graph.get_multi_relational_adjacency(),
-                graph.edge_features,
+                node_features,
+                adj_multi,
+                edge_features,
                 return_logits=True,
                 return_group_logits=True,
             )
-
-            # Compute loss
-            weight_mask = diag_mask.clone()
-            weight_mask[adj_true == 1] *= 4.0
-            bce_loss = F.binary_cross_entropy_with_logits(edge_logits, adj_true, weight=weight_mask)
-
-            relation_true = build_relation_targets(words, word_to_cat, device)
-
-            class_loss = focal_loss(
-                relation_logits.view(-1, NUM_RELATION_ARCHETYPES),
-                relation_true.view(-1),
-                gamma=2.0,
-                alpha=relation_class_weights,
-                ignore_index=-100,
-            )
-            group_relation_true = build_group_relation_targets(
-                model,
-                edge_logits,
-                words,
-                word_to_cat,
-                device,
-                hard_negative_count=GROUP_RELATION_HARD_NEGATIVES,
-            )
-            group_class_loss = _focal_loss_with_optional_targets(
-                group_relation_logits,
-                group_relation_true,
-                gamma=2.0,
-                alpha=group_class_weights,
-            )
-            group_loss = groupwise_ranking_loss(
-                model,
-                edge_logits,
-                words,
-                word_to_cat,
-                margin=GROUPWISE_LOSS_MARGIN,
-                hard_negative_count=GROUPWISE_HARD_NEGATIVES,
-            )
-
-            loss = (
-                bce_loss
-                + RELATION_LOSS_WEIGHT * class_loss
-                + GROUP_RELATION_LOSS_WEIGHT * group_class_loss
-                + GROUPWISE_LOSS_WEIGHT * group_loss
-            )
-            total_loss += loss.item()
-
-            edge_probs = torch.sigmoid(edge_logits)
-            c, scores = model.get_candidate_scores_tensor(edge_probs, group_relation_logits)
-
-            # 2. Find rank of each of the 4 true categories
-            ranks = []
-            for cat_idx in range(4):
-                indices = []
-                for i, w in enumerate(words):
-                    if word_to_cat[w]["cat_idx"] == cat_idx:
-                        indices.append(i)
-                tc = torch.tensor(sorted(indices), dtype=torch.long, device=device)
-                match_mask = (c == tc).all(dim=1)
-                true_score = scores[match_mask][0]
-                rank = int(torch.sum(scores >= true_score).item())
-                ranks.append(rank)
-
-            mrr_sum += sum(1.0 / r for r in ranks) / 4.0
-
-            # Save visual progress for the requested puzzle index if requested
-            if idx == visualize_idx and visualize and filepath is not None:
-                # Convert edge probabilities to numpy
-                edge_probs_np = edge_probs.cpu().numpy()
-                true_cats = [word_to_cat[w]["cat_idx"] for w in words]
-
-                # Save plot
-                plot_connections_graph(
-                    words,
-                    edge_probs_np,
-                    true_categories=true_cats,
-                    threshold=0.45,
-                    filepath=filepath,
-                    title=f"GCN Edge Predictions - Puzzle {puzzle_id}"
+            
+            for i in range(actual_batch_size):
+                idx = start_idx + i
+                puzzle = batch_puzzles[i]
+                words = puzzle["words"] if isinstance(puzzle, dict) else puzzle.words
+                word_to_cat = puzzle["word_to_cat"] if isinstance(puzzle, dict) else puzzle.word_to_cat
+                puzzle_id = puzzle["id"] if isinstance(puzzle, dict) else puzzle.id
+                
+                # Compute Mean Pairwise Cosine Similarity of node embeddings
+                norm_embeddings = F.normalize(node_embeddings[i], p=2, dim=-1)
+                cos_sim_matrix = torch.mm(norm_embeddings, norm_embeddings.t())
+                triu_indices = torch.triu_indices(16, 16, offset=1)
+                puzzle_cos_sim = cos_sim_matrix[triu_indices[0], triu_indices[1]].mean().item()
+                total_cos_sim += puzzle_cos_sim
+                
+                # Compute loss
+                weight_mask = diag_mask.clone()
+                weight_mask[adj_true[i] == 1] *= 4.0
+                bce_loss = F.binary_cross_entropy_with_logits(edge_logits[i], adj_true[i], weight=weight_mask)
+                
+                class_loss = focal_loss(
+                    relation_logits[i].view(-1, NUM_RELATION_ARCHETYPES),
+                    relation_targets[i].view(-1),
+                    gamma=2.0,
+                    alpha=relation_class_weights,
+                    ignore_index=-100,
                 )
-
+                
+                targets_i = static_group_targets[i].clone()
+                edge_probs_i = torch.sigmoid(edge_logits[i])
+                _, scores_i = model.get_candidate_scores_tensor(edge_probs_i)
+                true_mask_i = true_group_mask[i]
+                negative_indices = torch.nonzero(~true_mask_i, as_tuple=False).flatten()
+                if negative_indices.numel() > 0:
+                    negative_scores = scores_i[negative_indices]
+                    top_k = min(GROUP_RELATION_HARD_NEGATIVES, negative_indices.numel())
+                    hard_negative_indices = negative_indices[torch.topk(negative_scores, k=top_k).indices]
+                    targets_i[hard_negative_indices] = NO_RELATION_IDX
+                    
+                group_class_loss = _focal_loss_with_optional_targets(
+                    group_relation_logits[i],
+                    targets_i,
+                    gamma=2.0,
+                    alpha=group_class_weights,
+                )
+                
+                # Groupwise Ranking Loss
+                combinations = model.comb_tensor.to(device)
+                pair_scores = torch.stack(
+                    [
+                        edge_probs_i[combinations[:, 0], combinations[:, 1]],
+                        edge_probs_i[combinations[:, 0], combinations[:, 2]],
+                        edge_probs_i[combinations[:, 0], combinations[:, 3]],
+                        edge_probs_i[combinations[:, 1], combinations[:, 2]],
+                        edge_probs_i[combinations[:, 1], combinations[:, 3]],
+                        edge_probs_i[combinations[:, 2], combinations[:, 3]],
+                    ],
+                    dim=-1,
+                )
+                beta = 10.0
+                scores = - (1.0 / beta) * torch.log(torch.sum(torch.exp(-beta * pair_scores), dim=-1))
+                true_scores = scores[true_mask_i]
+                negative_scores = scores[~true_mask_i]
+                
+                if true_scores.numel() > 0 and negative_scores.numel() > 0:
+                    hard_count = min(GROUPWISE_HARD_NEGATIVES, negative_scores.numel())
+                    hard_negative_scores = torch.topk(negative_scores, k=hard_count).values
+                    group_loss = (torch.clamp(GROUPWISE_LOSS_MARGIN - true_scores.unsqueeze(1) + hard_negative_scores.unsqueeze(0), min=0.0) ** 2).mean()
+                else:
+                    group_loss = edge_logits.new_tensor(0.0)
+                    
+                loss = (
+                    bce_loss
+                    + RELATION_LOSS_WEIGHT * class_loss
+                    + GROUP_RELATION_LOSS_WEIGHT * group_class_loss
+                    + GROUPWISE_LOSS_WEIGHT * group_loss
+                )
+                total_loss += loss.item()
+                
+                # Find rank of each of the 4 true categories
+                ranks = []
+                for cat_idx in range(4):
+                    indices = []
+                    for w_idx, w in enumerate(words):
+                        if _word_category(word_to_cat, w)["cat_idx"] == cat_idx:
+                            indices.append(w_idx)
+                    tc = torch.tensor(sorted(indices), dtype=torch.long, device=device)
+                    match_mask = (combinations == tc).all(dim=1)
+                    true_score = scores_i[match_mask][0]
+                    rank = int(torch.sum(scores_i >= true_score).item())
+                    ranks.append(rank)
+                    
+                mrr_sum += sum(1.0 / r for r in ranks) / 4.0
+                
+                # Save visual progress for the requested puzzle index if requested
+                if idx == visualize_idx and visualize and filepath is not None:
+                    edge_probs_np = edge_probs_i.cpu().numpy()
+                    true_cats = [word_to_cat[w]["cat_idx"] for w in words]
+                    plot_connections_graph(
+                        words,
+                        edge_probs_np,
+                        true_categories=true_cats,
+                        threshold=0.45,
+                        filepath=filepath,
+                        title=f"GCN Edge Predictions - Puzzle {puzzle_id}"
+                    )
+                    
+    avg_cos_sim = total_cos_sim / len(puzzles)
+    if epoch is not None:
+        try:
+            import mlflow
+            if mlflow.active_run():
+                mlflow.log_metric("val_mean_node_cosine_similarity", avg_cos_sim, step=epoch)
+        except Exception as e:
+            print(f"Warning: Failed to log mean cosine similarity to MLflow: {e}")
+            
     return total_loss / len(puzzles), mrr_sum / len(puzzles)
 
 
