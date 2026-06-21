@@ -46,6 +46,7 @@ except Exception as e:
 EDGE_FEATURE_DIM = 25
 FEATURE_SCHEMA_VERSION = 13
 NGRAM_COMPOUND_CACHE_SCHEMA_VERSION = 1
+NGRAMS_DEV_COMPOUND_CACHE_SCHEMA_VERSION = 2
 NGRAM_COMPOUND_CORPUS = "eng_2019"
 NGRAM_COMPOUND_YEAR_START = 1980
 NGRAM_COMPOUND_YEAR_END = 2019
@@ -285,9 +286,26 @@ class FeatureExtractor:
     def _load_ngram_compound_cache(self) -> Dict[str, Any]:
         data = self._load_json_cache(self.ngram_compound_cache_path)
         metadata = self._ngram_compound_cache_metadata()
-        if data.get("metadata") != metadata or not isinstance(data.get("profiles"), dict):
+        profiles = data.get("profiles")
+        if not isinstance(profiles, dict):
             return {"metadata": metadata, "profiles": {}}
-        return data
+
+        cache_metadata = data.get("metadata")
+        if cache_metadata == metadata:
+            return data
+        if self._is_ngram_dev_compound_cache_metadata(cache_metadata):
+            return data
+
+        return {"metadata": metadata, "profiles": {}}
+
+    @staticmethod
+    def _is_ngram_dev_compound_cache_metadata(metadata: Any) -> bool:
+        return (
+            isinstance(metadata, dict)
+            and metadata.get("schema_version") == NGRAMS_DEV_COMPOUND_CACHE_SCHEMA_VERSION
+            and metadata.get("source") == "ngrams.dev/search"
+            and metadata.get("corpus") == "eng"
+        )
 
     def _save_conceptnet_cache(self):
         try:

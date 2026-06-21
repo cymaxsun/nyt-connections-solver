@@ -25,7 +25,16 @@ timeline
     Phase 16 : Data Integrity Cleanup : Remove Full-Corpus Collocation Feature : Drop Malformed Puzzle : Schema v12
     Phase 17 : Archetype Regularization & Gated Boosting : Gated Candidate Scoring : MLP Head Dropout : DropEdge p=0.2 : Class-Balanced Group Weights
     Phase 18 : Google Ngrams Compound Fragment Edge Feature : Shared Wildcard Completion Channel : Schema v13
+    Phase 20 : Ngrams.dev Cache Warmer : Search-Based Compound Profiles : Cache Schema v2
 ```
+
+---
+
+## Phase 20: Ngrams.dev Cache Warmer
+* **Milestone**: Replaced the planned full Google Books gzip-stream cache fill path with a faster `ngrams.dev/search` wildcard cache warmer.
+* **Major Changes**:
+  - **Search-Based Profiles**: Added an overwrite-oriented cache warmer that queries `token *` and `* token` for puzzle vocabulary, normalizes total corpus scores, and writes `google_ngram_compound_cache.json` profiles directly.
+  - **Cache Schema Version 2**: Accepted `ngrams.dev/search` metadata in `FeatureExtractor` while preserving the existing profile shape used by the compound-fragment edge feature.
 
 ---
 
