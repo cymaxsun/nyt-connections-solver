@@ -4,15 +4,29 @@ import numpy as np
 import torch
 
 from src.candidates import (
+    DEFAULT_PARTITION_TOP_K,
+    DEFAULT_PARTITION_TOP_N,
+    DEFAULT_SINGLE_SWAP_MAX_REPAIRS,
+    DEFAULT_SINGLE_SWAP_REPAIR_SEED_LIMIT,
+    PARTITION_SEARCH_MAX_STATES,
     PartitionCandidate,
     PartitionGroupCandidate,
     build_partition_candidates,
+    _augment_with_single_swap_repairs,
+    _score_partition,
     partition_groups_for_actions,
 )
 from src.rl_agent import CANDIDATE_FEATURE_DIM, DQNAgent
 
 
 class PartitionCandidateTests(unittest.TestCase):
+    def test_partition_search_defaults_are_tuned_for_validation_selection(self):
+        self.assertEqual(DEFAULT_PARTITION_TOP_N, 300)
+        self.assertEqual(DEFAULT_PARTITION_TOP_K, 20)
+        self.assertEqual(PARTITION_SEARCH_MAX_STATES, 20000)
+        self.assertEqual(DEFAULT_SINGLE_SWAP_REPAIR_SEED_LIMIT, 40)
+        self.assertEqual(DEFAULT_SINGLE_SWAP_MAX_REPAIRS, 160)
+
     def test_partitions_cover_active_words_once(self):
         active_mask = np.ones(16, dtype=np.float32)
         solution = [
@@ -29,6 +43,73 @@ class PartitionCandidateTests(unittest.TestCase):
             flattened = [idx for group in partition.groups for idx in group.group]
             self.assertEqual(sorted(flattened), list(range(16)))
             self.assertEqual(len(flattened), len(set(flattened)))
+
+    def test_single_swap_repairs_expose_groups_below_top_n_cutoff(self):
+        active_mask = np.ones(16, dtype=np.float32)
+        near_misses = [
+            ((0, 1, 2, 4), 0.95),
+            ((5, 6, 7, 8), 0.94),
+            ((9, 10, 11, 12), 0.93),
+            ((3, 13, 14, 15), 0.92),
+        ]
+        repaired_solution = [
+            ((0, 1, 2, 3), 0.70),
+            ((4, 5, 6, 7), 0.69),
+            ((8, 9, 10, 11), 0.68),
+            ((12, 13, 14, 15), 0.67),
+        ]
+
+        partitions = build_partition_candidates(
+            near_misses + repaired_solution,
+            active_mask,
+            top_n=4,
+            top_k=3,
+        )
+
+        exact_partition = {
+            (0, 1, 2, 3),
+            (4, 5, 6, 7),
+            (8, 9, 10, 11),
+            (12, 13, 14, 15),
+        }
+        self.assertTrue(
+            any({candidate.group for candidate in partition.groups} == exact_partition for partition in partitions)
+        )
+
+    def test_single_swap_repairs_prefer_stronger_seed_when_scores_are_close(self):
+        active_set = set(range(8))
+        base_groups = [
+            ((0, 1, 2, 3), 1.0),
+            ((4, 5, 6, 7), 0.2),
+        ]
+        candidates = [
+            *base_groups,
+            ((0, 1, 2, 4), 0.50),
+            ((0, 4, 5, 6), 0.53),
+        ]
+
+        augmented = _augment_with_single_swap_repairs(
+            candidates,
+            active_set,
+            rejected_groups=set(),
+            base_group_scores=base_groups,
+            seed_limit=2,
+            max_repairs=1,
+        )
+
+        self.assertEqual(augmented[-1], ((0, 1, 2, 4), 0.50))
+
+    def test_partition_score_prefers_no_weak_group_at_same_mean(self):
+        consistent = _score_partition([0.7, 0.7, 0.7, 0.7])
+        weak_link = _score_partition([1.0, 0.8, 0.7, 0.3])
+
+        self.assertAlmostEqual(np.mean([1.0, 0.8, 0.7, 0.3]), 0.7)
+        self.assertLess(weak_link, consistent)
+
+    def test_partition_score_uses_tuned_mean_min_median_weights(self):
+        score = _score_partition([1.0, 0.8, 0.7, 0.3])
+
+        self.assertAlmostEqual(score, 0.5475, places=6)
 
     def test_rejected_and_inactive_groups_are_excluded(self):
         active_mask = np.ones(16, dtype=np.float32)

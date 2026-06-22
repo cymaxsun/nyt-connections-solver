@@ -24,7 +24,14 @@ class CandidateScoringTests(unittest.TestCase):
 
         scores = score_group_pair_values(pair_scores)
 
-        self.assertTrue(torch.allclose(scores, torch.tensor([0.5, 7.0 / 12.0])))
+        self.assertTrue(torch.allclose(scores, torch.tensor([0.5, 0.5]), atol=1e-4))
+
+    def test_same_mean_prefers_no_weak_link(self):
+        near_miss = float(score_group_pair_values([1.0, 1.0, 0.7, 0.7, 0.6, 0.2]))
+        consistent = float(score_group_pair_values([0.7] * 6))
+
+        self.assertAlmostEqual(np.mean([1.0, 1.0, 0.7, 0.7, 0.6, 0.2]), 0.7)
+        self.assertLess(near_miss, consistent)
 
 
 if __name__ == "__main__":

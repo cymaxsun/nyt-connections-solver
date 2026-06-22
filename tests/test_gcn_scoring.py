@@ -10,6 +10,9 @@ from src.gcn import (
     build_relation_targets,
     build_true_group_tensor,
     _cross_entropy_with_optional_targets,
+    _candidate_pair_values,
+    _groupwise_margin_loss_from_scores,
+    _near_miss_negative_mask,
     groupwise_ranking_loss,
 )
 from src.relation_archetypes import (
@@ -219,7 +222,79 @@ class GCNScoringTests(unittest.TestCase):
         combinations, scores = model.get_candidate_scores_tensor(edge_probs)
         match = (combinations == torch.tensor([0, 1, 2, 3])).all(dim=1)
 
-        self.assertAlmostEqual(float(scores[match][0]), 7.0 / 12.0, places=6)
+        self.assertAlmostEqual(float(scores[match][0]), 0.5, places=6)
+
+    def test_candidate_pair_values_support_batched_edge_scores(self):
+        model = ConnectionsGCN()
+        edge_probs = torch.zeros(2, 16, 16)
+        edge_probs[0, 0, 1] = 0.2
+        edge_probs[0, 0, 2] = 0.4
+        edge_probs[0, 0, 3] = 0.6
+        edge_probs[0, 1, 2] = 0.8
+        edge_probs[0, 1, 3] = 1.0
+        edge_probs[0, 2, 3] = 0.3
+        edge_probs[1] = edge_probs[0] * 0.5
+
+        pair_values = _candidate_pair_values(edge_probs, model.comb_tensor)
+        match = (model.comb_tensor == torch.tensor([0, 1, 2, 3])).all(dim=1)
+
+        self.assertEqual(pair_values.shape, (2, 1820, 6))
+        self.assertTrue(torch.allclose(
+            pair_values[0, match][0],
+            torch.tensor([0.2, 0.4, 0.6, 0.8, 1.0, 0.3]),
+        ))
+        self.assertTrue(torch.allclose(
+            pair_values[1, match][0],
+            torch.tensor([0.1, 0.2, 0.3, 0.4, 0.5, 0.15]),
+        ))
+
+    def test_batched_candidate_scores_match_unbatched_scores(self):
+        model = ConnectionsGCN()
+        edge_probs = torch.rand(2, 16, 16)
+        edge_probs = (edge_probs + edge_probs.transpose(1, 2)) / 2.0
+        edge_probs[:, torch.arange(16), torch.arange(16)] = 0.0
+
+        combinations, batched_scores = model.get_candidate_scores_tensor(edge_probs)
+        _, first_scores = model.get_candidate_scores_tensor(edge_probs[0])
+        _, second_scores = model.get_candidate_scores_tensor(edge_probs[1])
+
+        self.assertEqual(combinations.shape, (1820, 4))
+        self.assertTrue(torch.allclose(batched_scores[0], first_scores))
+        self.assertTrue(torch.allclose(batched_scores[1], second_scores))
+
+    def test_near_miss_negative_mask_flags_three_of_four_decoys(self):
+        model = ConnectionsGCN()
+        combinations = model.comb_tensor
+        true_group = torch.tensor([0, 1, 2, 3])
+        near_miss = torch.tensor([0, 1, 2, 4])
+        two_overlap = torch.tensor([0, 1, 4, 5])
+        true_mask = (combinations == true_group).all(dim=1)
+
+        near_miss_mask = _near_miss_negative_mask(combinations, true_mask)
+
+        self.assertTrue(bool(near_miss_mask[(combinations == near_miss).all(dim=1)][0]))
+        self.assertFalse(bool(near_miss_mask[(combinations == two_overlap).all(dim=1)][0]))
+        self.assertFalse(bool(near_miss_mask[true_mask][0]))
+
+    def test_groupwise_loss_weights_near_miss_hard_negative(self):
+        model = ConnectionsGCN()
+        combinations = model.comb_tensor
+        true_group = torch.tensor([0, 1, 2, 3])
+        near_miss = torch.tensor([0, 1, 2, 4])
+        true_mask = (combinations == true_group).all(dim=1)
+        scores = torch.zeros(combinations.shape[0])
+        scores[true_mask] = 0.50
+        scores[(combinations == near_miss).all(dim=1)] = 0.53
+
+        loss = _groupwise_margin_loss_from_scores(
+            scores,
+            combinations,
+            true_mask,
+            margin=0.05,
+            hard_negative_count=1,
+        )
+
+        self.assertAlmostEqual(float(loss), 0.0128, places=6)
 
     def test_candidate_scores_ignore_group_archetype_confidence_when_disabled(self):
         model = ConnectionsGCN(group_archetype_score_weight=0.0)
@@ -236,6 +311,20 @@ class GCNScoringTests(unittest.TestCase):
         _, boosted_scores = model.get_candidate_scores_tensor(edge_probs, group_logits)
 
         self.assertEqual(float(boosted_scores[match][0]), float(base_scores[match][0]))
+
+    def test_candidate_scores_use_tuned_group_archetype_gate(self):
+        model = ConnectionsGCN(group_archetype_score_weight=0.05)
+        edge_probs = torch.full((16, 16), 0.5)
+        edge_probs.fill_diagonal_(0.0)
+        combinations, base_scores = model.get_candidate_scores_tensor(edge_probs)
+        group_logits = torch.full((1820, NUM_RELATION_ARCHETYPES), torch.log(torch.tensor(0.01)))
+        match = (combinations == torch.tensor([0, 1, 2, 3])).all(dim=1)
+        group_logits[match, NO_RELATION_IDX] = torch.log(torch.tensor(0.35))
+        group_logits[match, RELATION_ARCHETYPE_TO_IDX["SYNONYM_OR_NEAR"]] = torch.log(torch.tensor(0.41))
+
+        _, boosted_scores = model.get_candidate_scores_tensor(edge_probs, group_logits)
+
+        self.assertGreater(float(boosted_scores[match][0]), float(base_scores[match][0]))
 
     def test_candidate_subgraphs_match_tensor_scores(self):
         model = ConnectionsGCN()

@@ -274,7 +274,7 @@ def train_rl_episodes(
     extractor: FeatureExtractor,
     episodes: int,
     batch_size: int = 16,
-    target_update_frequency: int = 5
+    target_update_frequency: int = 20
 ) -> List[Dict[str, Any]]:
     """Runs RL training loops with feedback-adaptive graph refinement."""
     gcn_model.eval()

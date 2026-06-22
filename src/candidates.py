@@ -5,6 +5,15 @@ import numpy as np
 
 
 GroupScore = Tuple[Tuple[int, ...], float]
+DEFAULT_PARTITION_TOP_N = 300
+DEFAULT_PARTITION_TOP_K = 20
+PARTITION_SEARCH_MAX_STATES = 20000
+DEFAULT_SINGLE_SWAP_REPAIR_SEED_LIMIT = 40
+DEFAULT_SINGLE_SWAP_MAX_REPAIRS = 160
+SINGLE_SWAP_REPAIR_SEED_SCORE_PRIORITY_WEIGHT = 0.05
+PARTITION_SCORE_MEAN_WEIGHT = 0.45
+PARTITION_SCORE_MIN_WEIGHT = 0.40
+PARTITION_SCORE_MEDIAN_WEIGHT = 0.15
 
 
 @dataclass(frozen=True)
@@ -28,8 +37,8 @@ def build_partition_candidates(
     candidates: Sequence[GroupScore],
     active_mask: np.ndarray,
     rejected_groups: Set[Tuple[int, ...]] | None = None,
-    top_n: int = 200,
-    top_k: int = 20,
+    top_n: int = DEFAULT_PARTITION_TOP_N,
+    top_k: int = DEFAULT_PARTITION_TOP_K,
 ) -> List[PartitionCandidate]:
     """
     Build deterministic, bounded partitions from GCN-scored 4-word candidates.
@@ -46,6 +55,14 @@ def build_partition_candidates(
     group_scores = _active_group_scores(candidates, active_set, rejected_groups, top_n)
     if not group_scores:
         return []
+    group_scores = _augment_with_single_swap_repairs(
+        candidates,
+        active_set,
+        rejected_groups,
+        group_scores,
+        seed_limit=min(DEFAULT_SINGLE_SWAP_REPAIR_SEED_LIMIT, top_n),
+        max_repairs=DEFAULT_SINGLE_SWAP_MAX_REPAIRS,
+    )
 
     groups_by_first_word: Dict[int, List[GroupScore]] = {idx: [] for idx in active_indices}
     for group, score in group_scores:
@@ -60,7 +77,7 @@ def build_partition_candidates(
         partitions=partitions,
         top_k=top_k,
         state_counter=[0],
-        max_states=5000,
+        max_states=PARTITION_SEARCH_MAX_STATES,
     )
 
     partitions.sort(key=lambda item: (-item[1], item[0]))
@@ -128,6 +145,60 @@ def _active_group_scores(
     return group_scores
 
 
+def _augment_with_single_swap_repairs(
+    candidates: Sequence[GroupScore],
+    active_set: Set[int],
+    rejected_groups: Set[Tuple[int, ...]],
+    base_group_scores: Sequence[GroupScore],
+    seed_limit: int = 80,
+    max_repairs: int = 80,
+) -> List[GroupScore]:
+    """
+    Add bounded one-word swap candidates around top groups.
+
+    The GCN often ranks 3-of-4 near misses highly. Correct repairs can sit just
+    outside the partition search cutoff, so expose the strongest single swaps
+    from the full candidate list without changing their model score.
+    """
+    if not candidates or not base_group_scores or max_repairs <= 0:
+        return list(base_group_scores)
+
+    candidate_map: Dict[Tuple[int, ...], float] = {}
+    for comb, score in candidates:
+        group = tuple(sorted(comb))
+        if group in candidate_map:
+            continue
+        if group in rejected_groups:
+            continue
+        if all(idx in active_set for idx in group):
+            candidate_map[group] = float(score)
+
+    seen = {tuple(sorted(group)) for group, _ in base_group_scores}
+    repairs: List[Tuple[Tuple[int, ...], float, float]] = []
+    active_indices = tuple(sorted(active_set))
+
+    for seed_group, seed_score in base_group_scores[:seed_limit]:
+        seed = tuple(sorted(seed_group))
+        seed_set = set(seed)
+        for removed in seed:
+            kept = tuple(idx for idx in seed if idx != removed)
+            for replacement in active_indices:
+                if replacement in seed_set:
+                    continue
+                repaired = tuple(sorted((*kept, replacement)))
+                if repaired in seen or repaired in rejected_groups:
+                    continue
+                score = candidate_map.get(repaired)
+                if score is None:
+                    continue
+                seen.add(repaired)
+                priority = score + SINGLE_SWAP_REPAIR_SEED_SCORE_PRIORITY_WEIGHT * float(seed_score)
+                repairs.append((repaired, score, priority))
+
+    repairs.sort(key=lambda item: (-item[2], item[0]))
+    return list(base_group_scores) + [(group, score) for group, score, _ in repairs[:max_repairs]]
+
+
 def _search_partitions(
     uncovered: frozenset[int],
     selected: Tuple[GroupScore, ...],
@@ -168,9 +239,15 @@ def _search_partitions(
 
 
 def _score_partition(scores: Iterable[float]) -> float:
-    score_list = list(scores)
-    mean_score = sum(score_list) / len(score_list)
-    return mean_score - 0.25 * (max(score_list) - min(score_list))
+    score_list = np.asarray(list(scores), dtype=np.float32)
+    if score_list.size == 0:
+        return 0.0
+    score = (
+        PARTITION_SCORE_MEAN_WEIGHT * float(np.mean(score_list))
+        + PARTITION_SCORE_MIN_WEIGHT * float(np.min(score_list))
+        + PARTITION_SCORE_MEDIAN_WEIGHT * float(np.median(score_list))
+    )
+    return float(np.clip(score, 0.0, 1.0))
 
 
 def _make_partition_candidate(
@@ -287,4 +364,3 @@ def build_greedy_partition_candidates(
 
     partitions.sort(key=lambda item: (-item[1], item[0]))
     return [_make_partition_candidate(groups, score) for groups, score in partitions[:top_k]]
-

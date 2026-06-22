@@ -15,6 +15,7 @@ from src.features import (
     CN_RESIDUAL_FORWARD_DIM,
     CN_SYNONYM_DIM,
     COMPOUND_FRAGMENT_SHARED_DIM,
+    CONCATENATED_COMPLETION_DIM,
     EDGE_FEATURE_DIM,
     INTRINSIC_NODE_METADATA_DIM,
     LENGTH_DISTANCE_DIM,
@@ -114,6 +115,81 @@ class FeatureExtractorTests(unittest.TestCase):
         self.assertEqual(edge_features[0, 0, COMPOUND_FRAGMENT_SHARED_DIM], 1.0)
         self.assertEqual(edge_features[0, 1, COMPOUND_FRAGMENT_SHARED_DIM], 0.75)
         self.assertEqual(edge_features[1, 0, COMPOUND_FRAGMENT_SHARED_DIM], 0.75)
+
+    def test_concatenated_completion_score_finds_shared_right_completion(self):
+        extractor = FeatureExtractor()
+
+        for w1, w2 in [
+            ("A", "CAPRI"),
+            ("A", "POP"),
+            ("A", "UNI"),
+            ("CAPRI", "POP"),
+            ("CAPRI", "UNI"),
+            ("POP", "UNI"),
+        ]:
+            self.assertEqual(extractor.get_concatenated_completion_score(w1, w2), 1.0)
+
+    def test_concatenated_completion_score_keeps_directions_separate(self):
+        extractor = FeatureExtractor()
+        extractor._concat_right_completions_by_fragment = {
+            "red": {"wood"},
+            "blue": {"bird"},
+        }
+        extractor._concat_left_completions_by_fragment = {
+            "red": {"blue"},
+            "blue": {"black"},
+        }
+
+        self.assertEqual(extractor.get_concatenated_completion_score("RED", "BLUE"), 0.0)
+
+    def test_concatenated_completion_score_finds_shared_left_completion(self):
+        extractor = FeatureExtractor()
+        extractor._concat_right_completions_by_fragment = {}
+        extractor._concat_left_completions_by_fragment = {
+            "one": {"stone"},
+            "age": {"stone"},
+        }
+
+        self.assertEqual(extractor.get_concatenated_completion_score("ONE", "AGE"), 1.0)
+
+    def test_concatenated_completion_map_ignores_short_hidden_completion(self):
+        original_right = FeatureExtractor._SHARED_CONCAT_RIGHT_COMPLETIONS_BY_FRAGMENT
+        original_left = FeatureExtractor._SHARED_CONCAT_LEFT_COMPLETIONS_BY_FRAGMENT
+        try:
+            FeatureExtractor._SHARED_CONCAT_RIGHT_COMPLETIONS_BY_FRAGMENT = None
+            FeatureExtractor._SHARED_CONCAT_LEFT_COMPLETIONS_BY_FRAGMENT = None
+            extractor = FeatureExtractor()
+            extractor._build_concatenated_completion_maps()
+
+            self.assertNotIn(
+                "le",
+                extractor._concat_right_completions_by_fragment.get("app", set()),
+            )
+        finally:
+            FeatureExtractor._SHARED_CONCAT_RIGHT_COMPLETIONS_BY_FRAGMENT = original_right
+            FeatureExtractor._SHARED_CONCAT_LEFT_COMPLETIONS_BY_FRAGMENT = original_left
+
+    def test_graph_matrices_include_concatenated_completion_edge_feature(self):
+        extractor = FeatureExtractor()
+        extractor.get_word_node_features = lambda word: [0.0] * INTRINSIC_NODE_METADATA_DIM
+        extractor.query_conceptnet = lambda word: []
+        extractor.extract_wordnet_features = lambda w1, w2: (0.0, 0.0)
+        extractor.get_clue_similarity = lambda w1, w2: 0.0
+        extractor.get_sentence_embeddings = lambda words: {}
+        extractor.get_ngram_compound_shared_score = lambda w1, w2: 0.0
+        extractor._concat_right_completions_by_fragment = {
+            "a": {"corn"},
+            "capri": {"corn"},
+        }
+        extractor._concat_left_completions_by_fragment = {}
+
+        words = ["A", "CAPRI"] + [f"WORD{i}" for i in range(14)]
+        _, edge_features = extractor.build_graph_matrices(words)
+
+        self.assertEqual(edge_features.shape, (16, 16, EDGE_FEATURE_DIM))
+        self.assertEqual(edge_features[0, 0, CONCATENATED_COMPLETION_DIM], 1.0)
+        self.assertEqual(edge_features[0, 1, CONCATENATED_COMPLETION_DIM], 1.0)
+        self.assertEqual(edge_features[1, 0, CONCATENATED_COMPLETION_DIM], 1.0)
 
     def test_graph_matrices_decompose_conceptnet_relation_types(self):
         extractor = FeatureExtractor()
@@ -465,6 +541,7 @@ class FeatureExtractorTests(unittest.TestCase):
         extractor.get_soundex = lambda word: word
         extractor.get_metaphone = lambda word: word
         extractor.get_ngram_compound_shared_score = lambda w1, w2: 0.0
+        extractor.get_concatenated_completion_score = lambda w1, w2: 0.0
 
         def wordplay(w1, w2):
             base = {

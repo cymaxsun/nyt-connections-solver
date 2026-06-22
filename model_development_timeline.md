@@ -29,7 +29,70 @@ timeline
     Phase 20 : Ngrams.dev Cache Warmer : Search-Based Compound Profiles : Cache Schema v2
     Phase 21 : MLflow Telemetry & Logging Refactor : MLflow Tracking Server : val_mean_node_cosine_similarity : gcn1_W_rel_norm_*
     Phase 22 : GPU/CPU Dispatch & Precomputation Optimizations : RelationalGCNLayer Matmul : Static Feature Precomputation : Single-Transfer Batching : Batched Validation
+    Phase 23 : Replicate v12 GCN Model : 24 Relation Channels : Feature Reversion : Preprocessed Cache Rebuild
+    Phase 24 : Concatenated Completion Edge Feature : WordNet Affix Hash Maps : Schema v14
+    Phase 25 : Near-Miss Candidate Repair : Tuned Weakest-Link Scoring : 3-of-4 Hard Negatives : Single-Swap Partition Search
+    Phase 26 : Candidate Objective Alignment : Shared Quartet Scorer : Training/Inference Ranking Match
 ```
+
+---
+
+## Phase 26: Candidate Objective Alignment
+* **Milestone**: Removed a training/inference mismatch in GCN quartet ranking after the near-miss scoring pivot.
+* **Major Changes**:
+  - **Shared Candidate Pair Extraction**: Centralized candidate pair gathering so scalar edge-score tensors support both unbatched `(16, 16)` and batched `(batch, 16, 16)` paths.
+  - **Solver-Aligned Groupwise Loss**: Updated GCN training and validation groupwise ranking loss to use `score_group_pair_values`, the same mean/min/median quartet score used by inference candidate ranking.
+  - **Regression Coverage**: Added tests proving batched candidate score extraction matches per-board unbatched scoring.
+* **Validation Snapshot**:
+  - Commands: `.venv/bin/python -m compileall main.py src tests`; `MPLCONFIGDIR=/private/tmp/mplconfig-connections .venv/bin/python -m unittest discover -s tests`
+  - Result: `117` tests passed.
+  - Aligned retrain command: `PYTHONUNBUFFERED=1 MPLCONFIGDIR=/private/tmp/mplconfig-connections .venv/bin/python -u main.py --train --gcn-epochs 30 --gcn-patience 12 --rl-episodes 0 --device cpu --seed 42`
+  - Retrain outcome: early-stopped at epoch `17`; best observed validation selection score was `18256.29`, below the incumbent all-time score `22005.53`, so `models/gcn_all_time_best_v14.pt` was preserved.
+  - No-new-data proposal check: raw sentence and board-contrast sentence candidate sources underperformed the GCN alone, and conservative merge variants did not add top-20 true-group recall. This points the next material improvement toward new feature/data sources for named-entity and wordplay categories rather than more search or hyperparameter tuning.
+
+---
+
+## Phase 25: Near-Miss Candidate Repair
+* **Milestone**: Improved validation partition quality by targeting high-ranked 3-of-4 decoy groups.
+* **Major Changes**:
+  - **Weakest-Link Candidate Scoring**: Replaced mean-minus-spread quartet scoring with a weighted mean/min/median score to demote groups with one poor-fitting word.
+  - **Solver-Aligned Scoring Grid**: Tuned the quartet scoring weights on the default validation split using the solver selection score; the best tested setting was `60%` mean, `40%` weakest pair, and `0%` median, improving selection score from `20052.13` to `20828.06`.
+  - **Seed-Aware Repair Selection**: Added a small `0.05 * seed_group_score` priority bonus when choosing bounded single-swap repairs, preserving raw group scores while slightly reducing high-ranked 3-of-4 decoys.
+  - **Archetype Boost Gate Tuning**: Relaxed the group-archetype boost gate from `positive >= 0.45` and `positive - no_relation >= 0.10` to `positive >= 0.40` and `positive - no_relation >= 0.05`, improving true-group coverage without changing checkpoint weights.
+  - **Separate Partition Scoring**: Split full-board partition scoring from quartet scoring and tuned partition ranking to `45%` mean, `40%` weakest group, and `15%` median group score, improving top-candidate coverage without changing individual group scores.
+  - **Partition Search Breadth Tuning**: Increased partition candidate breadth from top `200` to top `300` groups and the DFS state cap from `5000` to `20000`, improving complete-partition discovery while keeping the retained partition count at `20`.
+  - **Repair Limit Retuning**: Retuned single-swap repair exposure under the wider search to use the top `40` seed groups and retain `160` repaired candidates, improving all-true top-20 coverage.
+  - **3-of-4 Hard Negatives**: Added explicit near-miss detection in groupwise GCN ranking loss and weighted those negatives more heavily during hard-negative selection.
+  - **Single-Swap Repair Search**: Augmented partition candidate construction with bounded one-word swaps around top groups so exact repaired groups below the top-N cutoff can still participate in full-board partition search.
+  - **Partition Weakest-Link Scoring**: Added explicit mean/min/median partition scoring to favor boards without one weak group while preserving enough median pressure to rank viable complete boards.
+  - **Solver-Aligned Checkpoint Selection**: Added a validation selection score that prioritizes top-5 perfect partitions, top-partition solves, true-group coverage, and near-miss reduction over candidate MRR alone. All-time metadata now records `validation_selection_score`, partition selection metrics, `validation_split_seed`, candidate scoring weights, and candidate generation settings to avoid stale comparisons across split, scorer, or search changes.
+* **Validation Snapshot**:
+  - Command: `.venv/bin/python main.py --train --skip-gcn --rl-episodes 0 --device cpu`
+  - Existing all-time GCN checkpoint, refreshed validation artifacts only.
+  - Top partition solves all 4 groups improved from `1/109 (0.9%)` to `8/109 (7.3%)`.
+  - Any top-5 partition solves all 4 groups improved from `9/109 (8.3%)` to `16/109 (14.7%)`.
+  - True groups in top-20 candidates improved from `158/436 (36.2%)` to `181/436 (41.5%)`.
+  - Avg correct groups in top partition improved from `0.77/4` to `0.96/4`.
+  - A follow-up seed-32 retrain reached higher epoch MRR (`0.2024`) but underperformed the previous checkpoint on partition selection metrics; the all-time checkpoint was restored by solver-aligned selection score.
+  - The scoring-grid, seed-aware repair, archetype-gate tuning, partition-scorer split, search-breadth tuning, and repair-limit retune improved selection score from `20052.13` to `22005.53`, any top-5 perfect partitions from `16/109 (14.7%)` to `18/109 (16.5%)`, complete partition candidates from `106/109 (97.2%)` to `107/109 (98.2%)`, true groups in top-20 from `181/436 (41.5%)` to `192/436 (44.0%)`, puzzles with any true group in top-20 from `81/109 (74.3%)` to `85/109 (78.0%)`, puzzles with all true groups in top-20 from `19/109 (17.4%)` to `23/109 (21.1%)`, and avg best correct groups across top partitions from `1.33/4` to `1.48/4`. Top partition solves moved from `8/109 (7.3%)` to `7/109 (6.4%)`, so the gain is specifically in best-of-top-5 partition quality and true-group coverage.
+
+---
+
+## Phase 24: Concatenated Completion Edge Feature
+* **Milestone**: Added a WordNet-backed edge channel for single-token fill-in-the-blank compounds.
+* **Major Changes**:
+  - **Concatenated Completion Edge**: Expanded `EDGE_FEATURE_DIM` to `26` with `is_concatenated_completion`, connecting pairs that share a hidden prefix or suffix forming valid words, such as `A`, `CAPRI`, `POP`, and `UNI` before `corn`.
+  - **Feature Schema Version 14**: Bumped `FEATURE_SCHEMA_VERSION` to `14`; preprocessed graph caches and GCN checkpoints must be rebuilt.
+
+---
+
+## Phase 23: Replicate v12 GCN Model
+* **Milestone**: Reconfigured and evaluated GCN training performance under the v12 feature schema to reproduce the all-time best validation MRR results.
+* **Major Changes**:
+  - **Feature Reversion (v12)**: Changed `EDGE_FEATURE_DIM` from `25` to `24` and `FEATURE_SCHEMA_VERSION` from `13` to `12` in `src/features.py`. Conditionally disabled the 25th Google Ngrams edge feature in `src/features.py`, `src/graph.py`, and `src/raw_candidates.py`.
+  - **Preprocessed Graph Dataset Rebuild**: Re-ran the preprocessing pipeline to regenerate the graph feature cache `data/preprocessed_graphs.pt` under v12.
+  - **Model Verification & Seed Search**: Validated the original `gcn_all_time_best_v12.pt` checkpoint (achieving 0.1678 candidate MRR on validation set). Conducted a stochastic seed search over 6 initialization seeds, finding that seed 789 replicated the converges best with a validation MRR of 0.1469.
+  - **MLflow norm tracking fix**: Fixed relation parameters norm logging in `src/train.py` to prevent indexing out of bounds when using 24 relations.
 
 ---
 

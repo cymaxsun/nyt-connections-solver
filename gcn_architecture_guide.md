@@ -1,6 +1,6 @@
 # Understanding GCN and the Connections Solver Architecture
 
-This guide explains the non-RL half of the Connections solver: how a 16-word board becomes a graph, how graph features are built, and how the GCN predicts candidate groups. It reflects feature schema `13` and the current `EDGE_FEATURE_DIM = 25` implementation.
+This guide explains the non-RL half of the Connections solver: how a 16-word board becomes a graph, how graph features are built, and how the GCN predicts candidate groups. It reflects feature schema `14` and the current `EDGE_FEATURE_DIM = 26` implementation.
 
 ---
 
@@ -21,14 +21,14 @@ The solver represents the board as a graph so it can reason over all pairwise re
 Each board becomes a graph:
 
 * **Nodes**: the 16 board words.
-* **Edges**: every ordered pair of words, with a 25-dimensional feature vector.
+* **Edges**: every ordered pair of words, with a 26-dimensional feature vector.
 * **Relations**: each edge feature dimension becomes one channel in the relational adjacency tensor.
 
 ```mermaid
 flowchart TD
     A[16 board words] --> B[FeatureExtractor]
     B --> C[Node feature matrix]
-    B --> D[25-channel edge feature tensor]
+    B --> D[26-channel edge feature tensor]
     C --> E[ConnectionsGraph]
     D --> E
     E --> F[Relational GCN]
@@ -43,7 +43,7 @@ The current feature extractor combines dictionary resources, local caches, neura
 
 ## 3. Edge Features
 
-Each ordered word pair `(w_i, w_j)` receives a 25-dimensional vector. These raw edge features are used in two places:
+Each ordered word pair `(w_i, w_j)` receives a 26-dimensional vector. These raw edge features are used in two places:
 
 * As relation-specific adjacency channels for message passing.
 * As direct inputs to the edge and group scoring heads, concatenated with learned node embeddings.
@@ -75,6 +75,7 @@ Each ordered word pair `(w_i, w_j)` receives a 25-dimensional vector. These raw 
 | 22 | `metaphone_match` | Binary Metaphone code match. | Phonetic similarity |
 | 23 | `phoneme_overlap` | Jaccard overlap of phoneme sets. | Pronunciation overlap |
 | 24 | `compound_fragment_shared` | Strongest shared cached ngram completion, e.g. `surf board` and `skate board`. | Fill-in-the-blank compounds |
+| 25 | `is_concatenated_completion` | Binary flag when two fragments share a hidden prefix/suffix that forms valid WordNet words, e.g. `a + corn`, `capri + corn`. | Single-token compound completions |
 
 ### Edge Sparsification
 
@@ -141,10 +142,11 @@ After all edge features and sentence embeddings are available, the extractor add
 
 ## 5. Compound and Fill-in-the-Blank Signals
 
-The solver has two compound-related feature families:
+The solver has three compound-related feature families:
 
 * **WordNet compound valence** is a node signal. It says a word often appears as a compound fragment, such as `surf` in `surfboard`.
 * **Ngram shared completion** is an edge signal. It says two board words share a phrase completion, such as `surf board` and `skate board`.
+* **Concatenated completion** is an edge signal. It says two board fragments share a hidden prefix or suffix that creates valid single words, such as `a/capri/pop/uni + corn`.
 
 The ngram cache is stored at `data/google_ngram_compound_cache.json`. The preferred warmer is now:
 
@@ -161,7 +163,16 @@ token *
 
 It stores schema v2 metadata with source `ngrams.dev/search`, and `FeatureExtractor` accepts both the original Google Viewer-style schema and the new ngrams.dev schema.
 
-This feature is designed for spaced phrase completions. It helps with categories like `SURF ___`, `SKATE ___`, and `SCORE ___` when the hidden word is `BOARD`. It does not fully solve concatenated hidden suffix categories such as `A/CAPRI/POP/UNI + CORN`, because those completions are single tokens: `ACORN`, `CAPRICORN`, `POPCORN`, `UNICORN`.
+The ngram feature is designed for spaced phrase completions. It helps with categories like `SURF ___`, `SKATE ___`, and `SCORE ___` when the hidden word is `BOARD`.
+
+The concatenated-completion feature is designed for single-token hidden affixes. It builds a lazy WordNet-derived hash map of valid words and checks whether two board tokens share a hidden suffix or prefix:
+
+```text
+A + CORN      = ACORN
+CAPRI + CORN  = CAPRICORN
+POP + CORN    = POPCORN
+UNI + CORN    = UNICORN
+```
 
 ---
 
@@ -170,7 +181,7 @@ This feature is designed for spaced phrase completions. It helps with categories
 The GCN updates node representations through relation-specific message passing. Each layer has:
 
 * A self transformation, `W_self`, for the node's own features.
-* A learned relation matrix for each of the 25 edge channels.
+* A learned relation matrix for each of the 26 edge channels.
 * A weighted aggregation over relation-specific adjacency matrices.
 
 The implementation supports both unbatched tensors for individual boards and batched tensors for training. The relation adjacency tensor has shape:
@@ -232,15 +243,6 @@ The RL agent can later choose among candidate partitions during interactive solv
 
 ---
 
-## 9. Known Feature Gap
+## 9. Remaining Feature Gap
 
-The current compound completion channel is phrase-based, not concatenation-based. It can detect that `SURF` and `SKATE` share `BOARD` as a spaced completion, but it is weak for:
-
-```text
-A + CORN      = ACORN
-CAPRI + CORN  = CAPRICORN
-POP + CORN    = POPCORN
-UNI + CORN    = UNICORN
-```
-
-A future feature should add lexicon-backed shared concatenated prefix/suffix detection. That would search for hidden fragments that form valid single words when prepended or appended to board tokens.
+The concatenated-completion channel uses WordNet as its first dictionary source. That covers common examples such as `ACORN`, `CAPRICORN`, `POPCORN`, and `UNICORN`, but it may miss slang, newer proper nouns, brand names, and puzzle-specific coinages. A future extension could add a larger frequency-filtered vocabulary while keeping the same edge-feature interface.

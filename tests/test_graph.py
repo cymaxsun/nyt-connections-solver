@@ -2,7 +2,11 @@ import unittest
 
 import numpy as np
 
-from src.features import COMPOUND_FRAGMENT_SHARED_DIM, EDGE_FEATURE_DIM
+from src.features import (
+    COMPOUND_FRAGMENT_SHARED_DIM,
+    CONCATENATED_COMPLETION_DIM,
+    EDGE_FEATURE_DIM,
+)
 from src.graph import ConnectionsGraph, LENGTH_SIMILARITY_DIM, LEVENSHTEIN_DISTANCE_DIM
 
 
@@ -160,6 +164,21 @@ class ConnectionsGraphCompoundFragmentTests(unittest.TestCase):
 
         self.assertEqual(adj[0, 1].item(), 0.0)
         self.assertEqual(adj[0, 2].item(), 1.0)
+
+    def test_multi_relational_adjacency_preserves_concatenated_completion_channel(self):
+        node_features = np.zeros((16, 7), dtype=np.float32)
+        edge_features = np.zeros((16, 16, EDGE_FEATURE_DIM), dtype=np.float32)
+        edge_features[0, 1, CONCATENATED_COMPLETION_DIM] = 1.0
+
+        graph = ConnectionsGraph(
+            [f"WORD{i}" for i in range(16)],
+            node_features=node_features,
+            edge_features=edge_features,
+        )
+
+        adj = graph.get_multi_relational_adjacency()[CONCATENATED_COMPLETION_DIM]
+
+        self.assertEqual(adj[0, 1].item(), 1.0)
 
 
 if __name__ == "__main__":

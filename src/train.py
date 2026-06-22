@@ -17,6 +17,9 @@ from src.features import (
 )
 from src.gcn import (
     ConnectionsGCN,
+    GROUP_ARCHETYPE_MARGIN_GATE,
+    GROUP_ARCHETYPE_POSITIVE_GATE,
+    GROUP_ARCHETYPE_SCORE_WEIGHT,
     build_gcn_model,
     train_gcn_epoch,
     validate_gcn,
@@ -29,7 +32,24 @@ from src.rl_agent import CANDIDATE_FEATURE_DIM, DQNAgent, train_rl_episodes
 from src.env import ConnectionsEnv
 from src.graph import ConnectionsGraph
 from src.visualize import plot_connections_graph
-from src.candidates import build_partition_candidates, partition_groups_for_actions
+from src.candidates import (
+    DEFAULT_PARTITION_TOP_K,
+    DEFAULT_PARTITION_TOP_N,
+    DEFAULT_SINGLE_SWAP_MAX_REPAIRS,
+    DEFAULT_SINGLE_SWAP_REPAIR_SEED_LIMIT,
+    PARTITION_SCORE_MEAN_WEIGHT,
+    PARTITION_SCORE_MEDIAN_WEIGHT,
+    PARTITION_SCORE_MIN_WEIGHT,
+    PARTITION_SEARCH_MAX_STATES,
+    SINGLE_SWAP_REPAIR_SEED_SCORE_PRIORITY_WEIGHT,
+    build_partition_candidates,
+    partition_groups_for_actions,
+)
+from src.candidate_scoring import (
+    GROUP_SCORE_MEAN_WEIGHT,
+    GROUP_SCORE_MIN_WEIGHT,
+    GROUP_SCORE_MEDIAN_WEIGHT,
+)
 from src.relation_archetypes import (
     NUM_RELATION_ARCHETYPES,
     RELATION_ARCHETYPE_SCHEMA_VERSION,
@@ -76,6 +96,7 @@ def train_pipeline(
     if seed is not None:
         set_deterministic_seed(seed)
         print(f"Using deterministic seed: {seed}")
+    split_seed = seed if seed is not None else 42
     os.makedirs(model_dir, exist_ok=True)
 
     # Initialize MLflow experiment and parent run
@@ -102,7 +123,7 @@ def train_pipeline(
         print(f"Loading preprocessed graphs from {preprocessed_path}...")
         train_puzzles, val_puzzles, test_puzzles = load_preprocessed_dataset(
             preprocessed_path,
-            seed=seed if seed is not None else 42,
+            seed=split_seed,
         )
         if not _preprocessed_features_are_current(train_puzzles + val_puzzles + test_puzzles):
             print(
@@ -112,13 +133,13 @@ def train_pipeline(
             )
             train_puzzles, val_puzzles, test_puzzles = load_dataset(
                 data_path,
-                seed=seed if seed is not None else 42,
+                seed=split_seed,
             )
     else:
         print(f"Loading raw dataset from {data_path}...")
         train_puzzles, val_puzzles, test_puzzles = load_dataset(
             data_path,
-            seed=seed if seed is not None else 42,
+            seed=split_seed,
         )
     print(f"Loaded {len(train_puzzles)} train, {len(val_puzzles)} val, {len(test_puzzles)} test puzzles.")
     
@@ -168,7 +189,7 @@ def train_pipeline(
                 state = torch.load(all_time_gcn_weights_path, map_location=device)
                 if _gcn_checkpoint_matches_model(state, in_features):
                     gcn_state = state
-                    checkpoint_label = "all-time best GCN"
+                    checkpoint_label = all_time_gcn_weights_path
                 else:
                     print("Warning: All-time best GCN checkpoint is incompatible with the current model architecture.")
             except Exception as e:
@@ -181,7 +202,7 @@ def train_pipeline(
                     state = torch.load(gcn_weights_path, map_location=device)
                     if _gcn_checkpoint_matches_model(state, in_features):
                         gcn_state = state
-                        checkpoint_label = "current best GCN"
+                        checkpoint_label = gcn_weights_path
                     else:
                         print("Warning: Current best GCN checkpoint is incompatible with the current model architecture.")
                 except Exception as e:
@@ -232,26 +253,71 @@ def train_pipeline(
             val_puzzles,
             extractor,
             device,
+            split_seed,
         )
+        all_time_best_selection_score = _load_gcn_all_time_best_selection_score(
+            all_time_gcn_metadata_path
+        )
+        if all_time_best_selection_score <= 0.0:
+            all_time_best_selection_score = all_time_best_mrr
         
         best_mrr = 0.0
+        best_selection_score = float("-inf")
         epochs_no_improve = 0
         gcn_history = []
         for epoch in range(1, gcn_epochs + 1):
             loss = train_gcn_epoch(gcn, train_puzzles, extractor, gcn_optimizer, device)
             val_loss, val_mrr = validate_gcn(gcn, val_puzzles, extractor, device, visualize=False, epoch=epoch)
+            val_stats, _, _ = _evaluate_gcn_model_stats(
+                gcn,
+                val_puzzles,
+                extractor,
+                device,
+                top_k=5,
+                visualize_prefix=None,
+                output_dir=None,
+                collect_puzzle_details=False,
+                quiet=True,
+            )
+            val_selection_score = _gcn_selection_score_from_stats(val_stats)
             
-            print(f"Epoch {epoch:02d}/{gcn_epochs:02d} | Train Loss: {loss:.4f} | Val Loss: {val_loss:.4f} | Val MRR: {val_mrr:.4f}")
+            print(
+                f"Epoch {epoch:02d}/{gcn_epochs:02d} | Train Loss: {loss:.4f} | "
+                f"Val Loss: {val_loss:.4f} | Val MRR: {val_mrr:.4f} | "
+                f"Selection: {val_selection_score:.2f}"
+            )
             
             try:
                 if mlflow.active_run():
                     mlflow.log_metric("gcn_train_loss", loss, step=epoch)
                     mlflow.log_metric("gcn_val_loss", val_loss, step=epoch)
                     mlflow.log_metric("gcn_val_mrr", val_mrr, step=epoch)
+                    mlflow.log_metric("gcn_val_selection_score", val_selection_score, step=epoch)
+                    mlflow.log_metric(
+                        "gcn_val_top_partition_solved",
+                        val_stats["top_partition_solved"],
+                        step=epoch,
+                    )
+                    mlflow.log_metric(
+                        "gcn_val_any_top_5_partition_solved",
+                        val_stats["best_top_k_partition_solved"],
+                        step=epoch,
+                    )
+                    mlflow.log_metric(
+                        "gcn_val_true_groups_in_top_20",
+                        val_stats["true_groups_in_top_candidates"],
+                        step=epoch,
+                    )
+                    mlflow.log_metric(
+                        "gcn_val_3_of_4_near_misses_top_20",
+                        val_stats["near_miss_3_of_4_candidates"],
+                        step=epoch,
+                    )
                     
                     # Track per relation weights L2 norm
                     with torch.no_grad():
-                        for r_idx, name in enumerate(EDGE_FEATURE_NAMES):
+                        for r_idx in range(EDGE_FEATURE_DIM):
+                            name = EDGE_FEATURE_NAMES[r_idx]
                             norm_val1 = torch.norm(gcn.gcn1.W_rel[r_idx]).item()
                             mlflow.log_metric(f"gcn1_W_rel_norm_{name}", norm_val1, step=epoch)
                             norm_val2 = torch.norm(gcn.gcn2.W_rel[r_idx]).item()
@@ -263,18 +329,21 @@ def train_pipeline(
                 "epoch": epoch,
                 "train_loss": float(loss),
                 "val_loss": float(val_loss),
-                "val_mrr": float(val_mrr)
+                "val_mrr": float(val_mrr),
+                "selection_score": float(val_selection_score),
             })
             
-            # Save best GCN and store its visualization
-            if val_mrr > best_mrr:
+            # Save best GCN by solver-aligned validation selection score.
+            if val_selection_score > best_selection_score:
+                best_selection_score = val_selection_score
                 best_mrr = val_mrr
                 epochs_no_improve = 0
                 _save_gcn_best_checkpoint(
                     gcn.state_dict(),
                     gcn_weights_path,
                 )
-                if val_mrr > all_time_best_mrr:
+                if val_selection_score > all_time_best_selection_score:
+                    all_time_best_selection_score = val_selection_score
                     all_time_best_mrr = val_mrr
                     _save_gcn_all_time_best_checkpoint(
                         gcn.state_dict(),
@@ -282,8 +351,14 @@ def train_pipeline(
                         all_time_gcn_metadata_path,
                         val_mrr,
                         epoch,
+                        selection_score=val_selection_score,
+                        validation_stats=val_stats,
+                        validation_split_seed=split_seed,
                     )
-                    print(f"New all-time best GCN Validation MRR: {val_mrr:.4f}")
+                    print(
+                        "New all-time best GCN selection score: "
+                        f"{val_selection_score:.2f} (Validation MRR: {val_mrr:.4f})"
+                    )
                     # Also save the all-time best validation graph visualization
                     all_time_best_filepath = os.path.join("visualizations", "val_all_time_best.png")
                     _, _ = validate_gcn(
@@ -350,7 +425,7 @@ def train_pipeline(
                         num_relations=EDGE_FEATURE_DIM,
                     ).to(device)
                     gcn.load_state_dict(state)
-                    checkpoint_label = "all-time best GCN"
+                    checkpoint_label = all_time_gcn_weights_path
                     loaded_gcn = True
                 else:
                     print("Warning: All-time best GCN checkpoint is incompatible. Falling back to current best.")
@@ -367,22 +442,38 @@ def train_pipeline(
                 num_relations=EDGE_FEATURE_DIM,
             ).to(device)
             gcn.load_state_dict(state)
-            checkpoint_label = "current best GCN"
+            checkpoint_label = gcn_weights_path
 
         print(f"GCN training complete. Loaded {checkpoint_label} for RL training.")
 
+    validation_stats = None
     if update_artifacts:
         print("\n--- Phase 1b: Updating Validation Artifacts ---")
-        update_validation_artifacts(
+        validation_stats = update_validation_artifacts(
             gcn,
             val_puzzles,
             extractor,
             device,
             model_dir=model_dir,
-            checkpoint_label=os.path.join(model_dir, _gcn_checkpoint_filename()),
+            checkpoint_label=checkpoint_label,
         )
     else:
         print("\n--- Phase 1b: Skipping Validation Artifacts ---")
+
+    if (
+        checkpoint_label == all_time_gcn_weights_path
+        and validation_stats is not None
+        and _all_time_metadata_requires_selection_refresh(all_time_gcn_metadata_path, split_seed)
+    ):
+        _save_gcn_all_time_best_checkpoint(
+            gcn.state_dict(),
+            all_time_gcn_weights_path,
+            all_time_gcn_metadata_path,
+            best_mrr,
+            selection_score=_gcn_selection_score_from_stats(validation_stats),
+            validation_stats=validation_stats,
+            validation_split_seed=split_seed,
+        )
     
     if rl_episodes <= 0:
         print("\n--- Phase 2: Skipping RL DQN Agent Training ---")
@@ -392,14 +483,19 @@ def train_pipeline(
     print("\n--- Phase 2: Training RL DQN Agent ---")
     # State space dimension = 16 (mask) + 1 (mistakes normalized) + 16 (history) = 33
     # Candidate feature dimension includes GCN group features plus partition context.
+    rl_lr = 2e-4
+    rl_gamma = 0.9
+    rl_epsilon_start = 1.0
+    rl_epsilon_end = 0.10
+    rl_epsilon_decay = 0.999
     agent = DQNAgent(
         state_dim=33,
         candidate_dim=CANDIDATE_FEATURE_DIM,
-        lr=5e-4,
-        gamma=0.9,
-        epsilon_start=1.0,
-        epsilon_end=0.05,
-        epsilon_decay=0.998,
+        lr=rl_lr,
+        gamma=rl_gamma,
+        epsilon_start=rl_epsilon_start,
+        epsilon_end=rl_epsilon_end,
+        epsilon_decay=rl_epsilon_decay,
         device=device
     )
     
@@ -408,11 +504,11 @@ def train_pipeline(
         mlflow.start_run(run_name="DQN-Training", nested=True)
         mlflow.log_params({
             "rl_episodes": rl_episodes,
-            "rl_lr": 5e-4,
-            "rl_gamma": 0.9,
-            "rl_epsilon_start": 1.0,
-            "rl_epsilon_end": 0.05,
-            "rl_epsilon_decay": 0.998,
+            "rl_lr": rl_lr,
+            "rl_gamma": rl_gamma,
+            "rl_epsilon_start": rl_epsilon_start,
+            "rl_epsilon_end": rl_epsilon_end,
+            "rl_epsilon_decay": rl_epsilon_decay,
             "batch_size": batch_size,
         })
     except Exception as e:
@@ -486,6 +582,8 @@ def evaluate_system(gcn: ConnectionsGCN, agent: DQNAgent, test_puzzles: List[Con
     successes = 0
     total_reward = 0.0
     steps_list = []
+    level_solve_stats: Dict[Any, Dict[str, int]] = {}
+    archetype_solve_stats: Dict[str, Dict[str, int]] = {}
     
     for puzzle in test_puzzles:
         with torch.no_grad():
@@ -502,6 +600,20 @@ def evaluate_system(gcn: ConnectionsGCN, agent: DQNAgent, test_puzzles: List[Con
             # Clone edge features for episode-local mutations
             graph.edge_features = graph.edge_features.clone()
                 
+        words = _puzzle_value(puzzle, "words")
+        word_to_cat = _puzzle_value(puzzle, "word_to_cat")
+        true_groups = _true_groups_for_words(words, word_to_cat)
+        solved_cat_indices = set()
+        category_metadata = {
+            cat_idx: {
+                "level": _category_level_for_cat(words, word_to_cat, cat_idx),
+                "archetype": normalize_relation_archetype(
+                    _relation_type_for_cat(words, word_to_cat, cat_idx)
+                ),
+            }
+            for cat_idx in true_groups
+        }
+
         env = ConnectionsEnv(puzzle)
         obs, info = env.reset()
         done = False
@@ -530,6 +642,13 @@ def evaluate_system(gcn: ConnectionsGCN, agent: DQNAgent, test_puzzles: List[Con
             obs, reward, done, _, info = env.step(action_indices)
             total_reward += reward
             steps += 1
+
+            if info.get("feedback") == "Correct!":
+                solved_group = tuple(sorted(action_indices))
+                for cat_idx, true_group in true_groups.items():
+                    if solved_group == true_group:
+                        solved_cat_indices.add(cat_idx)
+                        break
             
             # Update graph edges based on feedback
             feedback = info.get("feedback", "")
@@ -538,6 +657,19 @@ def evaluate_system(gcn: ConnectionsGCN, agent: DQNAgent, test_puzzles: List[Con
         if info.get("win", False):
             successes += 1
         steps_list.append(steps)
+
+        for cat_idx, metadata in category_metadata.items():
+            level_stats = level_solve_stats.setdefault(
+                metadata["level"], {"solved": 0, "total": 0}
+            )
+            level_stats["total"] += 1
+            level_stats["solved"] += int(cat_idx in solved_cat_indices)
+
+            archetype_stats = archetype_solve_stats.setdefault(
+                metadata["archetype"], {"solved": 0, "total": 0}
+            )
+            archetype_stats["total"] += 1
+            archetype_stats["solved"] += int(cat_idx in solved_cat_indices)
         
     test_win_rate = successes / len(test_puzzles)
     avg_reward = total_reward / len(test_puzzles)
@@ -547,12 +679,34 @@ def evaluate_system(gcn: ConnectionsGCN, agent: DQNAgent, test_puzzles: List[Con
     print(f"Win Rate: {test_win_rate:.2%}")
     print(f"Average Reward: {avg_reward:.2f}")
     print(f"Average Submissions: {avg_submissions:.1f}")
+    print("Category Solve Rate by Level:")
+    for level, stats in sorted(level_solve_stats.items(), key=lambda item: str(item[0])):
+        print(
+            f"  Level {level}: {stats['solved']}/{stats['total']} "
+            f"({_pct(stats['solved'], stats['total'])})"
+        )
+    print("Category Solve Rate by Archetype:")
+    for archetype, stats in sorted(archetype_solve_stats.items()):
+        print(
+            f"  {archetype}: {stats['solved']}/{stats['total']} "
+            f"({_pct(stats['solved'], stats['total'])})"
+        )
 
     try:
         if mlflow.active_run():
             mlflow.log_metric("test_win_rate", test_win_rate)
             mlflow.log_metric("test_avg_reward", avg_reward)
             mlflow.log_metric("test_avg_submissions", avg_submissions)
+            for level, stats in level_solve_stats.items():
+                mlflow.log_metric(
+                    f"test_level_{level}_solve_rate",
+                    stats["solved"] / stats["total"] if stats["total"] else 0.0,
+                )
+            for archetype, stats in archetype_solve_stats.items():
+                mlflow.log_metric(
+                    f"test_archetype_{archetype.lower()}_solve_rate",
+                    stats["solved"] / stats["total"] if stats["total"] else 0.0,
+                )
     except Exception as e:
         print(f"Warning: Failed to log test evaluation metrics to MLflow: {e}")
 
@@ -567,6 +721,7 @@ def _evaluate_gcn_model_stats(
     visualize_prefix: Optional[str] = None,
     output_dir: Optional[str] = None,
     collect_puzzle_details: bool = False,
+    quiet: bool = False,
 ) -> Tuple[Dict[str, Any], List[str], List[Dict[str, Any]]]:
     model.eval()
     top_group_limit = top_k * 4
@@ -599,7 +754,7 @@ def _evaluate_gcn_model_stats(
             )
             candidates = model.get_candidate_subgraphs(edge_probs, group_relation_logits)
             active_mask = np.ones(16, dtype=np.float32)
-            partitions = build_partition_candidates(candidates, active_mask, top_n=200)
+            partitions = build_partition_candidates(candidates, active_mask)
             action_candidates = partition_groups_for_actions(partitions, candidates, active_mask)
             true_groups = _true_groups_for_words(words, word_to_cat)
             
@@ -701,7 +856,7 @@ def _evaluate_gcn_model_stats(
                     puzzle_lines.append("_No candidate groups were available._")
                 puzzle_lines.extend(["", "---", ""])
 
-            if (idx + 1) % 20 == 0 or (idx + 1) == len(val_puzzles):
+            if not quiet and ((idx + 1) % 20 == 0 or (idx + 1) == len(val_puzzles)):
                 print(f"Evaluated {idx + 1}/{len(val_puzzles)} validation puzzles for {visualize_prefix or 'metrics'}")
 
     return aggregate_stats, puzzle_lines, puzzle_mrrs
@@ -733,6 +888,25 @@ def _stats_to_metric_dict(stats: Dict[str, Any]) -> Dict[str, str]:
         f"Median rank of true groups found in top-{top_group_limit}": f"{median_rank:.1f}",
         f"3-of-4 near-miss candidates in top-{top_group_limit}": f"{stats['near_miss_3_of_4_candidates']}",
     }
+
+
+def _gcn_selection_score_from_stats(stats: Dict[str, Any]) -> float:
+    """
+    Score validation quality for checkpoint selection.
+
+    Candidate MRR alone can select models that rank some true groups higher while
+    hurting full-board partition quality. This score prioritizes solved
+    partitions, then candidate coverage, and penalizes high-ranked 3-of-4 decoys.
+    """
+    exact_mrr = stats["exact_mrr_sum"] / max(1, stats["exact_mrr_count"])
+    return (
+        1000.0 * stats["best_top_k_partition_solved"]
+        + 300.0 * stats["top_partition_solved"]
+        + 50.0 * stats["puzzles_with_all_true_groups"]
+        + 5.0 * stats["true_groups_in_top_candidates"]
+        + 100.0 * exact_mrr
+        - 0.25 * stats["near_miss_3_of_4_candidates"]
+    )
 
 
 def update_validation_artifacts(
@@ -925,6 +1099,8 @@ def update_validation_artifacts(
                 mlflow.log_artifact(all_time_best_filepath, artifact_path="validation_artifacts")
     except Exception as e:
         print(f"Warning: Failed to log validation artifacts to MLflow: {e}")
+
+    return aggregate_stats
 
 def _puzzle_value(puzzle: Any, field: str):
     return puzzle[field] if isinstance(puzzle, dict) else getattr(puzzle, field)
@@ -1142,7 +1318,13 @@ def _format_comparison(metric_name: str, curr_str: str, prev_str: str | None) ->
         return prev_str, "-"
         
     diff = curr_val - prev_val
-    lower_is_better = "rank" in metric_name.lower()
+    metric_key = metric_name.lower()
+    lower_is_better = (
+        "rank" in metric_key
+        or "loss" in metric_key
+        or "near-miss" in metric_key
+        or "near miss" in metric_key
+    )
     is_pct = "%" in curr_str and "%" in prev_str
     
     if abs(diff) < 1e-5:
@@ -1369,6 +1551,18 @@ def _relation_type_for_cat(
     return "SYNONYM_OR_NEAR"
 
 
+def _category_level_for_cat(
+    words: List[str],
+    word_to_cat: Dict[str, Dict[str, Any]],
+    cat_idx: int,
+) -> Any:
+    for word in words:
+        cat_info = word_to_cat[word]
+        if cat_info["cat_idx"] == cat_idx:
+            return cat_info.get("level", cat_idx)
+    return cat_idx
+
+
 def _candidate_summary_line(
     group_idx: int,
     candidate: Any,
@@ -1462,21 +1656,50 @@ def _save_gcn_all_time_best_checkpoint(
     metadata_path: str,
     val_mrr: float,
     epoch: int | None = None,
+    selection_score: float | None = None,
+    validation_stats: Dict[str, Any] | None = None,
+    validation_split_seed: int | None = None,
 ) -> None:
     os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
     torch.save(state_dict, checkpoint_path)
-    metadata = _gcn_all_time_best_metadata(val_mrr, epoch)
+    metadata = _gcn_all_time_best_metadata(
+        val_mrr,
+        epoch,
+        selection_score=selection_score,
+        validation_stats=validation_stats,
+        validation_split_seed=validation_split_seed,
+    )
     with open(metadata_path, "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2, sort_keys=True)
 
-def _gcn_all_time_best_metadata(val_mrr: float, epoch: int | None = None) -> Dict[str, Any]:
+def _gcn_all_time_best_metadata(
+    val_mrr: float,
+    epoch: int | None = None,
+    selection_score: float | None = None,
+    validation_stats: Dict[str, Any] | None = None,
+    validation_split_seed: int | None = None,
+) -> Dict[str, Any]:
     metadata = {
         "validation_mrr": float(val_mrr),
         "edge_feature_dim": EDGE_FEATURE_DIM,
         "feature_schema_version": FEATURE_SCHEMA_VERSION,
         "relation_archetype_schema_version": RELATION_ARCHETYPE_SCHEMA_VERSION,
         "default_node_feature_dim": DEFAULT_NODE_FEATURE_DIM,
+        "candidate_score_weights": _candidate_score_weight_metadata(),
+        "candidate_generation": _candidate_generation_metadata(),
     }
+    if selection_score is not None:
+        metadata["validation_selection_score"] = float(selection_score)
+    if validation_split_seed is not None:
+        metadata["validation_split_seed"] = int(validation_split_seed)
+    if validation_stats is not None:
+        metadata["selection_metrics"] = {
+            "top_partition_solved": int(validation_stats["top_partition_solved"]),
+            "best_top_k_partition_solved": int(validation_stats["best_top_k_partition_solved"]),
+            "true_groups_in_top_candidates": int(validation_stats["true_groups_in_top_candidates"]),
+            "puzzles_with_all_true_groups": int(validation_stats["puzzles_with_all_true_groups"]),
+            "near_miss_3_of_4_candidates": int(validation_stats["near_miss_3_of_4_candidates"]),
+        }
     if epoch is not None:
         metadata["epoch"] = int(epoch)
     return metadata
@@ -1493,6 +1716,35 @@ def _load_gcn_all_time_best_mrr(metadata_path: str) -> float:
     except Exception:
         return 0.0
 
+def _load_gcn_all_time_best_selection_score(metadata_path: str) -> float:
+    if not os.path.exists(metadata_path):
+        return 0.0
+    try:
+        with open(metadata_path, "r", encoding="utf-8") as f:
+            metadata = json.load(f)
+        if not _gcn_all_time_best_metadata_is_current(metadata):
+            return 0.0
+        return float(metadata.get("validation_selection_score", 0.0))
+    except Exception:
+        return 0.0
+
+def _all_time_metadata_requires_selection_refresh(
+    metadata_path: str,
+    validation_split_seed: int,
+) -> bool:
+    if not os.path.exists(metadata_path):
+        return True
+    try:
+        with open(metadata_path, "r", encoding="utf-8") as f:
+            metadata = json.load(f)
+        if not _gcn_all_time_best_metadata_is_current(metadata):
+            return True
+        if metadata.get("validation_split_seed") != validation_split_seed:
+            return True
+        return float(metadata.get("validation_selection_score", 0.0)) <= 0.0
+    except Exception:
+        return True
+
 def _gcn_all_time_best_metadata_is_current(metadata: Dict[str, Any]) -> bool:
     return (
         metadata.get("edge_feature_dim") == EDGE_FEATURE_DIM
@@ -1500,7 +1752,36 @@ def _gcn_all_time_best_metadata_is_current(metadata: Dict[str, Any]) -> bool:
         and metadata.get("relation_archetype_schema_version")
         == RELATION_ARCHETYPE_SCHEMA_VERSION
         and metadata.get("default_node_feature_dim") == DEFAULT_NODE_FEATURE_DIM
+        and metadata.get("candidate_score_weights") == _candidate_score_weight_metadata()
+        and metadata.get("candidate_generation") == _candidate_generation_metadata()
     )
+
+
+def _candidate_score_weight_metadata() -> Dict[str, float]:
+    return {
+        "mean": float(GROUP_SCORE_MEAN_WEIGHT),
+        "min": float(GROUP_SCORE_MIN_WEIGHT),
+        "median": float(GROUP_SCORE_MEDIAN_WEIGHT),
+    }
+
+
+def _candidate_generation_metadata() -> Dict[str, float]:
+    return {
+        "single_swap_repair_seed_score_priority_weight": float(
+            SINGLE_SWAP_REPAIR_SEED_SCORE_PRIORITY_WEIGHT
+        ),
+        "group_archetype_score_weight": float(GROUP_ARCHETYPE_SCORE_WEIGHT),
+        "group_archetype_positive_gate": float(GROUP_ARCHETYPE_POSITIVE_GATE),
+        "group_archetype_margin_gate": float(GROUP_ARCHETYPE_MARGIN_GATE),
+        "partition_score_mean_weight": float(PARTITION_SCORE_MEAN_WEIGHT),
+        "partition_score_min_weight": float(PARTITION_SCORE_MIN_WEIGHT),
+        "partition_score_median_weight": float(PARTITION_SCORE_MEDIAN_WEIGHT),
+        "default_partition_top_n": float(DEFAULT_PARTITION_TOP_N),
+        "default_partition_top_k": float(DEFAULT_PARTITION_TOP_K),
+        "partition_search_max_states": float(PARTITION_SEARCH_MAX_STATES),
+        "default_single_swap_repair_seed_limit": float(DEFAULT_SINGLE_SWAP_REPAIR_SEED_LIMIT),
+        "default_single_swap_max_repairs": float(DEFAULT_SINGLE_SWAP_MAX_REPAIRS),
+    }
 
 def _initialize_all_time_gcn_best(
     current_checkpoint_path: str,
@@ -1510,12 +1791,44 @@ def _initialize_all_time_gcn_best(
     val_puzzles: list,
     extractor: FeatureExtractor,
     device: str,
+    validation_split_seed: int,
 ) -> float:
     all_time_mrr = _load_gcn_all_time_best_mrr(all_time_metadata_path)
     if all_time_mrr > 0.0 and os.path.exists(all_time_checkpoint_path):
         try:
             state_dict = torch.load(all_time_checkpoint_path, map_location=device)
             if _gcn_checkpoint_matches_model(state_dict, in_features):
+                if _all_time_metadata_requires_selection_refresh(
+                    all_time_metadata_path,
+                    validation_split_seed,
+                ):
+                    hidden_feats = get_hidden_features_from_state_dict(state_dict, default=32)
+                    all_time_gcn = build_gcn_model(
+                        in_features=in_features,
+                        hidden_features=hidden_feats,
+                        out_features=16,
+                        num_relations=EDGE_FEATURE_DIM,
+                    ).to(device)
+                    all_time_gcn.load_state_dict(state_dict)
+                    all_time_stats, _, _ = _evaluate_gcn_model_stats(
+                        all_time_gcn,
+                        val_puzzles,
+                        extractor,
+                        device,
+                        top_k=5,
+                        collect_puzzle_details=False,
+                        quiet=True,
+                    )
+                    _save_gcn_all_time_best_checkpoint(
+                        state_dict,
+                        all_time_checkpoint_path,
+                        all_time_metadata_path,
+                        all_time_mrr,
+                        epoch=None,
+                        selection_score=_gcn_selection_score_from_stats(all_time_stats),
+                        validation_stats=all_time_stats,
+                        validation_split_seed=validation_split_seed,
+                    )
                 print(f"Loaded all-time best GCN Validation MRR: {all_time_mrr:.4f}")
                 return all_time_mrr
             else:
@@ -1548,12 +1861,24 @@ def _initialize_all_time_gcn_best(
             device,
             visualize=False,
         )
+        baseline_stats, _, _ = _evaluate_gcn_model_stats(
+            baseline_gcn,
+            val_puzzles,
+            extractor,
+            device,
+            top_k=5,
+            collect_puzzle_details=False,
+            quiet=True,
+        )
         _save_gcn_all_time_best_checkpoint(
             state_dict,
             all_time_checkpoint_path,
             all_time_metadata_path,
             baseline_mrr,
             epoch=None,
+            selection_score=_gcn_selection_score_from_stats(baseline_stats),
+            validation_stats=baseline_stats,
+            validation_split_seed=validation_split_seed,
         )
         print(
             "Initialized all-time best GCN from existing checkpoint "

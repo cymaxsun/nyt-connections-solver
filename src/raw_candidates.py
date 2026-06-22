@@ -24,6 +24,7 @@ from src.features import (
     CN_SYNONYM_DIM,
     COMPOUND_FRAGMENT_SHARED_DIM,
     COMPOUND_FRAGMENT_SHARED_THRESHOLD,
+    CONCATENATED_COMPLETION_DIM,
     EDGE_FEATURE_DIM,
     IS_ANAGRAM_DIM,
     IS_SUBSTRING_DIM,
@@ -78,6 +79,7 @@ RAW_FEATURE_WEIGHTS: Dict[int, float] = {
     METAPHONE_MATCH_DIM: 0.15,
     PHONEME_OVERLAP_DIM: 0.10,
     COMPOUND_FRAGMENT_SHARED_DIM: 1.0,
+    CONCATENATED_COMPLETION_DIM: 1.25,
 }
 
 
@@ -104,6 +106,8 @@ def raw_pair_scores(edge_features: np.ndarray) -> np.ndarray:
     weights = []
 
     for dim, weight in RAW_FEATURE_WEIGHTS.items():
+        if dim >= features.shape[-1]:
+            continue
         channel = features[:, :, dim].copy()
         if dim == WORDNET_PATH_SIM_DIM:
             channel = np.where(channel >= 0.15, channel, 0.0)

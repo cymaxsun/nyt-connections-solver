@@ -27,6 +27,10 @@ RELATION_LOSS_WEIGHT = 0.25
 GROUP_RELATION_LOSS_WEIGHT = 0.50
 GROUP_RELATION_HARD_NEGATIVES = 64
 GROUP_ARCHETYPE_SCORE_WEIGHT = 0.05
+GROUP_ARCHETYPE_POSITIVE_GATE = 0.40
+GROUP_ARCHETYPE_MARGIN_GATE = 0.05
+NEAR_MISS_HARD_NEGATIVE_BONUS = 0.10
+NEAR_MISS_GROUP_LOSS_WEIGHT = 2.0
 
 
 class RelationalGCNLayer(nn.Module):
@@ -231,37 +235,17 @@ class ConnectionsScoringMixin:
         """Return all 4-node combinations and their cohesion scores as tensors."""
         c = self.comb_tensor.to(edge_probs.device)
         is_batched = len(edge_probs.shape) == 3
-        if is_batched:
-            pair_scores = torch.stack(
-                [
-                    edge_probs[:, c[:, 0], c[:, 1]],
-                    edge_probs[:, c[:, 0], c[:, 2]],
-                    edge_probs[:, c[:, 0], c[:, 3]],
-                    edge_probs[:, c[:, 1], c[:, 2]],
-                    edge_probs[:, c[:, 1], c[:, 3]],
-                    edge_probs[:, c[:, 2], c[:, 3]],
-                ],
-                dim=-1,
-            )
-        else:
-            pair_scores = torch.stack(
-                [
-                    edge_probs[c[:, 0], c[:, 1]],
-                    edge_probs[c[:, 0], c[:, 2]],
-                    edge_probs[c[:, 0], c[:, 3]],
-                    edge_probs[c[:, 1], c[:, 2]],
-                    edge_probs[c[:, 1], c[:, 3]],
-                    edge_probs[c[:, 2], c[:, 3]],
-                ],
-                dim=-1,
-            )
+        pair_scores = _candidate_pair_values(edge_probs, c)
         scores = score_group_pair_values(pair_scores)
         if group_relation_logits is not None:
             group_probs = torch.softmax(group_relation_logits, dim=-1)
             positive_confidence = group_probs[..., 1:].max(dim=-1).values
             no_relation_confidence = group_probs[..., NO_RELATION_IDX]
             # Only boost if the prediction clears the archetype classification gate
-            gate = (positive_confidence >= 0.45) & ((positive_confidence - no_relation_confidence) >= 0.10)
+            gate = (
+                (positive_confidence >= GROUP_ARCHETYPE_POSITIVE_GATE)
+                & ((positive_confidence - no_relation_confidence) >= GROUP_ARCHETYPE_MARGIN_GATE)
+            )
             archetype_boost = torch.where(
                 gate,
                 positive_confidence - no_relation_confidence,
@@ -537,30 +521,15 @@ def train_gcn_epoch(
                 alpha=group_class_weights,
             )
             
-            # Groupwise Ranking Loss
             combinations = model.comb_tensor.to(device)
-            pair_scores = torch.stack(
-                [
-                    edge_probs_i[combinations[:, 0], combinations[:, 1]],
-                    edge_probs_i[combinations[:, 0], combinations[:, 2]],
-                    edge_probs_i[combinations[:, 0], combinations[:, 3]],
-                    edge_probs_i[combinations[:, 1], combinations[:, 2]],
-                    edge_probs_i[combinations[:, 1], combinations[:, 3]],
-                    edge_probs_i[combinations[:, 2], combinations[:, 3]],
-                ],
-                dim=-1,
+            scores = score_group_pair_values(_candidate_pair_values(edge_probs_i, combinations))
+            group_loss_i = _groupwise_margin_loss_from_scores(
+                scores,
+                combinations,
+                true_mask_i,
+                margin=GROUPWISE_LOSS_MARGIN,
+                hard_negative_count=GROUPWISE_HARD_NEGATIVES,
             )
-            beta = 10.0
-            scores = - (1.0 / beta) * torch.log(torch.sum(torch.exp(-beta * pair_scores), dim=-1))
-            true_scores = scores[true_mask_i]
-            negative_scores = scores[~true_mask_i]
-            
-            if true_scores.numel() > 0 and negative_scores.numel() > 0:
-                hard_count = min(GROUPWISE_HARD_NEGATIVES, negative_scores.numel())
-                hard_negative_scores = torch.topk(negative_scores, k=hard_count).values
-                group_loss_i = (torch.clamp(GROUPWISE_LOSS_MARGIN - true_scores.unsqueeze(1) + hard_negative_scores.unsqueeze(0), min=0.0) ** 2).mean()
-            else:
-                group_loss_i = edge_logits.new_tensor(0.0)
 
             loss_i = (
                 bce_loss_i
@@ -691,30 +660,15 @@ def validate_gcn(
                     alpha=group_class_weights,
                 )
                 
-                # Groupwise Ranking Loss
                 combinations = model.comb_tensor.to(device)
-                pair_scores = torch.stack(
-                    [
-                        edge_probs_i[combinations[:, 0], combinations[:, 1]],
-                        edge_probs_i[combinations[:, 0], combinations[:, 2]],
-                        edge_probs_i[combinations[:, 0], combinations[:, 3]],
-                        edge_probs_i[combinations[:, 1], combinations[:, 2]],
-                        edge_probs_i[combinations[:, 1], combinations[:, 3]],
-                        edge_probs_i[combinations[:, 2], combinations[:, 3]],
-                    ],
-                    dim=-1,
+                scores = score_group_pair_values(_candidate_pair_values(edge_probs_i, combinations))
+                group_loss = _groupwise_margin_loss_from_scores(
+                    scores,
+                    combinations,
+                    true_mask_i,
+                    margin=GROUPWISE_LOSS_MARGIN,
+                    hard_negative_count=GROUPWISE_HARD_NEGATIVES,
                 )
-                beta = 10.0
-                scores = - (1.0 / beta) * torch.log(torch.sum(torch.exp(-beta * pair_scores), dim=-1))
-                true_scores = scores[true_mask_i]
-                negative_scores = scores[~true_mask_i]
-                
-                if true_scores.numel() > 0 and negative_scores.numel() > 0:
-                    hard_count = min(GROUPWISE_HARD_NEGATIVES, negative_scores.numel())
-                    hard_negative_scores = torch.topk(negative_scores, k=hard_count).values
-                    group_loss = (torch.clamp(GROUPWISE_LOSS_MARGIN - true_scores.unsqueeze(1) + hard_negative_scores.unsqueeze(0), min=0.0) ** 2).mean()
-                else:
-                    group_loss = edge_logits.new_tensor(0.0)
                     
                 loss = (
                     bce_loss
@@ -829,8 +783,13 @@ def get_hidden_features_from_state_dict(state_dict: dict, default: int = 128) ->
 
 
 def _candidate_pair_values(values: torch.Tensor, combinations: torch.Tensor) -> torch.Tensor:
-    is_batched = len(values.shape) == 4
-    if is_batched:
+    """Gather the six internal pair values for each 4-word candidate.
+
+    Supports scalar edge score matrices with shape ``(16, 16)`` or
+    ``(batch, 16, 16)``, and feature matrices with shape ``(16, 16, dim)`` or
+    ``(batch, 16, 16, dim)``.
+    """
+    if len(values.shape) == 4:
         return torch.stack(
             [
                 values[:, combinations[:, 0], combinations[:, 1]],
@@ -842,7 +801,19 @@ def _candidate_pair_values(values: torch.Tensor, combinations: torch.Tensor) -> 
             ],
             dim=2,
         )
-    else:
+    if len(values.shape) == 3 and values.shape[1] == values.shape[2]:
+        return torch.stack(
+            [
+                values[:, combinations[:, 0], combinations[:, 1]],
+                values[:, combinations[:, 0], combinations[:, 2]],
+                values[:, combinations[:, 0], combinations[:, 3]],
+                values[:, combinations[:, 1], combinations[:, 2]],
+                values[:, combinations[:, 1], combinations[:, 3]],
+                values[:, combinations[:, 2], combinations[:, 3]],
+            ],
+            dim=2,
+        )
+    if len(values.shape) in (2, 3):
         return torch.stack(
             [
                 values[combinations[:, 0], combinations[:, 1]],
@@ -854,6 +825,7 @@ def _candidate_pair_values(values: torch.Tensor, combinations: torch.Tensor) -> 
             ],
             dim=1,
         )
+    raise ValueError(f"Unsupported candidate pair tensor shape: {tuple(values.shape)}")
 
 
 def build_relation_targets(
@@ -1020,6 +992,52 @@ def build_true_group_tensor(
     return torch.tensor(true_groups, dtype=torch.long, device=device)
 
 
+def _near_miss_negative_mask(
+    combinations: torch.Tensor,
+    true_mask: torch.Tensor,
+) -> torch.Tensor:
+    """Return false candidate groups that overlap any true group by exactly 3 words."""
+    true_groups = combinations[true_mask]
+    if true_groups.numel() == 0:
+        return torch.zeros_like(true_mask, dtype=torch.bool)
+
+    overlaps = (combinations.unsqueeze(1) == true_groups.unsqueeze(0)).sum(dim=-1)
+    max_overlap = overlaps.max(dim=1).values
+    return (~true_mask) & (max_overlap == 3)
+
+
+def _groupwise_margin_loss_from_scores(
+    scores: torch.Tensor,
+    combinations: torch.Tensor,
+    true_mask: torch.Tensor,
+    margin: float = GROUPWISE_LOSS_MARGIN,
+    hard_negative_count: int = GROUPWISE_HARD_NEGATIVES,
+) -> torch.Tensor:
+    """Rank true groups above hard negatives, emphasizing 3-of-4 near misses."""
+    true_scores = scores[true_mask]
+    negative_mask = ~true_mask
+    negative_scores = scores[negative_mask]
+    if true_scores.numel() == 0 or negative_scores.numel() == 0:
+        return scores.new_tensor(0.0)
+
+    near_miss_mask = _near_miss_negative_mask(combinations, true_mask)[negative_mask]
+    selection_scores = negative_scores + near_miss_mask.to(scores.dtype) * NEAR_MISS_HARD_NEGATIVE_BONUS
+    hard_count = min(hard_negative_count, negative_scores.numel())
+    hard_positions = torch.topk(selection_scores, k=hard_count).indices
+    hard_negative_scores = negative_scores[hard_positions]
+    hard_weights = torch.where(
+        near_miss_mask[hard_positions],
+        torch.full_like(hard_negative_scores, NEAR_MISS_GROUP_LOSS_WEIGHT),
+        torch.ones_like(hard_negative_scores),
+    )
+
+    losses = torch.clamp(
+        margin - true_scores.unsqueeze(1) + hard_negative_scores.unsqueeze(0),
+        min=0.0,
+    ) ** 2
+    return (losses * hard_weights.unsqueeze(0)).mean()
+
+
 def groupwise_ranking_loss(
     model: ConnectionsScoringMixin,
     edge_logits: torch.Tensor,
@@ -1054,14 +1072,10 @@ def groupwise_ranking_loss(
         return edge_logits.new_tensor(0.0)
 
     true_mask = (combinations.unsqueeze(1) == true_groups.unsqueeze(0)).all(dim=2).any(dim=1)
-    true_scores = scores[true_mask]
-    negative_scores = scores[~true_mask]
-    if true_scores.numel() == 0 or negative_scores.numel() == 0:
-        return edge_logits.new_tensor(0.0)
-
-    hard_count = min(hard_negative_count, negative_scores.numel())
-    hard_negative_scores = torch.topk(negative_scores, k=hard_count).values
-
-    # Use squared hinge loss (ReLU squared) so gradients scale down near convergence, and loss is exactly 0 when margin is cleared
-    losses = torch.clamp(margin - true_scores.unsqueeze(1) + hard_negative_scores.unsqueeze(0), min=0.0) ** 2
-    return losses.mean()
+    return _groupwise_margin_loss_from_scores(
+        scores,
+        combinations,
+        true_mask,
+        margin=margin,
+        hard_negative_count=hard_negative_count,
+    )

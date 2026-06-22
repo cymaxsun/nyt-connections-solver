@@ -43,8 +43,8 @@ except Exception as e:
     print(f"Warning: Failed to load CMUDict: {e}")
     CMU_DICT = {}
 
-EDGE_FEATURE_DIM = 25
-FEATURE_SCHEMA_VERSION = 13
+EDGE_FEATURE_DIM = 26
+FEATURE_SCHEMA_VERSION = 14
 NGRAM_COMPOUND_CACHE_SCHEMA_VERSION = 1
 NGRAMS_DEV_COMPOUND_CACHE_SCHEMA_VERSION = 2
 NGRAM_COMPOUND_CORPUS = "eng_2019"
@@ -142,6 +142,7 @@ SOUNDEX_MATCH_DIM = 21
 METAPHONE_MATCH_DIM = 22
 PHONEME_OVERLAP_DIM = 23
 COMPOUND_FRAGMENT_SHARED_DIM = 24
+CONCATENATED_COMPLETION_DIM = 25
 CONCEPTNET_RELATION_FEATURES = (
     ("cn_is_a_weight", ("IsA",)),
     ("cn_synonym_weight", ("Synonym",)),
@@ -199,6 +200,7 @@ EDGE_FEATURE_NAMES = [
     "metaphone_match",
     "phoneme_overlap",
     "compound_fragment_shared",
+    "is_concatenated_completion",
 ]
 
 
@@ -214,6 +216,9 @@ except Exception:
     nltk.download('omw-1.4', download_dir=nltk_data_dir, quiet=True)
 
 class FeatureExtractor:
+    _SHARED_CONCAT_RIGHT_COMPLETIONS_BY_FRAGMENT = None
+    _SHARED_CONCAT_LEFT_COMPLETIONS_BY_FRAGMENT = None
+
     def __init__(
         self,
         cache_dir: str = None,
@@ -258,6 +263,8 @@ class FeatureExtractor:
         self.embedding_cache_dirty = False
         self._compound_prefix_counts = None
         self._compound_suffix_counts = None
+        self._concat_right_completions_by_fragment = None
+        self._concat_left_completions_by_fragment = None
         self.word_frequency_lookup = zipf_frequency
         self.ngram_live_lookup = ngram_live_lookup
         self.ngram_client = ngram_client
@@ -1020,6 +1027,87 @@ class FeatureExtractor:
                 best_score = max(best_score, score)
         return float(min(1.0, best_score))
 
+    def _build_concatenated_completion_maps(self) -> None:
+        """Build maps of fragments to hidden prefixes/suffixes forming WordNet words."""
+        if (
+            FeatureExtractor._SHARED_CONCAT_RIGHT_COMPLETIONS_BY_FRAGMENT is not None
+            and FeatureExtractor._SHARED_CONCAT_LEFT_COMPLETIONS_BY_FRAGMENT is not None
+        ):
+            self._concat_right_completions_by_fragment = (
+                FeatureExtractor._SHARED_CONCAT_RIGHT_COMPLETIONS_BY_FRAGMENT
+            )
+            self._concat_left_completions_by_fragment = (
+                FeatureExtractor._SHARED_CONCAT_LEFT_COMPLETIONS_BY_FRAGMENT
+            )
+            return
+
+        right_completions = defaultdict(set)
+        left_completions = defaultdict(set)
+        lemma_words = set()
+
+        for synset in wn.all_synsets():
+            for lemma in synset.lemma_names():
+                token = self._compound_token(lemma)
+                if len(token) >= 4 and token.isalpha():
+                    lemma_words.add(token)
+
+        for word in lemma_words:
+            # fragment + suffix = valid word
+            for split_idx in range(1, len(word) - 2):
+                fragment = word[:split_idx]
+                suffix = word[split_idx:]
+                if len(suffix) >= 3:
+                    right_completions[fragment].add(suffix)
+
+            # prefix + fragment = valid word
+            for split_idx in range(3, len(word)):
+                prefix = word[:split_idx]
+                fragment = word[split_idx:]
+                if fragment:
+                    left_completions[fragment].add(prefix)
+
+        self._concat_right_completions_by_fragment = {
+            fragment: completions
+            for fragment, completions in right_completions.items()
+            if completions
+        }
+        self._concat_left_completions_by_fragment = {
+            fragment: completions
+            for fragment, completions in left_completions.items()
+            if completions
+        }
+        FeatureExtractor._SHARED_CONCAT_RIGHT_COMPLETIONS_BY_FRAGMENT = (
+            self._concat_right_completions_by_fragment
+        )
+        FeatureExtractor._SHARED_CONCAT_LEFT_COMPLETIONS_BY_FRAGMENT = (
+            self._concat_left_completions_by_fragment
+        )
+
+    def get_concatenated_completion_score(self, w1: str, w2: str) -> float:
+        """Return 1 when two fragments share a hidden affix that forms valid words."""
+        if (
+            self._concat_right_completions_by_fragment is None
+            or self._concat_left_completions_by_fragment is None
+        ):
+            self._build_concatenated_completion_maps()
+
+        token_1 = self._compound_token(w1)
+        token_2 = self._compound_token(w2)
+        if not token_1 or not token_2:
+            return 0.0
+
+        right_1 = self._concat_right_completions_by_fragment.get(token_1, set())
+        right_2 = self._concat_right_completions_by_fragment.get(token_2, set())
+        if right_1.intersection(right_2):
+            return 1.0
+
+        left_1 = self._concat_left_completions_by_fragment.get(token_1, set())
+        left_2 = self._concat_left_completions_by_fragment.get(token_2, set())
+        if left_1.intersection(left_2):
+            return 1.0
+
+        return 0.0
+
     def get_ngram_compound_profile(self, word: str) -> Dict[str, Dict[str, float]]:
         token = self._compound_token(word)
         empty_profile = {"left": {}, "right": {}}
@@ -1338,6 +1426,7 @@ class FeatureExtractor:
         # 22: Double Metaphone match
         # 23: Phoneme overlap Jaccard similarity
         # 24: Shared Google Ngrams compound-fragment completion
+        # 25: Shared concatenated prefix/suffix completion
         num_edge_feats = EDGE_FEATURE_DIM
         edge_features = np.zeros((n, n, num_edge_feats), dtype=np.float32)
 
@@ -1357,6 +1446,7 @@ class FeatureExtractor:
                     edge_features[i, j, METAPHONE_MATCH_DIM] = 1.0
                     edge_features[i, j, PHONEME_OVERLAP_DIM] = 1.0
                     edge_features[i, j, COMPOUND_FRAGMENT_SHARED_DIM] = 1.0
+                    edge_features[i, j, CONCATENATED_COMPLETION_DIM] = 1.0
                     continue
 
                 # WordNet
@@ -1423,6 +1513,9 @@ class FeatureExtractor:
 
                 edge_features[i, j, COMPOUND_FRAGMENT_SHARED_DIM] = (
                     self.get_ngram_compound_shared_score(w_i, w_j)
+                )
+                edge_features[i, j, CONCATENATED_COMPLETION_DIM] = (
+                    self.get_concatenated_completion_score(w_i, w_j)
                 )
 
         board_context_features = self._get_board_context_features(

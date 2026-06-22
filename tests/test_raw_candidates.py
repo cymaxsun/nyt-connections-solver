@@ -3,7 +3,12 @@ import unittest
 
 import numpy as np
 
-from src.features import EDGE_FEATURE_DIM, SENTENCE_SIMILARITY_DIM, PHONEME_EDIT_DISTANCE_DIM
+from src.features import (
+    CONCATENATED_COMPLETION_DIM,
+    EDGE_FEATURE_DIM,
+    PHONEME_EDIT_DISTANCE_DIM,
+    SENTENCE_SIMILARITY_DIM,
+)
 from src.raw_candidates import (
     evaluate_raw_candidates,
     raw_candidate_groups,
@@ -36,6 +41,19 @@ class RawCandidateTests(unittest.TestCase):
         edge_features[1, 0, LEVENSHTEIN_DISTANCE_DIM] = 0.25
         edge_features[0, 2, LEVENSHTEIN_DISTANCE_DIM] = 0.5
         edge_features[2, 0, LEVENSHTEIN_DISTANCE_DIM] = 0.5
+
+        scores = raw_pair_scores(edge_features)
+
+        self.assertGreater(scores[0, 1], 0.0)
+        self.assertEqual(scores[0, 2], 0.0)
+
+    def test_raw_pair_scores_include_concatenated_completion_channel(self):
+        edge_features = np.zeros((16, 16, EDGE_FEATURE_DIM), dtype=np.float32)
+        edge_features[:, :, LENGTH_SIMILARITY_DIM] = 1.0
+        edge_features[:, :, LEVENSHTEIN_DISTANCE_DIM] = 1.0
+        edge_features[:, :, PHONEME_EDIT_DISTANCE_DIM] = 1.0
+        edge_features[0, 1, CONCATENATED_COMPLETION_DIM] = 1.0
+        edge_features[1, 0, CONCATENATED_COMPLETION_DIM] = 1.0
 
         scores = raw_pair_scores(edge_features)
 
